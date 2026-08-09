@@ -1,1 +1,6 @@
 build/
+segments/
+test_video.mp4
+*.swp
+*.swo
+.DS_Store
