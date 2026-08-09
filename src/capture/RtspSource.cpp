@@ -64,11 +64,11 @@ bool RtspSource::openConnection() {
 
     AVDictionary* options = nullptr;
     av_dict_set(&options, "rtsp_transport", config_.transport.c_str(), 0);
-    // Option name differs across LibAV versions/protocols; set both so at
-    // least one is honored. Unrecognized entries are silently ignored by
-    // avformat_open_input rather than causing failure.
+    // Set stream timeout for reading from RTSP socket (in microseconds).
+    // NOTE: Do NOT set "timeout" option - LibAV interprets it as a listen timeout
+    // (for server mode), which causes it to open in listening mode instead of
+    // client mode. Only "stimeout" is correct for client-side connections.
     av_dict_set_int(&options, "stimeout", config_.timeout_us, 0);
-    av_dict_set_int(&options, "timeout", config_.timeout_us, 0);
 
     formatContext_ = avformat_alloc_context();
     if (formatContext_ == nullptr) {

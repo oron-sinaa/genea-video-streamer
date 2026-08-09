@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libavcodec-dev \
     libavutil-dev \
     libyaml-cpp-dev \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
