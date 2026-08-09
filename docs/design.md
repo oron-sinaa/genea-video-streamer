@@ -112,14 +112,16 @@ Why sixth:
 
 - Ensures reproducibility and code quality proof.
 
-### Phase 6 - Scalability Hooks (Priority 6)
+### Phase 6 - Scalability (Priority 6)
 
 Deliverables:
 
-1. Multi-pipeline manager (one pipeline per stream).
-2. Threading model and resource isolation.
-3. Horizontal scale pattern documentation (multiple streamer instances).
-4. Future support for distributed segment/object storage.
+1. `StreamWorker`: encapsulates a single-stream RTSP → HlsMuxer pipeline with per-stream reconnect policy, health tracking, and thread-safe state machine.
+2. `StreamManager`: manages a pool of StreamWorkers — creation, start, stop, and graceful shutdown; aggregates per-stream health metrics.
+3. `HttpServer`: embedded HTTP/1.1 server (POSIX sockets, no external deps) that routes per-stream HLS playlists, segments, and REST API endpoints.
+4. REST API: `GET /api/health`, `/api/streams`, `/api/streams/<name>` returning JSON.
+5. Multi-stream config: `streams:` array replacing single `rtsp:` block; backward-compatible with single-stream config.
+6. E2E test suite: 22 unit tests for HttpServer across 7 groups (lifecycle, routing, methods, headers, JSON correctness, file serving, multi-request robustness).
 
 Why seventh:
 
@@ -142,15 +144,26 @@ Why last:
 
 ```mermaid
 flowchart LR
-	A[IP Camera RTSP] --> B[Ingest and Demux LibAV]
-	B --> C[Packet Timestamp and Sync Layer]
-	C --> D[Remux HLS Segments LibAVFormat]
-	D --> E[Playlist and Segment Storage]
-	E --> F[HTTP Static Serving]
-	F --> G[Web Player HLS.js Live and Playback]
-	B --> H[Optional Future Decode Path for AI]
-	H --> I[Object Event Store]
-	I --> G
+	A[IP Cameras RTSP] --> B[StreamManager]
+	B --> W1[StreamWorker #1]
+	B --> W2[StreamWorker #2]
+	B --> WN[StreamWorker #N]
+	W1 --> C1[RtspSource + PacketClock]
+	W2 --> C2[RtspSource + PacketClock]
+	WN --> CN[RtspSource + PacketClock]
+	C1 --> D1[HlsMuxer → segments/stream-1/]
+	C2 --> D2[HlsMuxer → segments/stream-2/]
+	CN --> DN[HlsMuxer → segments/stream-N/]
+	B --> E[AggregateHealth]
+	D1 --> F[HttpServer]
+	D2 --> F
+	DN --> F
+	E --> F
+	F --> G[Web Player HLS.js]
+	F --> H[REST API /api/health /api/streams]
+	C1 --> I[Optional Future AI Decode Path]
+	I --> J[Object Event Store]
+	J --> G
 ```
 
 ## 4. Module-Level Design
@@ -158,22 +171,29 @@ flowchart LR
 ### 4.1 App Layer
 
 - `main.cpp`
-	- parses config.
-	- wires pipeline.
+	- parses config; auto-detects single-stream vs multi-stream mode.
+	- wires StreamManager and HttpServer.
 	- installs signal handlers for graceful shutdown.
 
-- `PipelineController`
-	- owns lifecycle: `init()`, `start()`, `stop()`.
-	- coordinates source, remuxer, monitor.
+- `StreamManager`
+	- creates one `StreamWorker` per stream entry in config.
+	- `start()` launches all worker threads; `stop()` joins them.
+	- `getAggregateHealth()` aggregates per-worker PipelineHealth metrics.
+	- `getStream(name)` returns a pointer to a named worker for HTTP routing.
 
 ### 4.2 Capture Layer
 
 - `ISource`
 	- `open()` / `readPacket()` / `close()`.
 
-- `LibAvInputSource`
+- `RtspSource` (implements `ISource`)
 	- wraps `AVFormatContext`.
 	- handles option dictionaries (RTSP transport, timeouts).
+
+- `StreamWorker`
+	- encapsulates a full single-stream pipeline: `RtspSource` + `PacketClock` + `HlsMuxer`.
+	- owns its own thread, reconnect policy, and `PipelineHealth` instance.
+	- state machine: IDLE → RUNNING → RECONNECTING → STOPPED.
 
 ### 4.3 Processing Layer
 
@@ -204,41 +224,73 @@ flowchart LR
 	- counters and moving averages.
 	- periodic logs for observability.
 
-### 4.6 Web Layer
+### 4.6 HTTP and API Layer
+
+- `HttpServer`
+	- embedded HTTP/1.1 server built on POSIX sockets (no external dependencies).
+	- single listener thread; synchronous connection handling (one request at a time).
+	- `accept()` polls with a 200 ms `SO_RCVTIMEO` so `stop()` reliably interrupts the loop.
+	- routes: `/hls/<stream>/live.m3u8`, `/hls/<stream>/<seg>.ts`, `/api/health`, `/api/streams`, `/api/streams/<name>`, `/` (web player).
+	- CORS headers configurable; non-GET/HEAD returns 405.
+
+### 4.7 Web Layer
 
 - `web/player.html`
 	- live and archive mode switch.
 	- playback controls and stream health indicator.
 	- clear error state for unsupported codec in browser.
 
-## 5. Suggested Repository Layout
+## 5. Repository Layout
 
 ```text
 .
 ├── CMakeLists.txt
 ├── README.md
+├── Dockerfile
+├── docker-compose.yml
 ├── docs/
 │   └── design.md
 ├── config/
-│   └── local-rtsp.yaml
-├── src/
-│   ├── app/
-│   ├── capture/
-│   ├── mux/
-│   ├── reliability/
-│   ├── util/
-│   └── main.cpp
+│   ├── rtsp-ingest.yaml           # Single-stream config
+│   ├── rtsp-multi-stream.yaml     # Multi-stream config
+│   └── multi-stream-example.yaml  # Annotated example
 ├── include/
 │   └── streamer/
+│       ├── RtspSource.h
+│       ├── PacketClock.h
+│       ├── ReconnectPolicy.h
+│       ├── PipelineHealth.h
+│       ├── HlsMuxer.h
+│       ├── StreamWorker.h
+│       ├── StreamManager.h
+│       └── HttpServer.h
+├── src/
+│   ├── capture/RtspSource.cpp
+│   ├── mux/HlsMuxer.cpp
+│   ├── mux/StreamCopyPlanner.cpp
+│   ├── server/HttpServer.cpp
+│   ├── util/Config.cpp
+│   ├── util/PacketClock.cpp
+│   ├── util/PipelineHealth.cpp
+│   ├── util/ReconnectPolicy.cpp
+│   ├── util/StreamWorker.cpp
+│   ├── util/StreamManager.cpp
+│   └── main.cpp
 ├── web/
-│   ├── player.html
-│   └── player.js
+│   └── player.html
 ├── scripts/
 │   ├── run_local_demo.sh
 │   └── serve_hls.sh
 └── tests/
-		├── unit/
-		└── integration/
+    ├── unit/
+    │   ├── test_reconnect_policy.cpp
+    │   ├── test_pipeline_health.cpp
+    │   └── test_http_server.cpp
+    ├── integration/
+    │   ├── test_reconnect_scenario.cpp
+    │   └── run_integration_tests.sh
+    └── e2e/
+        └── run_comprehensive_e2e.sh
 ```
 
 ## 6. Protocol and Delivery Choices
@@ -323,7 +375,7 @@ This plan is structured to address Genea's interview assignment requirements and
 | **4** | Reliability | Reconnect + backoff, health metrics, stale detection | Network Outage Handling, Reliability | 1 day |
 | **5** | Testing & CI | Unit/integration tests, build + lint checks | Testing, Code Quality | 1 day |
 
-**Subtotal: 5–5.5 days** → leaves 1.5–2 days for polish, documentation, and unforeseen issues.
+**All phases 0–5 complete.**
 
 ---
 
@@ -332,10 +384,8 @@ This plan is structured to address Genea's interview assignment requirements and
 
 | Phase | Name | Deliverables | PDF Alignment | Priority |
 |-------|------|--------------|---------------|----------|
-| **6** | Scalability | Multi-pipeline manager, thread pool, per-stream isolation | Scalability | Medium |
-| **7** | AI/Optional | Object detection (ONNX/OpenVINO), event index, search API | Optional Task | Low |
-
-**Note:** Phases 6–7 are deferred unless Phases 0–5 complete ahead of schedule.
+| **6** | Scalability | StreamWorker, StreamManager, HttpServer with REST API, multi-stream config, 22 HTTP unit tests | Scalability | ✅ Complete |
+| **7** | AI/Optional | Object detection (ONNX/OpenVINO), event index, search API | Optional Task | Not started |
 
 ---
 
@@ -353,12 +403,12 @@ This plan is structured to address Genea's interview assignment requirements and
 
 | Criterion | Phases | Key Deliverables |
 |-----------|--------|-------------------|
-| **Functionality** | 1–3 | RTSP → HLS → browser working end-to-end |
-| **Code Quality** | 0–5 | Clean architecture, error handling, logging, comments |
+| **Functionality** | 1–3, 6 | RTSP → HLS → browser working; multi-stream routing |
+| **Code Quality** | 0–6 | Clean architecture, error handling, logging, comments |
 | **Reliability** | 4 | Reconnect logic, stale detection, health metrics, graceful shutdown |
-| **Scalability** | 6 | Multi-pipeline manager, thread-safe design documented |
-| **Testing** | 5 | Unit tests (config, timestamps, reconnect), integration tests |
-| **Documentation** | 0–5 | README (setup/run), design.md (architecture), inline code comments |
+| **Scalability** | 6 | StreamManager, StreamWorker, multi-stream config, HTTP API |
+| **Testing** | 5–6 | 35+ unit tests, integration tests, E2E suite (10 suites) |
+| **Documentation** | 0–6 | README (setup/run/API), design.md (architecture), inline comments |
 
 ---
 

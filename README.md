@@ -1,160 +1,120 @@
 # genea-video-streamer
-Implementation of streaming and inference solution for the Genea interview assessment.
 
-## Goal
+Open-source live video streaming solution built in C++ and LibAV, implemented as a Genea interview assessment.
 
-Implement an open-source live video streaming solution using C++ and LibAV that:
+## What It Does
 
-1. Captures from IP camera via RTSP only.
-2. Streams to a destination endpoint.
-3. Supports browser-based live view and playback.
-4. Handles network outages and common failure conditions.
+- Ingests from IP cameras via RTSP (TCP or UDP transport)
+- Remuxes compressed packets into HLS segments (no transcoding)
+- Serves per-stream playlists and segments over HTTP
+- Provides a browser-based HLS.js player for live view and archive playback
+- Recovers automatically from network outages with exponential backoff
+- Supports 1–N concurrent streams through an integrated stream manager
+- Exposes a JSON REST API for aggregate and per-stream health metrics
 
-## Technical Direction
+## Architecture
 
-- Language: C++
-- Media stack: LibAV (`libavformat`, `libavcodec`, `libavutil`, `libswscale`)
-- Delivery protocol: HLS (open standard) through packet remuxing
-- Web playback: HLS.js-based player
-- Video policy: codec copy only (`-c copy` equivalent). No transcoding/encoding.
+```
+RTSP Sources
+  │
+  ├─ StreamWorker #1 → RtspSource → PacketClock → HlsMuxer → segments/cam-1/
+  ├─ StreamWorker #2 → RtspSource → PacketClock → HlsMuxer → segments/cam-2/
+  └─ StreamWorker #N ...
+  │
+StreamManager (lifecycle, health aggregation)
+  │
+HttpServer
+  ├─ GET /hls/<stream>/live.m3u8       → live playlist
+  ├─ GET /hls/<stream>/<seg>.ts        → segment
+  ├─ GET /api/health                   → aggregate JSON metrics
+  ├─ GET /api/streams                  → stream list
+  ├─ GET /api/streams/<name>           → per-stream status
+  └─ GET /                             → web player
+```
 
-## Scope Limitation
+## Implementation Status
 
-1. Ingest source is RTSP only.
-2. Output is produced by remuxing compressed packets, not decoding/re-encoding frames.
-3. Browser compatibility depends on source camera codec and GOP settings.
-4. Recommended camera profile for MVP: H.264 stream with regular keyframes (for stable HLS playback).
+| Phase | Name | Status |
+|-------|------|--------|
+| 0 | Foundation (CMake, config, logging) | ✅ Complete |
+| 1 | Capture & Probe (RTSP, PacketClock) | ✅ Complete |
+| 2 | Remux & Segments (HLS muxer, playlists) | ✅ Complete |
+| 3 | Web Player (HLS.js, live + archive UI) | ✅ Complete |
+| 4 | Reliability (reconnect, backoff, stale detection) | ✅ Complete |
+| 5 | Testing & CI (unit, integration, GitHub Actions, Docker) | ✅ Complete |
+| 6 | Scalability (StreamManager, StreamWorker, HTTP API) | ✅ Complete |
+| 7 | AI / Optional (object detection, event search) | 📅 Not started |
 
-## Working Style
+## Tech Stack
 
-1. Keep implementation simple and human-readable.
-2. Do not perform premature optimization.
-3. Build strictly step by step, validating each stage before moving forward.
-
-## Implementation Chronology (Priority Order)
-
-1. Foundation: CMake project, config model, logging, error handling conventions.
-2. Capture: RTSP input and stream probing.
-3. Pipeline core: demux packet ingest -> timestamp normalization -> packet remux.
-4. Streaming output: HLS segment + playlist generation for live and playback (codec copy only).
-5. Web player: browser UI for live playback and archive playback.
-6. Reliability: reconnect/backoff, health metrics, outage behavior.
-7. Quality: unit/integration tests and CI checks.
-8. Scalability: multi-stream pipeline manager and deployment guidance.
-9. Optional: AI inference, object search, performance profiling.
-
-## Design Document
-
-Detailed technical design, architecture, module breakdown, and implementation plan are in [docs/design.md](docs/design.md).
-
-### Quick Roadmap (1-Week Deadline)
-
-| Phase | Name | Status | Eval Criteria |
-|-------|------|--------|---------------|
-| 0 | Foundation | ✅ Done | Code Quality |
-| 1 | Capture & Probe | ✅ Done | Video Capture |
-| 2 | Remux & Segments | 🔄 Next | Streaming Protocol, Functionality |
-| 3 | Web Player | ⏳ Planned | Web Player, Functionality |
-| 4 | Reliability | ⏳ Planned | Network Outage Handling, Reliability |
-| 5 | Testing & CI | ⏳ Planned | Testing, Code Quality |
-| 6 | Scalability | 📅 Optional | Scalability |
-| 7 | AI/Optional | 📅 Optional | (Optional Task) |
-
-See [docs/design.md § 10](docs/design.md#10-implementation-plan-aligned-with-evaluation-criteria) for full implementation plan with time estimates and evaluation criteria alignment.
-
-## Current Status
-
-**Phases 0–4 Complete:**
-- ✅ CMake build system with LibAV + yaml-cpp
-- ✅ YAML configuration loader with validation
-- ✅ Logging framework (INFO/WARN/ERROR macros)
-- ✅ RTSP source ingest (LibAV wrapper)
-- ✅ Stream metadata probe (codec, resolution, fps, time base)
-- ✅ Packet read loop with compressed packet handling
-- ✅ Packet clock for timestamp normalization (monotonic enforcement, jitter handling)
-- ✅ HLS remux + segment generation with live/archive playlists
-- ✅ HTTP server for HLS streaming and playback
-- ✅ Web player UI for live and archive viewing
-- ✅ Automatic reconnect with exponential backoff (1s → 30s max)
-- ✅ Stale source detection (10s timeout)
-- ✅ HLS discontinuity markers for smooth playback through reconnects
-- ✅ Pipeline health metrics (packets, reconnects, throughput)
-
-**Phase 5 (Testing & CI/CD) Complete:**
-- ✅ Unit tests: ReconnectPolicy (5 tests), PipelineHealth (6 tests)
-- ✅ Integration tests: Reconnect scenarios, backoff progression, stale detection (4 scenarios)
-- ✅ GitHub Actions CI/CD pipeline (build, test, docker build)
-- ✅ Production Docker setup (multi-stage build, minimal runtime image)
-- ✅ docker-compose for easy local deployment
-- ✅ Health checks and resource limits configured
-
-**Next (Phases 6–7):**
-- Scalability: multi-stream pipeline manager
-- Optional: AI inference, object search, performance profiling
-
-**Timeline:** Phases 0–5 complete (~40 hours); ready for production deployment.
+| Layer | Choice | Rationale |
+|-------|--------|-----------|
+| Language | C++17 | Performance, LibAV compatibility |
+| Media | LibAV (libavformat 60, libavcodec 60, libavutil 58) | Packet demux/remux without decode |
+| Config | yaml-cpp 0.8 | Human-readable multi-stream config |
+| Protocol | HLS (MPEG-TS segments) | Open standard, browser-native via HLS.js |
+| HTTP | POSIX sockets (custom, no external dependency) | Zero added deps for test portability |
+| Build | CMake 3.16+, pkg-config | Standard C++ build tooling |
+| CI | GitHub Actions + Docker multi-stage | Reproducible builds and deployment |
 
 ## Quick Start
 
-### Local Development (Standalone Binary)
+### Build
 
 ```bash
-# Build
 mkdir -p build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
+```
 
-# Run (edit config/rtsp-ingest.yaml first)
+### Single-stream mode
+
+```bash
+# Edit config/rtsp-ingest.yaml with your camera URL, then:
 ./build/streamer --config config/rtsp-ingest.yaml
+```
 
-# Tests
+Open `http://localhost:8000` to view the player.
+
+### Multi-stream mode
+
+```bash
+# Edit config/rtsp-multi-stream.yaml or config/multi-stream-example.yaml
+./build/streamer --config config/rtsp-multi-stream.yaml
+```
+
+Streams are served at `/hls/<stream-name>/live.m3u8`.
+
+### Tests
+
+```bash
+# Unit tests
 ./build/test_reconnect_policy
 ./build/test_pipeline_health
-./tests/integration/run_integration_tests.sh
+./build/test_http_server
+
+# Integration tests
+bash tests/integration/run_integration_tests.sh
+
+# Full end-to-end suite (10 suites, 35+ scenarios)
+bash tests/e2e/run_comprehensive_e2e.sh
 ```
 
-### Production (Docker)
-
-#### Build Image
+### Docker
 
 ```bash
+# Build image
 docker build -t genea-streamer:latest .
-```
 
-#### Run with docker-compose (Recommended)
-
-```bash
-# Edit docker-compose.yml for your RTSP URL and output directory
+# Run with docker-compose (edit docker-compose.yml for your RTSP URL first)
 docker-compose up -d
-
-# Check logs
 docker-compose logs -f streamer
-
-# Stop
 docker-compose down
 ```
 
-#### Run Standalone Container
+## Configuration
 
-```bash
-docker run -d \
-  --name genea-streamer \
-  -v $(pwd)/config:/etc/streamer:ro \
-  -v $(pwd)/segments:/data/segments \
-  -e RTSP_URL="rtsp://camera-ip:554/stream" \
-  genea-streamer:latest
-```
-
-#### Verify Health
-
-```bash
-docker ps
-docker logs genea-streamer
-```
-
-### Configuration
-
-Edit `config/rtsp-ingest.yaml`:
+### Single stream (`config/rtsp-ingest.yaml`)
 
 ```yaml
 rtsp:
@@ -170,22 +130,95 @@ rtsp:
 
 http:
   listen_port: 8000
-  hls_path: "/hls"
 
 hls:
   output_dir: "segments"
-  segment_duration_s: 3
-  archive_retention_hours: 2
+  segment_duration_s: 4
   enable_discontinuity_markers: true
 ```
 
-### CI/CD
+### Multi-stream (`config/multi-stream-example.yaml`)
 
-GitHub Actions pipeline runs automatically on push:
-- ✅ Build and compile
-- ✅ Unit tests (ReconnectPolicy, PipelineHealth)
-- ✅ Integration tests (reconnect scenarios)
-- ✅ Docker image build
-- ✅ Code quality checks
+```yaml
+http:
+  listen_port: 8080
+  listen_address: "0.0.0.0"
+  enable_cors: true
 
-Pipeline status: `.github/workflows/ci-cd.yml`
+streams:
+  - name: "camera-front"
+    rtsp:
+      url: "rtsp://192.168.1.100:554/stream1"
+      reconnect:
+        enabled: true
+        initial_delay_ms: 1000
+        max_delay_ms: 30000
+        stale_timeout_s: 10
+    hls:
+      segment_duration_s: 4
+      output_dir: "segments/camera-front"
+
+  - name: "camera-rear"
+    rtsp:
+      url: "rtsp://192.168.1.101:554/stream1"
+      reconnect:
+        enabled: true
+        initial_delay_ms: 1000
+        max_delay_ms: 30000
+        stale_timeout_s: 10
+    hls:
+      segment_duration_s: 4
+      output_dir: "segments/camera-rear"
+```
+
+## REST API
+
+All endpoints return JSON. CORS is enabled by default.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Aggregate metrics across all streams |
+| `/api/streams` | GET | List of all configured streams with status |
+| `/api/streams/<name>` | GET | Per-stream status and metrics |
+| `/hls/<name>/live.m3u8` | GET | Live HLS playlist for a stream |
+| `/hls/<name>/<seg>.ts` | GET | HLS segment |
+| `/` | GET | Web player UI |
+
+Example health response:
+
+```json
+{
+  "total_packets_read": 12480,
+  "total_packets_written": 12480,
+  "total_packets_dropped": 0,
+  "total_reconnects": 1,
+  "active_streams": 2,
+  "error_streams": 0,
+  "stream_stats": [
+    { "name": "camera-front", "status": "1", "packets_written": 6240, "reconnects": 0 },
+    { "name": "camera-rear",  "status": "1", "packets_written": 6240, "reconnects": 1 }
+  ]
+}
+```
+
+## Camera Compatibility
+
+- **Recommended:** H.264 with regular IDR keyframes (every 1–2 s)
+- **Transport:** TCP preferred (more reliable across NAT/firewalls)
+- **Codec handling:** packets are remuxed without decode — no transcoding, no re-encoding
+- **Browser playback:** depends on source codec; H.264 is universally supported
+
+## CI/CD
+
+GitHub Actions runs on every push:
+
+- Build and compile (CMake, Release)
+- Unit tests (ReconnectPolicy, PipelineHealth, HttpServer — 35+ tests)
+- Integration tests (reconnect scenarios)
+- Docker image build
+
+Pipeline: `.github/workflows/ci-cd.yml`
+
+## Design Document
+
+Full technical design, architecture decisions, module breakdown, and testing matrix: [docs/design.md](docs/design.md)
