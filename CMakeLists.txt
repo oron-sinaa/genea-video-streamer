@@ -25,6 +25,7 @@ add_executable(streamer
     src/util/PipelineHealth.cpp
     src/util/StreamWorker.cpp
     src/util/StreamManager.cpp
+    src/server/HttpServer.cpp
     src/mux/StreamCopyPlanner.cpp
     src/mux/HlsMuxer.cpp
 )

@@ -1,5 +1,6 @@
 #include "streamer/Config.h"
 #include "streamer/HlsMuxer.h"
+#include "streamer/HttpServer.h"
 #include "streamer/Logger.h"
 #include "streamer/PacketClock.h"
 #include "streamer/PipelineHealth.h"
@@ -173,6 +174,21 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
 
     LOG_INFO("Started %d stream(s); waiting for shutdown signal...", started);
 
+    // Start HTTP server
+    streamer::HttpServer::ServerConfig http_config;
+    http_config.listen_port = config.http.listen_port;
+    http_config.listen_address = "0.0.0.0";
+    http_config.enable_cors = true;
+
+    streamer::HttpServer http_server(&manager, http_config);
+    if (!http_server.start()) {
+        LOG_ERROR("Failed to start HTTP server: %s", http_server.getLastError().c_str());
+        manager.stop();
+        return EXIT_FAILURE;
+    }
+
+    LOG_INFO("HTTP server started on 0.0.0.0:%u", config.http.listen_port);
+
     // Monitor streams until shutdown signal
     const long statusInterval = 500;  // ms
     auto lastStatusTime = std::chrono::system_clock::now();
@@ -201,6 +217,9 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
             break;
         }
     }
+
+    LOG_INFO("Shutting down HTTP server...");
+    http_server.stop();
 
     LOG_INFO("Shutting down all streams...");
     manager.stop();
