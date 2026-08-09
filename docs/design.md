@@ -306,18 +306,80 @@ Performance tests:
 2. CPU and memory profile at target fps.
 3. Segment generation stability over long runs.
 
-## 10. Immediate Build Sequence (What to Implement First)
+## 10. Implementation Plan Aligned with Evaluation Criteria
 
-Implementation order for generated code:
+This plan is structured to address Genea's interview assignment requirements and evaluation criteria within a one-week deadline.
 
-1. Create project skeleton and CMake with LibAV linkage.
-2. Implement config loader and logger.
-3. Implement RTSP input + metadata probe tool.
-4. Implement compressed packet ingest and timestamp normalization for remux.
-5. Implement stream copy HLS remux.
+### Critical Path: Phases 0–5 (Core Functionality)
+**Target completion:** 5–6 days  
+**Delivers:** Working end-to-end stream with reliability and test coverage.
+
+| Phase | Name | Deliverables | PDF Alignment | Est. Time |
+|-------|------|--------------|---------------|-----------|
+| **0** | Foundation | CMake, config (YAML), logging, error conventions | Code Quality | 0.5 days |
+| **1** | Capture & Probe | RTSP source, stream metadata, packet clock | Video Capture, Code Quality | 1 day |
+| **2** | Remux & Segments | HLS muxer, playlist (live + archive), codec copy | Streaming Protocol, Functionality | 1.5 days |
+| **3** | Web Player | HLS.js player, live/archive UI, HTTP serving | Web Player, Functionality | 1 day |
+| **4** | Reliability | Reconnect + backoff, health metrics, stale detection | Network Outage Handling, Reliability | 1 day |
+| **5** | Testing & CI | Unit/integration tests, build + lint checks | Testing, Code Quality | 1 day |
+
+**Subtotal: 5–5.5 days** → leaves 1.5–2 days for polish, documentation, and unforeseen issues.
+
+---
+
+### Extended Phases: Phases 6–7 (Scalability & Optional)
+**If time permits after Phase 5:**
+
+| Phase | Name | Deliverables | PDF Alignment | Priority |
+|-------|------|--------------|---------------|----------|
+| **6** | Scalability | Multi-pipeline manager, thread pool, per-stream isolation | Scalability | Medium |
+| **7** | AI/Optional | Object detection (ONNX/OpenVINO), event index, search API | Optional Task | Low |
+
+**Note:** Phases 6–7 are deferred unless Phases 0–5 complete ahead of schedule.
+
+---
+
+### Known Gaps & Optional Additions
+
+| Requirement | Status | Priority | Approach |
+|-------------|--------|----------|----------|
+| AWS Kinesis Video Streams | Not in Phases 0–7 | Optional | If requested: add Phase 2.5 (AWS integration) after Phase 2 |
+| Docker / Deployment | Partial (demo scripts) | Low | Phase 3.5: Dockerfile + docker-compose.yml (optional) |
+| Design Doc for Evaluator | Partial (internal design.md) | Medium | Phase 5: Polish design doc + create ARCHITECTURE.md summary |
+
+---
+
+### Evaluation Criteria Mapping
+
+| Criterion | Phases | Key Deliverables |
+|-----------|--------|-------------------|
+| **Functionality** | 1–3 | RTSP → HLS → browser working end-to-end |
+| **Code Quality** | 0–5 | Clean architecture, error handling, logging, comments |
+| **Reliability** | 4 | Reconnect logic, stale detection, health metrics, graceful shutdown |
+| **Scalability** | 6 | Multi-pipeline manager, thread-safe design documented |
+| **Testing** | 5 | Unit tests (config, timestamps, reconnect), integration tests |
+| **Documentation** | 0–5 | README (setup/run), design.md (architecture), inline code comments |
+
+---
+
+### Immediate Build Sequence (What to Implement First)
+
+*Currently completed (Phases 0–1):*
+1. ✅ Create project skeleton and CMake with LibAV linkage.
+2. ✅ Implement config loader and logger.
+3. ✅ Implement RTSP input + metadata probe tool.
+4. ✅ Implement compressed packet ingest and timestamp normalization for remux.
+
+*Next (Phase 2):*
+5. 🔄 Implement stream copy HLS remux.
+
+*Then (Phases 3–5):*
 6. Add minimal web player and local serving script.
 7. Add reconnect/retry and health logging.
 8. Add unit/integration tests and CI.
-9. Add optional inference/event search modules.
 
-This sequence maximizes demonstrable progress early while preserving architecture for optional advanced features.
+*Deferred (Phases 6–7):*
+9. Add optional multi-pipeline scalability.
+10. Add optional inference/event search modules.
+
+This sequence maximizes demonstrable progress early (end-to-end streaming by day 3–4), validates reliability and quality (day 5–6), and preserves time for polish or optional enhancements.

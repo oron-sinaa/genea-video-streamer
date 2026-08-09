@@ -45,10 +45,40 @@ Implement an open-source live video streaming solution using C++ and LibAV that:
 
 ## Design Document
 
-Detailed design and module breakdown is in [docs/design.md](docs/design.md).
+Detailed technical design, architecture, module breakdown, and implementation plan are in [docs/design.md](docs/design.md).
+
+### Quick Roadmap (1-Week Deadline)
+
+| Phase | Name | Status | Eval Criteria |
+|-------|------|--------|---------------|
+| 0 | Foundation | ✅ Done | Code Quality |
+| 1 | Capture & Probe | ✅ Done | Video Capture |
+| 2 | Remux & Segments | 🔄 Next | Streaming Protocol, Functionality |
+| 3 | Web Player | ⏳ Planned | Web Player, Functionality |
+| 4 | Reliability | ⏳ Planned | Network Outage Handling, Reliability |
+| 5 | Testing & CI | ⏳ Planned | Testing, Code Quality |
+| 6 | Scalability | 📅 Optional | Scalability |
+| 7 | AI/Optional | 📅 Optional | (Optional Task) |
+
+See [docs/design.md § 10](docs/design.md#10-implementation-plan-aligned-with-evaluation-criteria) for full implementation plan with time estimates and evaluation criteria alignment.
 
 ## Current Status
 
-Phase 0 scaffold is in place: CMake target, application entry point, module directories,
-RTSP configuration template, web player placeholder, and scripts. RTSP ingest and HLS
-remux behavior have not been implemented yet.
+**Phases 0–1 Complete:**
+- ✅ CMake build system with LibAV + yaml-cpp
+- ✅ YAML configuration loader with validation
+- ✅ Logging framework (INFO/WARN/ERROR macros)
+- ✅ RTSP source ingest (LibAV wrapper)
+- ✅ Stream metadata probe (codec, resolution, fps, time base)
+- ✅ Packet read loop with compressed packet handling
+- ✅ Packet clock for timestamp normalization (monotonic enforcement, jitter handling)
+
+**Next (Phases 2–5):**
+1. HLS remux + segment generation (Phase 2)
+2. Web player + HTTP serving (Phase 3)
+3. Reconnect logic + reliability (Phase 4)
+4. Unit/integration tests + CI (Phase 5)
+
+**Timeline:** 5–5.5 days for core delivery (Phases 0–5); optional Phases 6–7 if time permits.
+
+See [Implementation Plan](#implementation-plan-aligned-with-evaluation-criteria) in [docs/design.md](docs/design.md) for detailed roadmap aligned with evaluation criteria.
