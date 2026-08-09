@@ -2,8 +2,25 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace streamer {
+
+// Individual stream configuration (Phase 6: Multi-stream support)
+struct StreamConfig {
+    std::string name;           // Stream identifier (e.g., "camera-1")
+    std::string rtsp_url;       // RTSP source URL
+    std::string hls_output;     // Per-stream HLS output directory (e.g., "segments/camera1/")
+    
+    // Reconnect policy per stream
+    struct {
+        bool enabled = true;
+        uint32_t initial_delay_ms = 1000;
+        uint32_t max_delay_ms = 30000;
+        uint32_t jitter_percent = 15;
+        uint32_t stale_timeout_s = 10;
+    } reconnect;
+};
 
 // Configuration for RTSP capture source.
 struct RtspConfig {
@@ -28,15 +45,40 @@ struct HlsConfig {
     bool enable_discontinuity_markers = true;  // write #EXT-X-DISCONTINUITY after reconnect
 };
 
-// Top-level application configuration. Extended as new modules are added.
+// HTTP server configuration
+struct HttpConfig {
+    uint16_t listen_port = 8000;
+};
+
+// Resource limits configuration (Phase 6)
+struct ResourceConfig {
+    uint32_t max_streams = 10;
+    float max_cpu_per_stream = 1.0f;        // CPU cores
+    uint32_t max_memory_per_stream = 512;   // MB
+};
+
+// Top-level application configuration.
 struct AppConfig {
+    // Legacy single-stream mode (Phase 0-5 compatibility)
     RtspConfig rtsp;
     HlsConfig hls;
+    
+    // Phase 6: Multi-stream support
+    std::vector<StreamConfig> streams;      // Array of stream configs
+    HttpConfig http;                        // HTTP server settings
+    ResourceConfig resources;               // Resource limits
+    
+    // Helper: Returns true if using multi-stream mode
+    bool isMultiStream() const {
+        return !streams.empty();
+    }
 };
 
 // Loads and validates configuration from a YAML file at `path`.
-// Throws std::runtime_error if the file is missing, malformed, or missing
-// required fields (currently: rtsp.url).
+// Supports both:
+//  - Legacy single-stream format (rtsp.url + hls settings)
+//  - New multi-stream format (streams[] array)
+// Throws std::runtime_error if file is missing, malformed, or validation fails.
 AppConfig loadConfig(const std::string& path);
 
 }  // namespace streamer

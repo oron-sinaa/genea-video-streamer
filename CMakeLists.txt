@@ -23,6 +23,8 @@ add_executable(streamer
     src/util/PacketClock.cpp
     src/util/ReconnectPolicy.cpp
     src/util/PipelineHealth.cpp
+    src/util/StreamWorker.cpp
+    src/util/StreamManager.cpp
     src/mux/StreamCopyPlanner.cpp
     src/mux/HlsMuxer.cpp
 )

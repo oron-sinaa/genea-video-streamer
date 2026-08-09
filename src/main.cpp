@@ -5,6 +5,8 @@
 #include "streamer/PipelineHealth.h"
 #include "streamer/RtspSource.h"
 #include "streamer/StreamCopyPlanner.h"
+#include "streamer/StreamManager.h"
+#include "streamer/StreamWorker.h"
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -16,14 +18,12 @@ extern "C" {
 #include <cstdlib>
 #include <exception>
 #include <string>
+#include <thread>
 
 namespace {
 
 // Set from a signal handler; only safe operation is a lock-free store/load.
 std::atomic<bool> g_shutdownRequested{false};
-
-// Global health instance (populated after creation in main, used for shutdown reporting)
-streamer::PipelineHealth* g_health = nullptr;
 
 void handleShutdownSignal(int /*signal*/) {
     g_shutdownRequested.store(true);
@@ -31,30 +31,16 @@ void handleShutdownSignal(int /*signal*/) {
 
 }  // namespace
 
-int main(int argc, char** argv) {
-    const std::string configPath = (argc > 1) ? argv[1] : "config/rtsp-ingest.yaml";
-
-    streamer::AppConfig config;
-    try {
-        config = streamer::loadConfig(configPath);
-    } catch (const std::exception& e) {
-        LOG_ERROR("Failed to load configuration from '%s': %s", configPath.c_str(), e.what());
-        return EXIT_FAILURE;
-    }
-
-    std::signal(SIGINT, handleShutdownSignal);
-    std::signal(SIGTERM, handleShutdownSignal);
-
-    avformat_network_init();
+// Single-stream legacy mode (backward compatibility)
+int runLegacyMode(const streamer::AppConfig& config) {
+    LOG_INFO("Running in legacy single-stream mode");
 
     // Create pipeline health tracker (shared across components).
     streamer::PipelineHealth health;
-    g_health = &health;
 
     streamer::RtspSource source(config.rtsp, &health);
     if (!source.open()) {
         LOG_ERROR("Failed to open RTSP source; exiting");
-        avformat_network_deinit();
         return EXIT_FAILURE;
     }
 
@@ -64,7 +50,6 @@ int main(int argc, char** argv) {
     if (videoStream == nullptr) {
         LOG_ERROR("Failed to get video stream for clock initialization");
         source.close();
-        avformat_network_deinit();
         return EXIT_FAILURE;
     }
     streamer::PacketClock clock(videoStream, 90000);
@@ -75,7 +60,6 @@ int main(int argc, char** argv) {
     if (!copyResult.canCopy) {
         LOG_ERROR("Source stream is not compatible with MPEG-TS codec copy: %s", copyResult.reason.c_str());
         source.close();
-        avformat_network_deinit();
         return EXIT_FAILURE;
     }
     LOG_INFO("Source stream validated for MPEG-TS codec copy");
@@ -85,7 +69,6 @@ int main(int argc, char** argv) {
     if (!muxer.open()) {
         LOG_ERROR("Failed to initialize HLS muxer; exiting");
         source.close();
-        avformat_network_deinit();
         return EXIT_FAILURE;
     }
 
@@ -94,7 +77,6 @@ int main(int argc, char** argv) {
         LOG_ERROR("Failed to allocate AVPacket");
         muxer.close();
         source.close();
-        avformat_network_deinit();
         return EXIT_FAILURE;
     }
 
@@ -168,10 +150,97 @@ int main(int argc, char** argv) {
     av_packet_free(&packet);
     muxer.close();
     source.close();
-    avformat_network_deinit();
 
     // Print health report on shutdown
     LOG_INFO("%s", health.getHealthReport().c_str());
 
     return EXIT_SUCCESS;
+}
+
+// Multi-stream mode (Phase 6)
+int runMultiStreamMode(const streamer::AppConfig& config) {
+    LOG_INFO("Running in multi-stream mode with %zu stream(s)", config.streams.size());
+
+    // Create stream manager
+    streamer::StreamManager manager(config);
+
+    // Start all streams
+    int started = manager.start();
+    if (started == 0) {
+        LOG_ERROR("Failed to start any streams");
+        return EXIT_FAILURE;
+    }
+
+    LOG_INFO("Started %d stream(s); waiting for shutdown signal...", started);
+
+    // Monitor streams until shutdown signal
+    const long statusInterval = 500;  // ms
+    auto lastStatusTime = std::chrono::system_clock::now();
+
+    while (!g_shutdownRequested.load()) {
+        auto now = std::chrono::system_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStatusTime).count();
+
+        if (elapsed >= statusInterval) {
+            auto aggregate = manager.getAggregateHealth();
+            LOG_INFO(
+                "Multi-stream status: %u active, %u error, total_reconnects=%u, "
+                "packets_written=%llu",
+                aggregate.active_streams,
+                aggregate.error_streams,
+                aggregate.total_reconnects,
+                static_cast<unsigned long long>(aggregate.total_packets_written));
+            lastStatusTime = now;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+        // Check if all streams have failed
+        if (manager.getActiveStreamCount() == 0 && started > 0) {
+            LOG_ERROR("All streams have failed or stopped");
+            break;
+        }
+    }
+
+    LOG_INFO("Shutting down all streams...");
+    manager.stop();
+
+    // Print final aggregate health
+    auto finalHealth = manager.getAggregateHealth();
+    LOG_INFO(
+        "Final stats: total_packets_written=%llu, total_reconnects=%u, error_streams=%u",
+        static_cast<unsigned long long>(finalHealth.total_packets_written),
+        finalHealth.total_reconnects,
+        finalHealth.error_streams);
+
+    return EXIT_SUCCESS;
+}
+
+int main(int argc, char** argv) {
+    const std::string configPath = (argc > 1) ? argv[1] : "config/rtsp-ingest.yaml";
+
+    streamer::AppConfig config;
+    try {
+        config = streamer::loadConfig(configPath);
+    } catch (const std::exception& e) {
+        LOG_ERROR("Failed to load configuration from '%s': %s", configPath.c_str(), e.what());
+        return EXIT_FAILURE;
+    }
+
+    std::signal(SIGINT, handleShutdownSignal);
+    std::signal(SIGTERM, handleShutdownSignal);
+
+    avformat_network_init();
+
+    int result;
+    
+    // Determine which mode to run based on config
+    if (config.isMultiStream()) {
+        result = runMultiStreamMode(config);
+    } else {
+        result = runLegacyMode(config);
+    }
+
+    avformat_network_deinit();
+    return result;
 }

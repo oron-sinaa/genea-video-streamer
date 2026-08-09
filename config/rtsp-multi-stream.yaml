@@ -1,0 +1,50 @@
+# Multi-Stream Configuration Example (Phase 6)
+# Supports 2+ concurrent RTSP streams with independent reconnect policies
+
+streams:
+  - name: "camera-1"
+    rtsp_url: "rtsp://camera1.example.com:554/stream"
+    hls_output: "segments/camera1/"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-2"
+    rtsp_url: "rtsp://camera2.example.com:554/stream"
+    hls_output: "segments/camera2/"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-3"
+    rtsp_url: "rtsp://camera3.example.com:554/stream"
+    hls_output: "segments/camera3/"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+# Global HLS settings (applied to all streams)
+hls:
+  segment_duration_s: 4
+  archive_retention_hours: 2
+  cleanup_interval_s: 300
+  enable_discontinuity_markers: true
+
+# HTTP server configuration
+http:
+  listen_port: 8000
+
+# Resource limits and constraints
+resources:
+  max_streams: 10          # Max concurrent streams allowed
+  max_cpu_per_stream: 1.0  # CPU cores per stream
+  max_memory_per_stream: 512  # MB per stream
