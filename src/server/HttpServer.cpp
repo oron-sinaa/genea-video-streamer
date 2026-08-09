@@ -138,6 +138,13 @@ bool HttpServer::start() {
         return false;
     }
 
+    // Give accept() a short timeout so that stop() can reliably interrupt the
+    // listener thread by setting running_=false and waiting.  On Linux,
+    // close()ing the fd from another thread does NOT reliably wake up a
+    // blocked accept(), so we poll every 200 ms instead.
+    struct timeval accept_tv{0, 200000};  // 200 ms
+    setsockopt(listening_socket_, SOL_SOCKET, SO_RCVTIMEO, &accept_tv, sizeof(accept_tv));
+
     // Start listener thread
     running_.store(true);
     listener_thread_ = std::thread(&HttpServer::listenerLoop, this);
@@ -152,15 +159,16 @@ void HttpServer::stop() {
 
     running_.store(false);
 
-    // Close listening socket to interrupt accept()
+    // Wait for listener thread to exit.  The listener polls accept() with a
+    // 200 ms SO_RCVTIMEO, so it will notice running_=false within 200 ms.
+    if (listener_thread_.joinable()) {
+        listener_thread_.join();
+    }
+
+    // Free the port only after the thread has exited
     if (listening_socket_ >= 0) {
         close(listening_socket_);
         listening_socket_ = -1;
-    }
-
-    // Wait for listener thread to finish
-    if (listener_thread_.joinable()) {
-        listener_thread_.join();
     }
 
     LOG_INFO("HttpServer: Stopped");
@@ -175,11 +183,21 @@ void HttpServer::listenerLoop() {
 
         int client_socket = accept(listening_socket_, (struct sockaddr*)&client_addr, &client_addr_len);
         if (client_socket < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                // accept() timed out (200 ms SO_RCVTIMEO); loop back and re-check running_
+                continue;
+            }
             if (running_.load()) {
                 LOG_INFO("HttpServer: accept() failed: %s", strerror(errno));
             }
             continue;
         }
+
+        // Set a receive timeout on the accepted socket so that a slow or
+        // closed client cannot stall the server indefinitely.
+        struct timeval client_tv{0, 500000};  // 500ms read timeout per request
+        setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO,
+                   &client_tv, sizeof(client_tv));
 
         // Handle connection (synchronous, one at a time)
         handleConnection(client_socket);

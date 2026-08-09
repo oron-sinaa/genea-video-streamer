@@ -65,3 +65,27 @@ target_include_directories(test_reconnect_scenario PRIVATE include)
 
 add_test(NAME ReconnectScenarioTests COMMAND test_reconnect_scenario)
 
+# HTTP Server integration tests (Phase 6.6)
+# Links against the full streaming stack to exercise HttpServer + StreamManager
+# without starting RTSP connections (StreamManager constructor creates workers;
+# getStream() works on never-started workers — zero RTSP activity in tests).
+add_executable(test_http_server
+    tests/unit/test_http_server.cpp
+    src/capture/RtspSource.cpp
+    src/util/Config.cpp
+    src/util/PacketClock.cpp
+    src/util/ReconnectPolicy.cpp
+    src/util/PipelineHealth.cpp
+    src/util/StreamWorker.cpp
+    src/util/StreamManager.cpp
+    src/server/HttpServer.cpp
+    src/mux/StreamCopyPlanner.cpp
+    src/mux/HlsMuxer.cpp
+)
+target_include_directories(test_http_server PRIVATE include)
+target_link_libraries(test_http_server PRIVATE
+    PkgConfig::LIBAV
+    PkgConfig::YAML_CPP
+)
+add_test(NAME HttpServerTests COMMAND test_http_server)
+

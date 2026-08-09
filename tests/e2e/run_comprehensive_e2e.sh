@@ -217,6 +217,90 @@ main() {
         fi
     done
 
+    # TEST SUITE 8: Phase 6.5/6.6 — HTTP Server Tests
+    log_info ""
+    log_info "========================================="
+    log_info "TEST SUITE 8: HTTP Server Tests (Phase 6.6)"
+    log_info "========================================="
+
+    if [[ -f "$BUILD_DIR/test_http_server" ]]; then
+        log_info "Running HTTP server tests..."
+        if "$BUILD_DIR/test_http_server" > "$RESULTS_DIR/test_http_server_output.txt" 2>&1; then
+            PASS_COUNT=$(grep -c " PASSED" "$RESULTS_DIR/test_http_server_output.txt" || echo 0)
+            log_pass "HTTP server tests: All $PASS_COUNT tests passed"
+            ((++TOTAL_PASSED))
+        else
+            PASS_COUNT=$(grep -c " PASSED" "$RESULTS_DIR/test_http_server_output.txt" || echo 0)
+            FAIL_COUNT=$(grep -c " FAILED" "$RESULTS_DIR/test_http_server_output.txt" || echo 0)
+            log_fail "HTTP server tests: $PASS_COUNT passed, $FAIL_COUNT failed"
+            tail -20 "$RESULTS_DIR/test_http_server_output.txt"
+            ((++TOTAL_FAILED))
+        fi
+    else
+        log_warn "test_http_server not built — skipping"
+    fi
+
+    # TEST SUITE 9: Phase 6 — File Structure Validation
+    log_info ""
+    log_info "========================================="
+    log_info "TEST SUITE 9: Phase 6 Structure Validation"
+    log_info "========================================="
+
+    PHASE6_FILES=(
+        "include/streamer/HttpServer.h"
+        "include/streamer/StreamWorker.h"
+        "include/streamer/StreamManager.h"
+        "src/server/HttpServer.cpp"
+        "src/util/StreamWorker.cpp"
+        "src/util/StreamManager.cpp"
+        "config/multi-stream-example.yaml"
+        "tests/unit/test_http_server.cpp"
+    )
+
+    for file in "${PHASE6_FILES[@]}"; do
+        if [[ -f "$PROJECT_ROOT/$file" ]]; then
+            log_pass "Phase 6 file: $file"
+            ((++TOTAL_PASSED))
+        else
+            log_fail "Phase 6 file missing: $file"
+            ((++TOTAL_FAILED))
+        fi
+    done
+
+    # TEST SUITE 10: HTTP Server Symbol Verification
+    log_info ""
+    log_info "========================================="
+    log_info "TEST SUITE 10: HTTP Server Binary Symbols"
+    log_info "========================================="
+
+    if [[ -f "$BUILD_DIR/streamer" ]]; then
+        if nm "$BUILD_DIR/streamer" 2>/dev/null | grep -q "HttpServer"; then
+            log_pass "HttpServer symbols present in streamer binary"
+            ((++TOTAL_PASSED))
+        else
+            log_fail "HttpServer symbols NOT found in streamer binary"
+            ((++TOTAL_FAILED))
+        fi
+
+        if nm "$BUILD_DIR/streamer" 2>/dev/null | grep -q "StreamManager"; then
+            log_pass "StreamManager symbols present in streamer binary"
+            ((++TOTAL_PASSED))
+        else
+            log_fail "StreamManager symbols NOT found in streamer binary"
+            ((++TOTAL_FAILED))
+        fi
+
+        if nm "$BUILD_DIR/streamer" 2>/dev/null | grep -q "StreamWorker"; then
+            log_pass "StreamWorker symbols present in streamer binary"
+            ((++TOTAL_PASSED))
+        else
+            log_fail "StreamWorker symbols NOT found in streamer binary"
+            ((++TOTAL_FAILED))
+        fi
+    else
+        log_warn "Streamer binary not found, skipping symbol checks"
+    fi
+
     # SUMMARY
     log_info ""
     log_info "========================================="
