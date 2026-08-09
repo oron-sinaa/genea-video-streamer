@@ -25,6 +25,12 @@ Implement an open-source live video streaming solution using C++ and LibAV that:
 3. Browser compatibility depends on source camera codec and GOP settings.
 4. Recommended camera profile for MVP: H.264 stream with regular keyframes (for stable HLS playback).
 
+## Working Style
+
+1. Keep implementation simple and human-readable.
+2. Do not perform premature optimization.
+3. Build strictly step by step, validating each stage before moving forward.
+
 ## Implementation Chronology (Priority Order)
 
 1. Foundation: CMake project, config model, logging, error handling conventions.
@@ -43,5 +49,6 @@ Detailed design and module breakdown is in [docs/design.md](docs/design.md).
 
 ## Current Status
 
-Planning and architecture complete.
-Code implementation starts with project skeleton and capture/probe module.
+Phase 0 scaffold is in place: CMake target, application entry point, module directories,
+RTSP configuration template, web player placeholder, and scripts. RTSP ingest and HLS
+remux behavior have not been implemented yet.

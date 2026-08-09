@@ -18,6 +18,13 @@ Implementation limitation for this version:
 
 Optional layers (after core delivery): AI inference, object search, and performance optimization.
 
+## 1.1 Engineering Principles
+
+1. Keep the project as simple and human-readable as possible.
+2. Avoid premature optimization at every stage.
+3. Implement and validate one small step at a time.
+4. Favor clear behavior and operability before advanced features.
+
 ## 2. Priority-Ordered Implementation Plan
 
 The work is intentionally sequenced so each phase is runnable and demonstrable.
