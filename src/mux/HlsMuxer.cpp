@@ -57,13 +57,48 @@ bool HlsMuxer::open() {
         return false;
     }
 
+    // Recover segment index from existing segment files in directory.
+    // This allows segment numbering to continue across stream restarts.
+    int maxExistingIndex = -1;
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(outputDir_)) {
+            if (entry.is_regular_file()) {
+                const std::string filename = entry.path().filename().string();
+                // Match pattern: segment_XXXXXX.ts
+                if (filename.find("segment_") == 0 && filename.find(".ts") != std::string::npos) {
+                    try {
+                        // Extract the number portion (segment_XXXXXX.ts)
+                        size_t underscore_pos = filename.find('_');
+                        size_t dot_pos = filename.rfind('.');
+                        if (underscore_pos != std::string::npos && dot_pos != std::string::npos) {
+                            const std::string numStr = filename.substr(underscore_pos + 1, dot_pos - underscore_pos - 1);
+                            int segmentNum = std::stoi(numStr);
+                            maxExistingIndex = std::max(maxExistingIndex, segmentNum - 1);  // Convert to 0-based index
+                        }
+                    } catch (const std::exception&) {
+                        // Ignore parse errors; just continue scanning
+                    }
+                }
+            }
+        }
+    } catch (const std::exception& e) {
+        LOG_WARN("HlsMuxer: failed to scan existing segments: %s", e.what());
+        // Not fatal; just start from 0
+    }
+
+    // Set currentSegmentIndex_ to resume from last segment (or 0 if none exist)
+    currentSegmentIndex_ = maxExistingIndex + 1;
+    if (maxExistingIndex >= 0) {
+        LOG_INFO("HlsMuxer: resuming segment numbering from index %d (last segment was %d)",
+                 currentSegmentIndex_, maxExistingIndex);
+    }
+
     LOG_INFO(
         "HlsMuxer: opened with config: segment_duration=%ds, retention=%dh, output_dir='%s'",
         config_.segment_duration_s,
         config_.archive_retention_hours,
         outputDir_.c_str());
 
-    currentSegmentIndex_ = 0;
     lastPacketPts_ = AV_NOPTS_VALUE;
     lastCleanupTime_ = std::time(nullptr);
     opened_ = true;
@@ -415,11 +450,11 @@ std::string HlsMuxer::generatePlaylistContent(
         m3u8 << seg.filename << "\n";
     }
 
-    // For VOD playlists (archive), include ENDLIST to signal end.
+    // NOTE: NEVER add ENDLIST to archive playlists.
+    // Archive is a continuously growing rolling window, not a final VOD.
+    // ENDLIST should only be added when the stream is truly stopping permanently,
+    // which is handled separately (not in the normal playlist generation).
     // For live playlists, omit ENDLIST so players know more segments may arrive.
-    if (!isLive && !segments.empty()) {
-        m3u8 << "#EXT-X-ENDLIST\n";
-    }
 
     return m3u8.str();
 }
