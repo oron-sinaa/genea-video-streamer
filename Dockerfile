@@ -49,5 +49,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/api/health || exit 1
 
 # Run streamer with config from mounted volume
-ENTRYPOINT ["/app/streamer"]
-CMD ["--config", "/etc/streamer/config.yaml"]
+CMD ["sleep", "infinity"]
+# ENTRYPOINT ["/app/streamer"]
+# CMD ["--config", "/etc/streamer/config.yaml"]

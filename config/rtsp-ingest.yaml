@@ -12,7 +12,7 @@ rtsp:
   # Examples:
   #   rtsp://camera.local:554/stream
   #   rtsp://user:password@192.168.1.100:554/stream1
-  url: "rtsp://127.0.0.1:8554/stream"
+  url: "rtsp://9627b0bf2a7b.entrypoint.cloud.wowza.com:1935/app-p5260J38/66abe4b9_stream1"
   # Transport protocol: "tcp" (recommended, reliable across NAT) or "udp"
   transport: "tcp"
   # Connection/read timeout in microseconds (5000000 = 5 seconds)

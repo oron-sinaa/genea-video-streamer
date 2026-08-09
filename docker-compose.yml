@@ -8,22 +8,16 @@ services:
     container_name: genea-video-streamer
     restart: unless-stopped
     
-    # Volume mounts for config and output
     volumes:
-      # Config file (read-only) - mount your config.yaml or multi-stream-example.yaml here
-      - ./config/rtsp-ingest.yaml:/etc/streamer/config.yaml:ro
-      # Output HLS segments directory (writable) - Phase 6 multi-stream structure
+      - ./config:/etc/streamer:ro
       - ./hls_output:/data/hls_output
     
-    # Port mapping for embedded HTTP server (Phase 6)
     ports:
       - "8080:8080"  # HTTP server: web player, REST API, HLS streaming
     
-    # Network settings
     networks:
       - streamer-network
     
-    # Resource limits
     deploy:
       resources:
         limits:
@@ -33,23 +27,18 @@ services:
           cpus: '1'
           memory: 256M
     
-    # Logging
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     
-    # Health check using HTTP API (Phase 6)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    
-    # Wait for network dependencies if needed
-    depends_on: []
 
 networks:
   streamer-network:

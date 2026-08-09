@@ -1,5 +1,6 @@
 build/
 segments/
+hls_output/
 test_video.mp4
 *.swp
 *.swo
