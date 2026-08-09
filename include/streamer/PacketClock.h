@@ -52,8 +52,9 @@ private:
     int64_t lastPts_ = AV_NOPTS_VALUE;
     int64_t lastDts_ = AV_NOPTS_VALUE;
 
-    int ptsJitterCount_ = 0;  // number of backward PTS detections (for stats)
-    int dtsJitterCount_ = 0;  // number of backward DTS detections (for stats)
+    int ptsJitterCount_ = 0;   // number of backward PTS detections (for stats)
+    int dtsJitterCount_ = 0;   // number of backward DTS detections (for stats)
+    int syntheticPtsCount_ = 0; // number of synthetic PTS generations (for logging)
 };
 
 }  // namespace streamer

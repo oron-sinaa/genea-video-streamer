@@ -22,48 +22,65 @@ void PacketClock::normalizePacket(AVPacket* packet) {
         return;
     }
 
-    // Rescale PTS from source time base to output time base.
-    // av_rescale_q handles AV_NOPTS_VALUE gracefully (returns AV_NOPTS_VALUE).
+    const AVRational sourceTimeBase{sourceTimeBaseNum_, sourceTimeBaseDen_};
+    const AVRational outTimeBase{1, outputTimeBase_};
+
+    // Handle PTS: rescale if present, generate synthetic if missing.
     if (packet->pts != AV_NOPTS_VALUE) {
-        const AVRational sourceTimeBase{sourceTimeBaseNum_, sourceTimeBaseDen_};
-        const AVRational outTimeBase{1, outputTimeBase_};
+        // Rescale existing PTS from source time base to output time base.
         packet->pts = av_rescale_q(packet->pts, sourceTimeBase, outTimeBase);
-
-        // Enforce monotonic PTS: clamp to at least lastPts_ + 1 to preserve order.
-        if (lastPts_ != AV_NOPTS_VALUE && packet->pts <= lastPts_) {
-            ++ptsJitterCount_;
-            if (ptsJitterCount_ <= 10) {  // Log first 10 jitters to avoid spam.
-                LOG_WARN(
-                    "PacketClock: PTS jitter detected: %lld <= %lld (count=%d)",
-                    static_cast<long long>(packet->pts),
-                    static_cast<long long>(lastPts_),
-                    ptsJitterCount_);
-            }
-            packet->pts = lastPts_ + 1;
+    } else {
+        // Generate synthetic PTS if missing.
+        // Assume ~30 fps by default: each packet = 3000 units (at 90kHz time base).
+        const int64_t DEFAULT_FRAME_DURATION = 3000;  // 30 fps at 90kHz
+        if (lastPts_ == AV_NOPTS_VALUE) {
+            packet->pts = 0;
+        } else {
+            packet->pts = lastPts_ + DEFAULT_FRAME_DURATION;
         }
-        lastPts_ = packet->pts;
+        if (syntheticPtsCount_ <= 5) {
+            LOG_INFO("PacketClock: Generated synthetic PTS=%lld (count=%d)", 
+                    static_cast<long long>(packet->pts), syntheticPtsCount_);
+            ++syntheticPtsCount_;
+        }
     }
 
-    // Rescale DTS from source time base to output time base.
+    // Enforce monotonic PTS: clamp to at least lastPts_ + 1 to preserve order.
+    if (lastPts_ != AV_NOPTS_VALUE && packet->pts <= lastPts_) {
+        ++ptsJitterCount_;
+        if (ptsJitterCount_ <= 10) {  // Log first 10 jitters to avoid spam.
+            LOG_WARN(
+                "PacketClock: PTS jitter detected: %lld <= %lld (count=%d)",
+                static_cast<long long>(packet->pts),
+                static_cast<long long>(lastPts_),
+                ptsJitterCount_);
+        }
+        packet->pts = lastPts_ + 1;
+    }
+    lastPts_ = packet->pts;
+
+    // Handle DTS: rescale if present, generate synthetic if missing.
     if (packet->dts != AV_NOPTS_VALUE) {
-        const AVRational sourceTimeBase{sourceTimeBaseNum_, sourceTimeBaseDen_};
-        const AVRational outTimeBase{1, outputTimeBase_};
+        // Rescale existing DTS from source time base to output time base.
         packet->dts = av_rescale_q(packet->dts, sourceTimeBase, outTimeBase);
-
-        // Enforce monotonic DTS: clamp to at least lastDts_ + 1 to preserve order.
-        if (lastDts_ != AV_NOPTS_VALUE && packet->dts <= lastDts_) {
-            ++dtsJitterCount_;
-            if (dtsJitterCount_ <= 10) {  // Log first 10 jitters to avoid spam.
-                LOG_WARN(
-                    "PacketClock: DTS jitter detected: %lld <= %lld (count=%d)",
-                    static_cast<long long>(packet->dts),
-                    static_cast<long long>(lastDts_),
-                    dtsJitterCount_);
-            }
-            packet->dts = lastDts_ + 1;
-        }
-        lastDts_ = packet->dts;
+    } else {
+        // Generate synthetic DTS if missing (typically same or slightly before PTS).
+        packet->dts = packet->pts;
     }
+
+    // Enforce monotonic DTS: clamp to at least lastDts_ + 1 to preserve order.
+    if (lastDts_ != AV_NOPTS_VALUE && packet->dts <= lastDts_) {
+        ++dtsJitterCount_;
+        if (dtsJitterCount_ <= 10) {  // Log first 10 jitters to avoid spam.
+            LOG_WARN(
+                "PacketClock: DTS jitter detected: %lld <= %lld (count=%d)",
+                static_cast<long long>(packet->dts),
+                static_cast<long long>(lastDts_),
+                dtsJitterCount_);
+        }
+        packet->dts = lastDts_ + 1;
+    }
+    lastDts_ = packet->dts;
 }
 
 }  // namespace streamer
