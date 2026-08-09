@@ -10,7 +10,21 @@ StreamManager::StreamManager(const AppConfig& config) : config_(config), lastErr
 }
 
 StreamManager::~StreamManager() {
-    stop();
+    // Only stop if not already stopped
+    // Note: stop() is idempotent and checks if workers are still active
+    if (!workers_.empty()) {
+        // Check if any worker is still in a running state
+        bool anyRunning = false;
+        for (const auto& worker : workers_) {
+            if (worker && worker->isActive()) {
+                anyRunning = true;
+                break;
+            }
+        }
+        if (anyRunning) {
+            stop();
+        }
+    }
     workers_.clear();
 }
 
@@ -66,16 +80,27 @@ int StreamManager::start() {
 }
 
 void StreamManager::stop() {
-    LOG_INFO("StreamManager stopping all %zu stream(s)...", workers_.size());
-
-    for (auto& worker : workers_) {
-        if (worker) {
-            LOG_INFO("StreamManager stopping stream '%s'", worker->getName().c_str());
-            worker->stop();
+    // Count active streams before stopping
+    int activeCount = 0;
+    for (const auto& worker : workers_) {
+        if (worker && worker->isActive()) {
+            ++activeCount;
         }
     }
 
-    LOG_INFO("StreamManager all streams stopped");
+    // Only log and stop if there are active streams
+    if (activeCount > 0) {
+        LOG_INFO("StreamManager stopping all %d active stream(s) (out of %zu total)...", activeCount, workers_.size());
+
+        for (auto& worker : workers_) {
+            if (worker && worker->isActive()) {
+                LOG_INFO("StreamManager stopping stream '%s'", worker->getName().c_str());
+                worker->stop();
+            }
+        }
+
+        LOG_INFO("StreamManager all streams stopped");
+    }
 }
 
 StreamWorker* StreamManager::getStream(const std::string& name) {

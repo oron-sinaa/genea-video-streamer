@@ -486,10 +486,55 @@ std::string HttpServer::handleGetStreamStatus(const std::string& stream_name) {
 }
 
 std::string HttpServer::handleGetIndex() {
-    std::string content = readFileContent("web/player.html");
+    // Try multiple possible paths for player.html
+    std::string content;
+    std::vector<std::string> possiblePaths = {
+        "web/player.html",      // From project root
+        "/app/web/player.html",  // Docker container
+        "./web/player.html",     // Current directory
+    };
+
+    for (const auto& path : possiblePaths) {
+        content = readFileContent(path);
+        if (!content.empty()) {
+            break;  // Found it
+        }
+    }
+
     if (content.empty()) {
-        // Return a simple HTML page if player.html not found
-        content = "<html><body><h1>Genea Video Streamer</h1><p>Player not available</p></body></html>";
+        // Return a simple fallback HTML page if player.html not found
+        content = R"(
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Genea Video Streamer</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; max-width: 600px; }
+        h1 { color: #667eea; margin-bottom: 10px; }
+        p { color: #666; font-size: 16px; margin: 10px 0; }
+        .error { background: #fee; border: 1px solid #fcc; color: #c33; padding: 15px; border-radius: 4px; margin-top: 20px; font-size: 14px; }
+        .links { margin-top: 20px; }
+        a { color: #667eea; text-decoration: none; margin: 10px; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Genea Live Video Streamer</h1>
+        <p>Web player interface</p>
+        <div class="error">
+            <p>⚠️ Player HTML file not found. The player.html file should be located in the <code>web/</code> directory.</p>
+            <p>However, the streaming backend is working! You can check the API:</p>
+        </div>
+        <div class="links">
+            <p><a href="/api/health">/api/health</a> - System health</p>
+            <p><a href="/api/streams">/api/streams</a> - Available streams</p>
+        </div>
+    </div>
+</body>
+</html>
+        )";
     }
 
     std::string header = generateHttpHeader(200, "text/html", content.size(), config_.enable_cors);
