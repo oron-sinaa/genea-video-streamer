@@ -24,6 +24,10 @@ public:
     // Index of the selected video stream, or -1 if not open.
     int videoStreamIndex() const { return videoStreamIndex_; }
 
+    // Returns the AVStream* for the selected video stream, or nullptr if not open
+    // or no video stream found. Caller must not retain the pointer past close().
+    AVStream* videoStream() const;
+
     // Logs codec, resolution, fps, and time base for the selected video stream.
     // No-op if the source is not open.
     void logStreamInfo() const;

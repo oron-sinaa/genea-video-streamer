@@ -20,6 +20,7 @@ add_executable(streamer
     src/main.cpp
     src/capture/RtspSource.cpp
     src/util/Config.cpp
+    src/util/PacketClock.cpp
 )
 
 target_include_directories(streamer PRIVATE include)

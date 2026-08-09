@@ -128,6 +128,13 @@ bool RtspSource::isOpen() const {
     return formatContext_ != nullptr;
 }
 
+AVStream* RtspSource::videoStream() const {
+    if (!isOpen() || videoStreamIndex_ < 0) {
+        return nullptr;
+    }
+    return formatContext_->streams[videoStreamIndex_];
+}
+
 void RtspSource::logStreamInfo() const {
     if (!isOpen() || videoStreamIndex_ < 0) {
         return;

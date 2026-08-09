@@ -1,5 +1,6 @@
 #include "streamer/Config.h"
 #include "streamer/Logger.h"
+#include "streamer/PacketClock.h"
 #include "streamer/RtspSource.h"
 
 extern "C" {
@@ -46,6 +47,18 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    // Initialize packet clock for timestamp normalization.
+    // Output time base is 90000 (standard for HLS/MPEG-TS).
+    AVStream* videoStream = source.videoStream();
+    if (videoStream == nullptr) {
+        LOG_ERROR("Failed to get video stream for clock initialization");
+        source.close();
+        avformat_network_deinit();
+        return EXIT_FAILURE;
+    }
+    streamer::PacketClock clock(videoStream, 90000);
+    LOG_INFO("Packet clock initialized for timestamp normalization (output_tb=90000)");
+
     AVPacket* packet = av_packet_alloc();
     if (packet == nullptr) {
         LOG_ERROR("Failed to allocate AVPacket");
@@ -67,6 +80,9 @@ int main(int argc, char** argv) {
         }
 
         if (packet->stream_index == source.videoStreamIndex()) {
+            // Normalize packet timestamps to output time base (90000).
+            clock.normalizePacket(packet);
+
             ++videoPacketCount;
             if (videoPacketCount % logInterval == 0) {
                 LOG_INFO(
