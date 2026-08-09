@@ -8,7 +8,7 @@ streams:
   - name: "camera-1"
     rtsp_url: "rtsp://9627b0bf2a7b.entrypoint.cloud.wowza.com:1935/app-p5260J38/66abe4b9_stream1"
     # Per-stream HLS output directory (optional; defaults to "segments/camera-1/")
-    hls_output: "hls_output/camera-1/"
+    hls_output: "/data/hls_output/camera-1/"
     transport: "tcp"
     # Per-stream reconnect policy (optional; uses defaults if not specified)
     reconnect:
@@ -20,7 +20,7 @@ streams:
 
   - name: "camera-2"
     rtsp_url: "rtsp://9627b0bf2a7b.entrypoint.cloud.wowza.com:1935/app-p5260J38/66abe4b9_stream1"
-    hls_output: "hls_output/camera-2/"
+    hls_output: "/data/hls_output/camera-2/"
     transport: "tcp"
     reconnect:
       enabled: true
