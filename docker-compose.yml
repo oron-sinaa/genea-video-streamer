@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   streamer:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: genea-video-streamer:latest
     container_name: genea-video-streamer
     restart: unless-stopped
     
