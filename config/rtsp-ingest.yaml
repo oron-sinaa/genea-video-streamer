@@ -6,10 +6,22 @@
 #                   "tcp" (recommended, more reliable across NAT/firewalls) or "udp".
 # rtsp.timeout_us:  Connection/read timeout in microseconds before the source is
 #                   considered unresponsive.
+# rtsp.reconnect:   Reconnection policy on network outage (automatic recovery).
 rtsp:
   url: "rtsp://127.0.0.1:8554/stream1"
   transport: "tcp"
   timeout_us: 5000000
+  reconnect:
+    # Enable automatic reconnection on network errors.
+    enabled: true
+    # Initial backoff delay in milliseconds (e.g., 1000 = 1 second).
+    initial_delay_ms: 1000
+    # Maximum backoff delay in milliseconds (e.g., 30000 = 30 seconds).
+    max_delay_ms: 30000
+    # Jitter variance in percentage (e.g., 15 = ±15%).
+    jitter_percent: 15
+    # Detect stale source (no packets) and trigger reconnect after this many seconds.
+    stale_timeout_s: 10
 
 hls:
   # Output directory for segments and playlists (created if missing).
@@ -21,3 +33,6 @@ hls:
   archive_retention_hours: 2
   # How often to scan and delete old segments beyond retention.
   cleanup_interval_s: 300
+  # Write #EXT-X-DISCONTINUITY markers to playlists after reconnects.
+  enable_discontinuity_markers: true
+

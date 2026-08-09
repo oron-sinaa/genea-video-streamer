@@ -42,6 +42,33 @@ AppConfig loadConfig(const std::string& path) {
             "Config file '" + path + "' has invalid 'rtsp.timeout_us' value (must be positive)");
     }
 
+    // Parse reconnection policy config (optional section; defaults already in struct).
+    if (rtspNode["reconnect"]) {
+        const YAML::Node reconnectNode = rtspNode["reconnect"];
+        config.rtsp.reconnect_enabled = reconnectNode["enabled"].as<bool>(true);
+        config.rtsp.reconnect_initial_delay_ms = reconnectNode["initial_delay_ms"].as<uint32_t>(1000);
+        config.rtsp.reconnect_max_delay_ms = reconnectNode["max_delay_ms"].as<uint32_t>(30000);
+        config.rtsp.reconnect_jitter_percent = reconnectNode["jitter_percent"].as<uint32_t>(15);
+        config.rtsp.stale_timeout_s = reconnectNode["stale_timeout_s"].as<uint32_t>(10);
+
+        if (config.rtsp.reconnect_initial_delay_ms <= 0) {
+            throw std::runtime_error(
+                "Config file '" + path + "' has invalid 'rtsp.reconnect.initial_delay_ms' value (must be positive)");
+        }
+        if (config.rtsp.reconnect_max_delay_ms < config.rtsp.reconnect_initial_delay_ms) {
+            throw std::runtime_error(
+                "Config file '" + path + "' has invalid 'rtsp.reconnect.max_delay_ms' (must be >= initial_delay_ms)");
+        }
+        if (config.rtsp.reconnect_jitter_percent > 100) {
+            throw std::runtime_error(
+                "Config file '" + path + "' has invalid 'rtsp.reconnect.jitter_percent' value (must be <= 100)");
+        }
+        if (config.rtsp.stale_timeout_s <= 0) {
+            throw std::runtime_error(
+                "Config file '" + path + "' has invalid 'rtsp.reconnect.stale_timeout_s' value (must be positive)");
+        }
+    }
+
     // Parse HLS config (optional section; defaults are already set in struct).
     if (root["hls"]) {
         const YAML::Node hlsNode = root["hls"];
@@ -49,6 +76,7 @@ AppConfig loadConfig(const std::string& path) {
         config.hls.segment_duration_s = hlsNode["segment_duration_s"].as<int>(config.hls.segment_duration_s);
         config.hls.archive_retention_hours = hlsNode["archive_retention_hours"].as<int>(config.hls.archive_retention_hours);
         config.hls.cleanup_interval_s = hlsNode["cleanup_interval_s"].as<int>(config.hls.cleanup_interval_s);
+        config.hls.enable_discontinuity_markers = hlsNode["enable_discontinuity_markers"].as<bool>(true);
 
         if (config.hls.segment_duration_s <= 0) {
             throw std::runtime_error(

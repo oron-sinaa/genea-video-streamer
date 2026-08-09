@@ -21,6 +21,8 @@ add_executable(streamer
     src/capture/RtspSource.cpp
     src/util/Config.cpp
     src/util/PacketClock.cpp
+    src/util/ReconnectPolicy.cpp
+    src/util/PipelineHealth.cpp
     src/mux/StreamCopyPlanner.cpp
     src/mux/HlsMuxer.cpp
 )
@@ -31,3 +33,24 @@ target_link_libraries(streamer PRIVATE
     PkgConfig::LIBAV
     PkgConfig::YAML_CPP
 )
+
+# Unit tests
+enable_testing()
+
+# ReconnectPolicy tests
+add_executable(test_reconnect_policy
+    tests/unit/test_reconnect_policy.cpp
+    src/util/ReconnectPolicy.cpp
+)
+target_include_directories(test_reconnect_policy PRIVATE include)
+
+# PipelineHealth tests
+add_executable(test_pipeline_health
+    tests/unit/test_pipeline_health.cpp
+    src/util/PipelineHealth.cpp
+)
+target_include_directories(test_pipeline_health PRIVATE include)
+
+add_test(NAME ReconnectPolicyTests COMMAND test_reconnect_policy)
+add_test(NAME PipelineHealthTests COMMAND test_pipeline_health)
+

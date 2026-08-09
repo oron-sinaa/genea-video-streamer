@@ -19,6 +19,7 @@ struct SegmentInfo {
     int64_t endPts = 0;      // PTS of last packet (in output time base)
     double duration = 0.0;   // calculated duration in seconds
     std::time_t createdAt = 0;
+    bool has_discontinuity_before = false;  // if true, #EXT-X-DISCONTINUITY should appear before this segment
 };
 
 // Muxes compressed packets into HLS-compatible MPEG-TS segments.
@@ -62,6 +63,11 @@ public:
     // Returns the number of segments created.
     int segmentCount() const { return static_cast<int>(segments_.size()); }
 
+    // Writes #EXT-X-DISCONTINUITY marker to both live.m3u8 and archive.m3u8.
+    // Call after a reconnect to signal timestamp discontinuity to players.
+    // Does nothing if discontinuity already written for current segment (once per segment).
+    void writeDiscontinuity();
+
 private:
     // Creates a new segment file and initializes muxing context for it.
     // Called when current segment would exceed duration limit.
@@ -101,6 +107,7 @@ private:
     int64_t currentSegmentStartPts_ = 0;
     int64_t lastPacketPts_ = 0;
     std::string currentSegmentFilename_;
+    bool discontinuity_written_for_segment_ = false;  // flag to avoid duplicate markers
 
     // All segments created so far.
     std::vector<SegmentInfo> segments_;

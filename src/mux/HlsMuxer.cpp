@@ -226,6 +226,7 @@ bool HlsMuxer::closeCurrentSegment() {
     info.startPts = currentSegmentStartPts_;
     info.endPts = lastPacketPts_;
     info.createdAt = std::time(nullptr);
+    info.has_discontinuity_before = discontinuity_written_for_segment_;
 
     // Calculate duration: (endPts - startPts) / outputTimeBase in seconds.
     if (info.endPts != AV_NOPTS_VALUE && info.startPts != AV_NOPTS_VALUE) {
@@ -236,6 +237,7 @@ bool HlsMuxer::closeCurrentSegment() {
     }
 
     segments_.push_back(info);
+    discontinuity_written_for_segment_ = false;  // Reset flag for next segment
     LOG_INFO("HlsMuxer: closed segment %d: duration=%.2fs, packets_total=%ld", 
              currentSegmentIndex_ + 1, info.duration, packetCount_);
 
@@ -355,6 +357,9 @@ std::string HlsMuxer::generatePlaylistContent(
 
     // Write segment entries.
     for (const auto& seg : segments) {
+        if (seg.has_discontinuity_before) {
+            m3u8 << "#EXT-X-DISCONTINUITY\n";
+        }
         m3u8 << "#EXTINF:" << std::fixed << std::setprecision(1) << seg.duration << ",\n";
         m3u8 << seg.filename << "\n";
     }
@@ -366,6 +371,25 @@ std::string HlsMuxer::generatePlaylistContent(
     }
 
     return m3u8.str();
+}
+
+void HlsMuxer::writeDiscontinuity() {
+    // Mark the next segment (if one exists) as having a discontinuity before it.
+    // If no segments exist yet, mark the next one we create.
+    if (!segments_.empty()) {
+        segments_.back().has_discontinuity_before = true;
+        LOG_INFO("HlsMuxer: discontinuity marker written after segment %d", currentSegmentIndex_);
+    } else {
+        // No segments yet; set flag so next segment gets marked
+        discontinuity_written_for_segment_ = true;
+        LOG_INFO("HlsMuxer: discontinuity marker flagged for next segment");
+    }
+    
+    // Update playlists to reflect the discontinuity marker
+    if (opened_) {
+        updateLivePlaylist();
+        updateArchivePlaylist();
+    }
 }
 
 }  // namespace streamer

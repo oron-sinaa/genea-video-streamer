@@ -1,6 +1,7 @@
 #include "streamer/RtspSource.h"
 
 #include "streamer/Logger.h"
+#include "streamer/PipelineHealth.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -9,6 +10,7 @@ extern "C" {
 }
 
 #include <utility>
+#include <thread>
 
 namespace streamer {
 
@@ -22,7 +24,13 @@ std::string avErrorToString(int errnum) {
 
 }  // namespace
 
-RtspSource::RtspSource(RtspConfig config) : config_(std::move(config)) {}
+RtspSource::RtspSource(RtspConfig config, PipelineHealth* health)
+    : config_(std::move(config)),
+      health_(health),
+      reconnect_policy_(config_.reconnect_initial_delay_ms,
+                        config_.reconnect_max_delay_ms,
+                        config_.reconnect_jitter_percent),
+      last_packet_time_(std::chrono::steady_clock::now()) {}
 
 RtspSource::~RtspSource() {
     close();
@@ -31,6 +39,21 @@ RtspSource::~RtspSource() {
 bool RtspSource::open() {
     if (formatContext_ != nullptr) {
         LOG_WARN("RtspSource::open() called while already open; ignoring");
+        return true;
+    }
+
+    if (!openConnection()) {
+        LOG_ERROR("RtspSource: failed to open RTSP connection on initial attempt");
+        return false;
+    }
+
+    last_packet_time_ = std::chrono::steady_clock::now();
+    return true;
+}
+
+bool RtspSource::openConnection() {
+    if (formatContext_ != nullptr) {
+        LOG_WARN("RtspSource::openConnection() called while already connected; ignoring");
         return true;
     }
 
@@ -73,14 +96,14 @@ bool RtspSource::open() {
             "RtspSource: failed to read stream info from '%s': %s",
             config_.url.c_str(),
             avErrorToString(probeRet).c_str());
-        close();
+        closeConnection();
         return false;
     }
 
     videoStreamIndex_ = av_find_best_stream(formatContext_, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (videoStreamIndex_ < 0) {
         LOG_ERROR("RtspSource: no video stream found in '%s'", config_.url.c_str());
-        close();
+        closeConnection();
         return false;
     }
 
@@ -93,35 +116,100 @@ bool RtspSource::open() {
     return true;
 }
 
-bool RtspSource::readPacket(AVPacket* packet) {
-    if (!isOpen()) {
-        LOG_ERROR("RtspSource::readPacket() called before open() or after close()");
-        return false;
-    }
-    if (packet == nullptr) {
-        LOG_ERROR("RtspSource::readPacket() called with null packet");
-        return false;
-    }
-
-    const int ret = av_read_frame(formatContext_, packet);
-    if (ret == AVERROR_EOF) {
-        LOG_INFO("RtspSource: end of stream reached");
-        return false;
-    }
-    if (ret < 0) {
-        LOG_ERROR("RtspSource: error reading packet: %s", avErrorToString(ret).c_str());
-        return false;
-    }
-
-    return true;
-}
-
-void RtspSource::close() {
+void RtspSource::closeConnection() {
     if (formatContext_ != nullptr) {
         avformat_close_input(&formatContext_);
         formatContext_ = nullptr;
     }
     videoStreamIndex_ = -1;
+}
+
+bool RtspSource::readPacket(AVPacket* packet) {
+    if (packet == nullptr) {
+        LOG_ERROR("RtspSource::readPacket() called with null packet");
+        return false;
+    }
+
+    // Reconnect loop: try to read packet, reconnect on error if enabled
+    while (!shutdown_requested_) {
+        // Check if source is stale (no packets for configured timeout)
+        if (isStale() && config_.reconnect_enabled) {
+            LOG_WARN("RtspSource: no packets for %u seconds, triggering reconnect", config_.stale_timeout_s);
+            closeConnection();
+            if (health_) health_->recordReconnect();
+        }
+
+        // If not open, attempt to open or reconnect
+        if (!isOpen()) {
+            if (!config_.reconnect_enabled) {
+                LOG_ERROR("RtspSource: connection closed and reconnect disabled");
+                return false;
+            }
+
+            if (reconnect_policy_.shouldRetry()) {
+                LOG_INFO("RtspSource: attempting reconnect (delay %u ms)",
+                         reconnect_policy_.getNextDelayMs());
+
+                if (openConnection()) {
+                    reconnect_policy_.reset();
+                    LOG_INFO("RtspSource: reconnection successful");
+                } else {
+                    reconnect_policy_.recordAttempt();
+                    // Sleep before next attempt to avoid busy-wait
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    continue;
+                }
+            } else {
+                // Not yet time to retry; sleep and check again
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+        }
+
+        // Try to read packet
+        const int ret = av_read_frame(formatContext_, packet);
+        
+        if (ret == AVERROR_EOF) {
+            LOG_INFO("RtspSource: end of stream reached");
+            if (!config_.reconnect_enabled) {
+                return false;
+            }
+            closeConnection();
+            if (health_) health_->recordReconnect();
+            continue;
+        }
+        
+        if (ret < 0) {
+            LOG_WARN("RtspSource: error reading packet: %s (will reconnect if enabled)", avErrorToString(ret).c_str());
+            if (!config_.reconnect_enabled) {
+                LOG_ERROR("RtspSource: packet read error and reconnect disabled");
+                return false;
+            }
+            closeConnection();
+            if (health_) health_->recordReconnect();
+            continue;
+        }
+
+        // Packet successfully read
+        last_packet_time_ = std::chrono::steady_clock::now();
+        if (health_) health_->recordPacketRead();
+        return true;
+    }
+
+    // Shutdown was requested
+    LOG_INFO("RtspSource: shutdown requested, stopping read loop");
+    return false;
+}
+
+bool RtspSource::isStale() const {
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_packet_time_).count();
+    return elapsed > config_.stale_timeout_s;
+}
+
+void RtspSource::close() {
+    shutdown_requested_ = true;
+    closeConnection();
 }
 
 bool RtspSource::isOpen() const {
