@@ -10,3 +10,14 @@ rtsp:
   url: "rtsp://127.0.0.1:8554/stream1"
   transport: "tcp"
   timeout_us: 5000000
+
+hls:
+  # Output directory for segments and playlists (created if missing).
+  output_dir: "segments"
+  # Duration of each segment in seconds. Lower = more granular live window,
+  # higher = fewer files but higher latency. Typical range: 2-10s.
+  segment_duration_s: 3
+  # How far back in time to retain archived segments for playback (VOD).
+  archive_retention_hours: 2
+  # How often to scan and delete old segments beyond retention.
+  cleanup_interval_s: 300

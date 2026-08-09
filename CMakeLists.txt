@@ -21,6 +21,8 @@ add_executable(streamer
     src/capture/RtspSource.cpp
     src/util/Config.cpp
     src/util/PacketClock.cpp
+    src/mux/StreamCopyPlanner.cpp
+    src/mux/HlsMuxer.cpp
 )
 
 target_include_directories(streamer PRIVATE include)

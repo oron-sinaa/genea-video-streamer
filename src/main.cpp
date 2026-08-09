@@ -1,7 +1,9 @@
 #include "streamer/Config.h"
+#include "streamer/HlsMuxer.h"
 #include "streamer/Logger.h"
 #include "streamer/PacketClock.h"
 #include "streamer/RtspSource.h"
+#include "streamer/StreamCopyPlanner.h"
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -59,9 +61,29 @@ int main(int argc, char** argv) {
     streamer::PacketClock clock(videoStream, 90000);
     LOG_INFO("Packet clock initialized for timestamp normalization (output_tb=90000)");
 
+    // Validate source stream compatibility with MPEG-TS codec copy.
+    const streamer::StreamCopyResult copyResult = streamer::StreamCopyPlanner::canCopyToMpegTs(videoStream);
+    if (!copyResult.canCopy) {
+        LOG_ERROR("Source stream is not compatible with MPEG-TS codec copy: %s", copyResult.reason.c_str());
+        source.close();
+        avformat_network_deinit();
+        return EXIT_FAILURE;
+    }
+    LOG_INFO("Source stream validated for MPEG-TS codec copy");
+
+    // Initialize HLS muxer.
+    streamer::HlsMuxer muxer(config.hls);
+    if (!muxer.open()) {
+        LOG_ERROR("Failed to initialize HLS muxer; exiting");
+        source.close();
+        avformat_network_deinit();
+        return EXIT_FAILURE;
+    }
+
     AVPacket* packet = av_packet_alloc();
     if (packet == nullptr) {
         LOG_ERROR("Failed to allocate AVPacket");
+        muxer.close();
         source.close();
         avformat_network_deinit();
         return EXIT_FAILURE;
@@ -83,14 +105,21 @@ int main(int argc, char** argv) {
             // Normalize packet timestamps to output time base (90000).
             clock.normalizePacket(packet);
 
+            // Write packet to HLS muxer (codec copy to .ts segments).
+            if (!muxer.writePacket(packet, videoStream)) {
+                LOG_ERROR("Muxer failed to write packet; stopping");
+                break;
+            }
+
             ++videoPacketCount;
             if (videoPacketCount % logInterval == 0) {
                 LOG_INFO(
-                    "Read %ld video packets so far (last pts=%lld, dts=%lld, size=%d bytes)",
+                    "Read %ld video packets so far (last pts=%lld, dts=%lld, size=%d bytes, segments=%d)",
                     videoPacketCount,
                     static_cast<long long>(packet->pts),
                     static_cast<long long>(packet->dts),
-                    packet->size);
+                    packet->size,
+                    muxer.segmentCount());
             }
         } else {
             ++otherPacketCount;
@@ -105,6 +134,7 @@ int main(int argc, char** argv) {
         otherPacketCount);
 
     av_packet_free(&packet);
+    muxer.close();
     source.close();
     avformat_network_deinit();
 

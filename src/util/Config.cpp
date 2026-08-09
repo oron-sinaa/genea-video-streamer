@@ -42,6 +42,28 @@ AppConfig loadConfig(const std::string& path) {
             "Config file '" + path + "' has invalid 'rtsp.timeout_us' value (must be positive)");
     }
 
+    // Parse HLS config (optional section; defaults are already set in struct).
+    if (root["hls"]) {
+        const YAML::Node hlsNode = root["hls"];
+        config.hls.output_dir = hlsNode["output_dir"].as<std::string>(config.hls.output_dir);
+        config.hls.segment_duration_s = hlsNode["segment_duration_s"].as<int>(config.hls.segment_duration_s);
+        config.hls.archive_retention_hours = hlsNode["archive_retention_hours"].as<int>(config.hls.archive_retention_hours);
+        config.hls.cleanup_interval_s = hlsNode["cleanup_interval_s"].as<int>(config.hls.cleanup_interval_s);
+
+        if (config.hls.segment_duration_s <= 0) {
+            throw std::runtime_error(
+                "Config file '" + path + "' has invalid 'hls.segment_duration_s' value (must be positive)");
+        }
+        if (config.hls.archive_retention_hours <= 0) {
+            throw std::runtime_error(
+                "Config file '" + path + "' has invalid 'hls.archive_retention_hours' value (must be positive)");
+        }
+        if (config.hls.cleanup_interval_s <= 0) {
+            throw std::runtime_error(
+                "Config file '" + path + "' has invalid 'hls.cleanup_interval_s' value (must be positive)");
+        }
+    }
+
     return config;
 }
 
