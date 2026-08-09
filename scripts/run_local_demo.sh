@@ -1,22 +1,22 @@
 #!/bin/bash
 #
-# run_local_demo.sh - Complete end-to-end demo: generate test video, stream, and open player.
+# run_local_demo.sh - Local demo: generate test video, start RTSP server, and run streamer.
 #
 # Usage:
 #   ./scripts/run_local_demo.sh
 #
 # This script:
 #   1. Generates a test video (if not present)
-#   2. Starts an RTSP server to stream the test video
-#   3. Starts the genea-video-streamer binary
-#   4. Starts the HTTP server for the web player
-#   5. Opens the player in the default browser
+#   2. Builds the streamer binary (if needed)
+#   3. Starts an RTSP server to stream the test video
+#   4. Starts the genea-video-streamer binary with embedded HTTP server
+#   5. Opens the web player in browser
 #   6. On Ctrl+C, cleans up all processes
 #
 # Requirements:
 #   - ffmpeg (for generating test video and RTSP server)
-#   - Python 3 (for HTTP server)
-#   - xdg-open or similar (for opening browser; macOS uses 'open')
+#   - CMake 3.16+ and C++17 compiler (for building)
+#   - xdg-open or 'open' (for opening browser; optional)
 
 set -e
 
@@ -48,7 +48,6 @@ cleanup() {
     
     # Force kill if necessary
     pkill -f "ffmpeg.*rtsp" 2>/dev/null || true
-    pkill -f "python3.*http.server" 2>/dev/null || true
     pkill -f "streamer" 2>/dev/null || true
     
     echo -e "${GREEN}All processes stopped.${NC}"
@@ -64,13 +63,11 @@ echo ""
 
 # Check dependencies
 echo -e "${YELLOW}Checking dependencies...${NC}"
-for cmd in ffmpeg python3; do
-    if ! command -v "$cmd" &> /dev/null; then
-        echo -e "${RED}Error: $cmd is required but not installed.${NC}"
-        exit 1
-    fi
-done
-echo -e "${GREEN}✓ Dependencies OK${NC}"
+if ! command -v ffmpeg &> /dev/null; then
+    echo -e "${RED}Error: ffmpeg is required but not installed.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ ffmpeg available${NC}"
 echo ""
 
 # Generate test video if it doesn't exist
@@ -97,8 +94,9 @@ else
 fi
 echo ""
 
-# Create segments directory
-mkdir -p "$REPO_ROOT/segments"
+# Create output directory for HLS segments
+OUTPUT_DIR="$REPO_ROOT/hls_output"
+mkdir -p "$OUTPUT_DIR"
 
 # Start RTSP server (ffmpeg streaming the test video)
 echo -e "${YELLOW}Starting RTSP server on rtsp://localhost:$RTSP_PORT/stream${NC}"
@@ -108,38 +106,31 @@ sleep 2  # Give RTSP server time to start
 echo -e "${GREEN}✓ RTSP server started (PID: $RTSP_PID)${NC}"
 echo ""
 
-# Update config to point to local RTSP server
-echo -e "${YELLOW}Configuring streamer for local RTSP...${NC}"
+# Create YAML config for the streamer with single stream
+echo -e "${YELLOW}Creating streamer configuration...${NC}"
 cat > "$REPO_ROOT/config/local-demo.yaml" <<EOF
-rtsp:
-  url: "rtsp://127.0.0.1:$RTSP_PORT/stream"
-  transport: "tcp"
-  timeout_us: 5000000
-
-hls:
-  output_dir: "segments"
-  segment_duration_s: 3
-  archive_retention_hours: 2
-  cleanup_interval_s: 300
+streams:
+  - name: "demo"
+    rtsp:
+      url: "rtsp://127.0.0.1:$RTSP_PORT/stream"
+      transport: "tcp"
+      timeout_us: 5000000
+    hls:
+      output_dir: "hls_output/demo"
+      segment_duration_s: 3
+      archive_retention_hours: 2
+      cleanup_interval_s: 300
 EOF
 echo -e "${GREEN}✓ Config created: config/local-demo.yaml${NC}"
 echo ""
 
-# Start streamer
-echo -e "${YELLOW}Starting streamer...${NC}"
-"$REPO_ROOT/build/streamer" "$REPO_ROOT/config/local-demo.yaml" &
+# Start streamer (includes embedded HTTP server on port 8080)
+echo -e "${YELLOW}Starting streamer with embedded HTTP server...${NC}"
+"$REPO_ROOT/build/streamer" "$REPO_ROOT/config/local-demo.yaml" > /tmp/streamer.log 2>&1 &
 STREAMER_PID=$!
-sleep 2  # Give streamer time to start and create first segments
+sleep 3  # Give streamer time to start HTTP server and connect to RTSP
 echo -e "${GREEN}✓ Streamer started (PID: $STREAMER_PID)${NC}"
-echo ""
-
-# Start HTTP server
-echo -e "${YELLOW}Starting HTTP server on http://localhost:$HTTP_PORT${NC}"
-cd "$REPO_ROOT"
-python3 -m http.server $HTTP_PORT > /dev/null 2>&1 &
-HTTP_PID=$!
-sleep 1
-echo -e "${GREEN}✓ HTTP server started (PID: $HTTP_PID)${NC}"
+echo -e "${BLUE}  Embedded HTTP server on http://localhost:$HTTP_PORT${NC}"
 echo ""
 
 # Determine browser open command
@@ -152,9 +143,9 @@ else
 fi
 
 # Open browser if possible
-PLAYER_URL="http://localhost:$HTTP_PORT/web/player.html"
+PLAYER_URL="http://localhost:$HTTP_PORT"
 if [ -n "$OPEN_CMD" ]; then
-    echo -e "${YELLOW}Opening player in browser...${NC}"
+    echo -e "${YELLOW}Opening web player in browser...${NC}"
     $OPEN_CMD "$PLAYER_URL" 2>/dev/null || true
     echo -e "${GREEN}✓ Player opened${NC}"
 else
@@ -167,10 +158,21 @@ echo -e "${GREEN}=========================================="
 echo "Demo is running!"
 echo "==========================================${NC}"
 echo ""
+echo "Streaming architecture (Phase 6):"
+echo "  - RTSP Ingest (ffmpeg test server)"
+echo "  - StreamWorker (captures and remuxes to HLS)"
+echo "  - HTTP REST API for stream info"
+echo "  - Web player with HLS.js"
+echo ""
 echo "Active processes:"
-echo "  - RTSP server (PID: $RTSP_PID)"
-echo "  - Streamer (PID: $STREAMER_PID)"
-echo "  - HTTP server (PID: $HTTP_PID)"
+echo "  - RTSP server on rtsp://localhost:$RTSP_PORT/stream (PID: $RTSP_PID)"
+echo "  - Streamer with embedded HTTP server (PID: $STREAMER_PID)"
+echo ""
+echo "Endpoints:"
+echo "  - Web player:    http://localhost:$HTTP_PORT"
+echo "  - Health check:  http://localhost:$HTTP_PORT/api/health"
+echo "  - Streams list:  http://localhost:$HTTP_PORT/api/streams"
+echo "  - Demo stream:   http://localhost:$HTTP_PORT/api/streams/demo"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services.${NC}"
 echo ""
