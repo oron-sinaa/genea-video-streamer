@@ -34,7 +34,7 @@ rtsp:
 hls:
   # Output directory for .ts segment files and .m3u8 playlists
   # Created if missing
-  output_dir: "/data/hls_output"
+  output_dir: "/data/hls_output/single-rtsp"
   # Target segment duration in seconds (typical range: 2-10s)
   # Lower = more granular live window, higher = fewer files but higher latency
   segment_duration_s: 3

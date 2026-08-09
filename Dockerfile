@@ -39,6 +39,9 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /build/build/streamer /app/streamer
 
+# Copy web player assets
+COPY --from=builder /build/web /app/web
+
 # Create directories for data
 RUN mkdir -p /etc/streamer /data/hls_output
 

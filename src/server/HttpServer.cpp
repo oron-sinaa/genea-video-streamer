@@ -505,19 +505,17 @@ std::string HttpServer::handleGetStreamStatus(const std::string& stream_name) {
 }
 
 std::string HttpServer::handleGetIndex() {
-    // Try multiple possible paths for player.html
-    std::string content;
-    std::vector<std::string> possiblePaths = {
-        "web/player.html",      // From project root
-        "/app/web/player.html",  // Docker container
-        "./web/player.html",     // Current directory
-    };
-
-    for (const auto& path : possiblePaths) {
-        content = readFileContent(path);
-        if (!content.empty()) {
-            break;  // Found it
-        }
+    // Use absolute path within Docker container
+    // In Docker: /app/web/player.html
+    // (Web directory is copied in Dockerfile COPY --from=builder /build/web /app/web)
+    const std::string player_path = "/app/web/player.html";
+    
+    std::string content = readFileContent(player_path);
+    if (content.empty()) {
+        LOG_WARN("HttpServer: Could not load player.html from %s; serving fallback page", 
+                 player_path.c_str());
+    } else {
+        LOG_INFO("HttpServer: Successfully loaded player.html from %s", player_path.c_str());
     }
 
     if (content.empty()) {
