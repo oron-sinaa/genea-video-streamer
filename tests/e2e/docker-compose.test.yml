@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # Mock RTSP server (ffmpeg streaming test video)
+  rtsp-server:
+    image: jrottenberg/ffmpeg:5.1-ubuntu
+    container_name: genea-rtsp-test-server
+    entrypoint: >
+      bash -c "
+      ffmpeg -re -loop 1 -i /test_video/test.mp4
+        -c:v libx264 -c:a aac
+        -f rtsp rtsp://rtsp-server:554/stream1
+      "
+    volumes:
+      # Generate a simple test video at runtime
+      - ./tests/e2e/test_video:/test_video
+    ports:
+      - "554:554"
+    networks:
+      - e2e-test-network
+    environment:
+      - LOGLEVEL=quiet
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-c", "timeout 3 rtsp-simple-server 2>/dev/null || exit 0"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  # Streamer service
+  streamer:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    container_name: genea-streamer-test
+    depends_on:
+      rtsp-server:
+        condition: service_healthy
+    environment:
+      RTSP_URL: "rtsp://rtsp-server:554/stream1"
+      LOG_LEVEL: "INFO"
+    volumes:
+      - ./config:/etc/streamer:ro
+      - ./segments:/data/segments
+    ports:
+      - "8000:8000"
+    networks:
+      - e2e-test-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "streamer"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+
+  # Test helper (runs validation scripts)
+  test-helper:
+    image: curlimages/curl:latest
+    container_name: genea-test-helper
+    depends_on:
+      streamer:
+        condition: service_healthy
+    networks:
+      - e2e-test-network
+    profiles:
+      - test
+    entrypoint: /bin/sh
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./results:/test_results
+
+networks:
+  e2e-test-network:
+    driver: bridge
+
+volumes:
+  test_segments:
