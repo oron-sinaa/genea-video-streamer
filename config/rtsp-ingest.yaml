@@ -1,0 +1,12 @@
+# RTSP ingest configuration
+#
+# rtsp.url:        Full RTSP URL of the IP camera, including credentials if required.
+#                   Example: rtsp://user:pass@192.168.1.10:554/stream1
+# rtsp.transport:   Transport protocol used for the RTSP session.
+#                   "tcp" (recommended, more reliable across NAT/firewalls) or "udp".
+# rtsp.timeout_us:  Connection/read timeout in microseconds before the source is
+#                   considered unresponsive.
+rtsp:
+  url: "rtsp://127.0.0.1:8554/stream1"
+  transport: "tcp"
+  timeout_us: 5000000
