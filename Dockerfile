@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
     libavcodec-dev \
     libavutil-dev \
     libyaml-cpp-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -38,12 +39,15 @@ WORKDIR /app
 COPY --from=builder /build/build/streamer /app/streamer
 
 # Create directories for data
-RUN mkdir -p /etc/streamer /data/segments
+RUN mkdir -p /etc/streamer /data/hls_output
 
-# Health check
+# Expose HTTP server port
+EXPOSE 8080
+
+# Health check using HTTP API (Phase 6)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD pgrep -f "streamer" > /dev/null || exit 1
+    CMD curl -f http://localhost:8080/api/health || exit 1
 
-# Run streamer
+# Run streamer with config from mounted volume
 ENTRYPOINT ["/app/streamer"]
-CMD ["--config", "/etc/streamer/rtsp-ingest.yaml"]
+CMD ["--config", "/etc/streamer/config.yaml"]

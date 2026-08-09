@@ -8,21 +8,16 @@ services:
     container_name: genea-video-streamer
     restart: unless-stopped
     
-    # Environment configuration
-    environment:
-      RTSP_URL: "rtsp://127.0.0.1:8554/stream1"
-      LOG_LEVEL: "INFO"
-    
-    # Volume mounts
+    # Volume mounts for config and output
     volumes:
-      # Config directory (read-only)
-      - ./config:/etc/streamer:ro
-      # Output segments directory (writable)
-      - ./segments:/data/segments
+      # Config file (read-only) - mount your config.yaml or multi-stream-example.yaml here
+      - ./config/rtsp-ingest.yaml:/etc/streamer/config.yaml:ro
+      # Output HLS segments directory (writable) - Phase 6 multi-stream structure
+      - ./hls_output:/data/hls_output
     
-    # Port mapping (optional, for management/metrics)
+    # Port mapping for embedded HTTP server (Phase 6)
     ports:
-      - "8080:8080"  # Metrics endpoint (future phase)
+      - "8080:8080"  # HTTP server: web player, REST API, HLS streaming
     
     # Network settings
     networks:
@@ -45,14 +40,35 @@ services:
         max-size: "10m"
         max-file: "3"
     
-    # Health check
+    # Health check using HTTP API (Phase 6)
     healthcheck:
-      test: ["CMD", "pgrep", "-f", "streamer"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+    
+    # Wait for network dependencies if needed
+    depends_on: []
 
 networks:
   streamer-network:
     driver: bridge
+
+# Optional: RTSP test source container (for local testing/demo)
+# Uncomment and configure to run local RTSP server for testing
+#
+# rtsp-server:
+#   image: ubuntu:22.04
+#   command: >
+#     bash -c "apt-get update && apt-get install -y ffmpeg &&
+#     ffmpeg -f lavfi -i testsrc=size=1280x720:rate=30 
+#            -f lavfi -i sine=frequency=1000 
+#            -pix_fmt yuv420p -c:v libx264 -preset veryfast -c:a aac
+#            -f rtsp rtsp://0.0.0.0:8554/stream"
+#   ports:
+#     - "8554:8554"
+#   networks:
+#     - streamer-network
+#   depends_on:
+#     - streamer
