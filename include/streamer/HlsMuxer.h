@@ -108,6 +108,7 @@ private:
     int64_t lastPacketPts_ = 0;
     std::string currentSegmentFilename_;
     bool discontinuity_written_for_segment_ = false;  // flag to avoid duplicate markers
+    bool headerWritten_ = false;  // flag to track if avformat_write_header was called for current segment
 
     // All segments created so far.
     std::vector<SegmentInfo> segments_;
@@ -120,6 +121,9 @@ private:
     int outputTimeBase_ = 90000;  // standard for HLS/MPEG-TS
     int sourceTimeBaseDen_ = 1;
     int sourceTimeBaseNum_ = 1;
+    
+    // Setup output stream from source stream codec parameters (called on first packet).
+    bool setupOutputStream(const AVStream* sourceStream);
 };
 
 }  // namespace streamer

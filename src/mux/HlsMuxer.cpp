@@ -92,6 +92,14 @@ bool HlsMuxer::writePacket(const AVPacket* packet, const AVStream* sourceStream)
         sourceTimeBaseDen_ = sourceStream->time_base.den;
     }
 
+    // If segment header not yet written, setup output stream and write header on first packet.
+    if (!headerWritten_) {
+        if (!setupOutputStream(sourceStream)) {
+            return false;
+        }
+        headerWritten_ = true;
+    }
+
     // Check if we should start a new segment based on duration.
     if (packet->pts != AV_NOPTS_VALUE && currentSegmentStartPts_ != AV_NOPTS_VALUE) {
         // Calculate duration elapsed in current segment (in output time base 90000).
@@ -109,11 +117,18 @@ bool HlsMuxer::writePacket(const AVPacket* packet, const AVStream* sourceStream)
                 return false;
             }
             currentSegmentStartPts_ = packet->pts;
+            // Setup output stream for new segment (headerWritten_ was reset to false in startNewSegment).
+            if (!setupOutputStream(sourceStream)) {
+                return false;
+            }
+            headerWritten_ = true;
         }
     }
 
     // Write packet to current segment.
-    const int writeRet = av_write_frame(currentSegmentFormat_, const_cast<AVPacket*>(packet));
+    // Ensure packet has correct time base (should already be 90000 from PacketClock, but double-check).
+    AVPacket* pkt = const_cast<AVPacket*>(packet);
+    const int writeRet = av_write_frame(currentSegmentFormat_, pkt);
     if (writeRet < 0) {
         LOG_ERROR("HlsMuxer: failed to write packet to segment: %s", avErrorToString(writeRet).c_str());
         return false;
@@ -152,7 +167,13 @@ void HlsMuxer::close() {
 bool HlsMuxer::startNewSegment() {
     // Generate output filename.
     currentSegmentFilename_ = "segment_" + formatSegmentIndex(currentSegmentIndex_) + ".ts";
-    const std::string outputPath = outputDir_ + "/" + currentSegmentFilename_;
+    
+    // Build output path, avoiding double slashes.
+    std::string outputPath = outputDir_;
+    if (!outputPath.empty() && outputPath.back() != '/') {
+        outputPath += "/";
+    }
+    outputPath += currentSegmentFilename_;
 
     LOG_INFO("HlsMuxer: starting segment %d: %s", currentSegmentIndex_ + 1, outputPath.c_str());
 
@@ -169,13 +190,6 @@ bool HlsMuxer::startNewSegment() {
 
     currentSegmentFormat_ = outContext;
 
-    // Note: We assume the caller will write packets with compatible codec.
-    // The source stream's codec and parameters should already be validated by StreamCopyPlanner.
-    // We don't create an output stream here; that happens on the first packet write by calling
-    // av_write_frame. This is handled by libavformat's auto-stream-creation (if enabled).
-    // For safety in codec copy, we would typically copy codec parameters manually, but
-    // since we're doing direct packet copy with av_write_frame, libavformat handles it.
-
     // Open output file.
     if (!(outContext->oformat->flags & AVFMT_NOFILE)) {
         const int openRet = avio_open(&outContext->pb, outputPath.c_str(), AVIO_FLAG_WRITE);
@@ -190,16 +204,51 @@ bool HlsMuxer::startNewSegment() {
         }
     }
 
-    // Write stream header (this initializes the MPEG-TS header; actual streams are added on first packet).
-    const int headerRet = avformat_write_header(outContext, nullptr);
-    if (headerRet < 0) {
-        LOG_ERROR("HlsMuxer: failed to write segment header: %s", avErrorToString(headerRet).c_str());
-        avio_closep(&outContext->pb);
-        avformat_free_context(outContext);
-        currentSegmentFormat_ = nullptr;
+    // Defer stream creation and header writing until first packet arrives.
+    // This is required because at segment start, we don't have source stream codec parameters yet.
+    // The first packet write will trigger setupOutputStream() and avformat_write_header().
+    headerWritten_ = false;
+
+    return true;
+}
+
+bool HlsMuxer::setupOutputStream(const AVStream* sourceStream) {
+    if (currentSegmentFormat_ == nullptr) {
+        LOG_ERROR("HlsMuxer::setupOutputStream() called with null output context");
+        return false;
+    }
+    if (sourceStream == nullptr || sourceStream->codecpar == nullptr) {
+        LOG_ERROR("HlsMuxer::setupOutputStream() called with null source stream or codec params");
         return false;
     }
 
+    // Create output stream with same codec type as source.
+    AVStream* outStream = avformat_new_stream(currentSegmentFormat_, nullptr);
+    if (outStream == nullptr) {
+        LOG_ERROR("HlsMuxer: failed to create output stream");
+        return false;
+    }
+
+    // Copy codec parameters from source to output stream.
+    const int copyRet = avcodec_parameters_copy(outStream->codecpar, sourceStream->codecpar);
+    if (copyRet < 0) {
+        LOG_ERROR(
+            "HlsMuxer: failed to copy codec parameters: %s",
+            avErrorToString(copyRet).c_str());
+        return false;
+    }
+
+    // Set output stream time base to standard HLS time base (90000 Hz).
+    outStream->time_base = {1, outputTimeBase_};
+
+    // Now write the header with the stream properly configured.
+    const int headerRet = avformat_write_header(currentSegmentFormat_, nullptr);
+    if (headerRet < 0) {
+        LOG_ERROR("HlsMuxer: failed to write segment header: %s", avErrorToString(headerRet).c_str());
+        return false;
+    }
+
+    LOG_INFO("HlsMuxer: wrote segment header with codec=%s", av_get_media_type_string(sourceStream->codecpar->codec_type));
     return true;
 }
 
@@ -208,11 +257,13 @@ bool HlsMuxer::closeCurrentSegment() {
         return true;  // Already closed or never opened.
     }
 
-    // Flush and write trailer.
-    const int trailerRet = av_write_trailer(currentSegmentFormat_);
-    if (trailerRet < 0) {
-        LOG_WARN("HlsMuxer: warning writing segment trailer: %s", avErrorToString(trailerRet).c_str());
-        // Don't fail; still try to close the file.
+    // Flush and write trailer only if header was written (i.e., at least one packet was written).
+    if (headerWritten_) {
+        const int trailerRet = av_write_trailer(currentSegmentFormat_);
+        if (trailerRet < 0) {
+            LOG_WARN("HlsMuxer: warning writing segment trailer: %s", avErrorToString(trailerRet).c_str());
+            // Don't fail; still try to close the file.
+        }
     }
 
     // Close output file.
