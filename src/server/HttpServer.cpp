@@ -210,12 +210,20 @@ void HttpServer::listenerLoop() {
 void HttpServer::handleConnection(int client_socket) {
     std::string request_line = readHttpRequest(client_socket);
     if (request_line.empty()) {
+        // Send 400 Bad Request instead of silently closing connection
+        std::string body = "400 Bad Request";
+        std::string header = generateHttpHeader(400, "text/plain", body.size(), config_.enable_cors);
+        sendResponse(client_socket, header + body);
         return;
     }
 
     HttpRequest request = parseRequestLine(request_line);
     if (request.method.empty() || request.path.empty()) {
-        LOG_INFO("HttpServer: Failed to parse request line");
+        // Send 400 Bad Request for malformed request line
+        LOG_INFO("HttpServer: Failed to parse request line: %s", request_line.c_str());
+        std::string body = "400 Bad Request";
+        std::string header = generateHttpHeader(400, "text/plain", body.size(), config_.enable_cors);
+        sendResponse(client_socket, header + body);
         return;
     }
 
@@ -231,6 +239,10 @@ std::string HttpServer::readHttpRequest(int socket) {
 
     ssize_t bytes_received = recv(socket, buffer, sizeof(buffer) - 1, 0);
     if (bytes_received <= 0) {
+        if (bytes_received < 0) {
+            LOG_WARN("HttpServer: recv() error: %s", strerror(errno));
+        }
+        // Return empty string to signal error (caller will send 400 response)
         return "";
     }
 
@@ -241,6 +253,8 @@ std::string HttpServer::readHttpRequest(int socket) {
     }
 
     if (line_end == std::string::npos) {
+        // No complete line found (timeout or malformed)
+        LOG_WARN("HttpServer: No complete HTTP request line found in buffer");
         return "";
     }
 
@@ -260,13 +274,18 @@ HttpServer::HttpRequest HttpServer::parseRequestLine(const std::string& line) {
 }
 
 bool HttpServer::sendResponse(int socket, const std::string& response) {
+    if (response.empty()) {
+        LOG_WARN("HttpServer: Attempt to send empty response");
+        return false;
+    }
+
     size_t total_sent = 0;
     size_t response_size = response.size();
 
     while (total_sent < response_size) {
-        ssize_t sent = send(socket, response.c_str() + total_sent, response_size - total_sent, 0);
+        ssize_t sent = send(socket, response.c_str() + total_sent, response_size - total_sent, MSG_NOSIGNAL);
         if (sent < 0) {
-            LOG_INFO("HttpServer: Failed to send response: %s", strerror(errno));
+            LOG_WARN("HttpServer: Failed to send response: %s", strerror(errno));
             return false;
         }
         total_sent += sent;

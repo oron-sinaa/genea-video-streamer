@@ -165,16 +165,16 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
     // Create stream manager
     streamer::StreamManager manager(config);
 
-    // Start all streams
+    // Start all streams (continue even if some/all fail - HTTP server still useful for health/debug)
     int started = manager.start();
     if (started == 0) {
-        LOG_ERROR("Failed to start any streams");
-        return EXIT_FAILURE;
+        LOG_WARN("No streams started; HTTP server will be available for health checks and debugging");
+    } else {
+        LOG_INFO("Started %d stream(s); waiting for shutdown signal...", started);
     }
 
-    LOG_INFO("Started %d stream(s); waiting for shutdown signal...", started);
-
-    // Start HTTP server
+    // Start HTTP server (regardless of stream startup status)
+    // Users can access /api/health to see why streams failed, and /api/streams for status
     streamer::HttpServer::ServerConfig http_config;
     http_config.listen_port = config.http.listen_port;
     http_config.listen_address = "0.0.0.0";
@@ -183,11 +183,21 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
     streamer::HttpServer http_server(&manager, http_config);
     if (!http_server.start()) {
         LOG_ERROR("Failed to start HTTP server: %s", http_server.getLastError().c_str());
-        manager.stop();
+        if (started > 0) {
+            manager.stop();
+        }
         return EXIT_FAILURE;
     }
 
     LOG_INFO("HTTP server started on 0.0.0.0:%u", config.http.listen_port);
+
+    // If no streams started, at least provide useful feedback before waiting
+    if (started == 0) {
+        LOG_WARN("Streams failed to start. You can check:");
+        LOG_WARN("  - Health API: curl http://localhost:%u/api/health", config.http.listen_port);
+        LOG_WARN("  - Streams: curl http://localhost:%u/api/streams", config.http.listen_port);
+        LOG_WARN("Waiting for shutdown signal (Ctrl+C)...");
+    }
 
     // Monitor streams until shutdown signal
     const long statusInterval = 500;  // ms
