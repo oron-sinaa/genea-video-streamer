@@ -64,7 +64,7 @@ See [docs/design.md § 10](docs/design.md#10-implementation-plan-aligned-with-ev
 
 ## Current Status
 
-**Phases 0–1 Complete:**
+**Phases 0–4 Complete:**
 - ✅ CMake build system with LibAV + yaml-cpp
 - ✅ YAML configuration loader with validation
 - ✅ Logging framework (INFO/WARN/ERROR macros)
@@ -72,13 +72,120 @@ See [docs/design.md § 10](docs/design.md#10-implementation-plan-aligned-with-ev
 - ✅ Stream metadata probe (codec, resolution, fps, time base)
 - ✅ Packet read loop with compressed packet handling
 - ✅ Packet clock for timestamp normalization (monotonic enforcement, jitter handling)
+- ✅ HLS remux + segment generation with live/archive playlists
+- ✅ HTTP server for HLS streaming and playback
+- ✅ Web player UI for live and archive viewing
+- ✅ Automatic reconnect with exponential backoff (1s → 30s max)
+- ✅ Stale source detection (10s timeout)
+- ✅ HLS discontinuity markers for smooth playback through reconnects
+- ✅ Pipeline health metrics (packets, reconnects, throughput)
 
-**Next (Phases 2–5):**
-1. HLS remux + segment generation (Phase 2)
-2. Web player + HTTP serving (Phase 3)
-3. Reconnect logic + reliability (Phase 4)
-4. Unit/integration tests + CI (Phase 5)
+**Phase 5 (Testing & CI/CD) Complete:**
+- ✅ Unit tests: ReconnectPolicy (5 tests), PipelineHealth (6 tests)
+- ✅ Integration tests: Reconnect scenarios, backoff progression, stale detection (4 scenarios)
+- ✅ GitHub Actions CI/CD pipeline (build, test, docker build)
+- ✅ Production Docker setup (multi-stage build, minimal runtime image)
+- ✅ docker-compose for easy local deployment
+- ✅ Health checks and resource limits configured
 
-**Timeline:** 5–5.5 days for core delivery (Phases 0–5); optional Phases 6–7 if time permits.
+**Next (Phases 6–7):**
+- Scalability: multi-stream pipeline manager
+- Optional: AI inference, object search, performance profiling
 
-See [Implementation Plan](#implementation-plan-aligned-with-evaluation-criteria) in [docs/design.md](docs/design.md) for detailed roadmap aligned with evaluation criteria.
+**Timeline:** Phases 0–5 complete (~40 hours); ready for production deployment.
+
+## Quick Start
+
+### Local Development (Standalone Binary)
+
+```bash
+# Build
+mkdir -p build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+
+# Run (edit config/rtsp-ingest.yaml first)
+./build/streamer --config config/rtsp-ingest.yaml
+
+# Tests
+./build/test_reconnect_policy
+./build/test_pipeline_health
+./tests/integration/run_integration_tests.sh
+```
+
+### Production (Docker)
+
+#### Build Image
+
+```bash
+docker build -t genea-streamer:latest .
+```
+
+#### Run with docker-compose (Recommended)
+
+```bash
+# Edit docker-compose.yml for your RTSP URL and output directory
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f streamer
+
+# Stop
+docker-compose down
+```
+
+#### Run Standalone Container
+
+```bash
+docker run -d \
+  --name genea-streamer \
+  -v $(pwd)/config:/etc/streamer:ro \
+  -v $(pwd)/segments:/data/segments \
+  -e RTSP_URL="rtsp://camera-ip:554/stream" \
+  genea-streamer:latest
+```
+
+#### Verify Health
+
+```bash
+docker ps
+docker logs genea-streamer
+```
+
+### Configuration
+
+Edit `config/rtsp-ingest.yaml`:
+
+```yaml
+rtsp:
+  url: "rtsp://camera-ip:554/stream"
+  transport: "tcp"
+  timeout_us: 5000000
+  reconnect:
+    enabled: true
+    initial_delay_ms: 1000
+    max_delay_ms: 30000
+    jitter_percent: 15
+    stale_timeout_s: 10
+
+http:
+  listen_port: 8000
+  hls_path: "/hls"
+
+hls:
+  output_dir: "segments"
+  segment_duration_s: 3
+  archive_retention_hours: 2
+  enable_discontinuity_markers: true
+```
+
+### CI/CD
+
+GitHub Actions pipeline runs automatically on push:
+- ✅ Build and compile
+- ✅ Unit tests (ReconnectPolicy, PipelineHealth)
+- ✅ Integration tests (reconnect scenarios)
+- ✅ Docker image build
+- ✅ Code quality checks
+
+Pipeline status: `.github/workflows/ci-cd.yml`

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  streamer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: genea-video-streamer
+    restart: unless-stopped
+    
+    # Environment configuration
+    environment:
+      RTSP_URL: "rtsp://127.0.0.1:8554/stream1"
+      LOG_LEVEL: "INFO"
+    
+    # Volume mounts
+    volumes:
+      # Config directory (read-only)
+      - ./config:/etc/streamer:ro
+      # Output segments directory (writable)
+      - ./segments:/data/segments
+    
+    # Port mapping (optional, for management/metrics)
+    ports:
+      - "8080:8080"  # Metrics endpoint (future phase)
+    
+    # Network settings
+    networks:
+      - streamer-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '1'
+          memory: 256M
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "streamer"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  streamer-network:
+    driver: bridge

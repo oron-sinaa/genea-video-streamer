@@ -54,3 +54,11 @@ target_include_directories(test_pipeline_health PRIVATE include)
 add_test(NAME ReconnectPolicyTests COMMAND test_reconnect_policy)
 add_test(NAME PipelineHealthTests COMMAND test_pipeline_health)
 
+# Integration tests
+add_executable(test_reconnect_scenario
+    tests/integration/test_reconnect_scenario.cpp
+)
+target_include_directories(test_reconnect_scenario PRIVATE include)
+
+add_test(NAME ReconnectScenarioTests COMMAND test_reconnect_scenario)
+
