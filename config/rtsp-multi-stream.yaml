@@ -1,10 +1,15 @@
-# Multi-Stream Configuration Example (Phase 6)
-# Supports 2+ concurrent RTSP streams with independent reconnect policies
+# Multi-Stream Configuration for Genea Video Streamer (Phase 6)
+#
+# This configuration demonstrates multi-stream RTSP ingest with independent
+# reconnect policies per stream, shared HLS settings, and HTTP server config.
 
+# Array of RTSP streams to ingest (Phase 6: Multi-stream support)
 streams:
   - name: "camera-1"
-    rtsp_url: "rtsp://camera1.example.com:554/stream"
-    hls_output: "segments/camera1/"
+    rtsp_url: "rtsp://192.168.1.100:554/stream1"
+    # Per-stream HLS output directory (optional; defaults to "segments/camera-1/")
+    hls_output: "hls_output/camera-1/"
+    # Per-stream reconnect policy (optional; uses defaults if not specified)
     reconnect:
       enabled: true
       initial_delay_ms: 1000
@@ -13,8 +18,8 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-2"
-    rtsp_url: "rtsp://camera2.example.com:554/stream"
-    hls_output: "segments/camera2/"
+    rtsp_url: "rtsp://192.168.1.101:554/stream1"
+    hls_output: "hls_output/camera-2/"
     reconnect:
       enabled: true
       initial_delay_ms: 1000
@@ -23,28 +28,39 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-3"
-    rtsp_url: "rtsp://camera3.example.com:554/stream"
-    hls_output: "segments/camera3/"
+    rtsp_url: "rtsp://192.168.1.102:554/stream1"
+    hls_output: "hls_output/camera-3/"
+    # Staggered reconnect retry for this camera
     reconnect:
       enabled: true
-      initial_delay_ms: 1000
+      initial_delay_ms: 1500
       max_delay_ms: 30000
       jitter_percent: 15
       stale_timeout_s: 10
 
 # Global HLS settings (applied to all streams)
 hls:
+  # Base output directory (per-stream directories created under this)
+  output_dir: "hls_output"
+  # Duration of each HLS segment in seconds (typical: 2-10s)
   segment_duration_s: 4
+  # How many hours of segments to retain for VOD/archive playback
   archive_retention_hours: 2
+  # How often (seconds) to scan and delete old segments beyond retention
   cleanup_interval_s: 300
+  # Write #EXT-X-DISCONTINUITY markers to playlists after reconnects
   enable_discontinuity_markers: true
 
-# HTTP server configuration
+# HTTP server configuration (Phase 6)
 http:
-  listen_port: 8000
+  # Port for embedded HTTP server (web player, REST API, HLS streaming)
+  listen_port: 8080
 
-# Resource limits and constraints
+# Resource limits and constraints (Phase 6)
 resources:
-  max_streams: 10          # Max concurrent streams allowed
-  max_cpu_per_stream: 1.0  # CPU cores per stream
-  max_memory_per_stream: 512  # MB per stream
+  # Maximum number of concurrent streams allowed
+  max_streams: 10
+  # CPU cores allocated per stream
+  max_cpu_per_stream: 1.0
+  # Memory (MB) allocated per stream
+  max_memory_per_stream: 512
