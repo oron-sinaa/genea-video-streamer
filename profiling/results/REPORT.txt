@@ -1,0 +1,47 @@
+============================================
+PERFORMANCE REPORT
+============================================
+
+Generated: Mon Aug 10 03:34:23 UTC 2026
+
+Scenario: 0_single_stream
+  CPU (avg): 0.6%
+  Memory (avg): 34 MB
+  Disk Read (avg): 0.0 MB/s
+  Disk Write (avg): 0.0 MB/s
+  Packets written: 925
+  Reconnects: 0
+  Error samples: 0
+
+Scenario: 1_five_streams
+  CPU (avg): 1.9%
+  Memory (avg): 47 MB
+  Disk Read (avg): 0.0 MB/s
+  Disk Write (avg): 0.0 MB/s
+  Packets written: 4576
+  Reconnects: 0
+  Error samples: 0
+
+Scenario: 2_ten_streams
+  CPU (avg): 3.0%
+  Memory (avg): 70 MB
+  Disk Read (avg): 0.0 MB/s
+  Disk Write (avg): 0.0 MB/s
+  Packets written: 9370
+  Reconnects: 0
+  Error samples: 0
+
+Scenario: 3_fifty_streams
+  CPU (avg): 10.2%
+  Memory (avg): 409 MB
+  Disk Read (avg): 0.0 MB/s
+  Disk Write (avg): 0.3 MB/s
+  Packets written: 48442
+  Reconnects: 0
+  Error samples: 0
+
+============================================
+Raw data:
+  /app/profiling/results/*_metrics.csv
+  /app/profiling/results/*.log
+============================================

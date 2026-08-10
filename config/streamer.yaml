@@ -1,0 +1,98 @@
+# Multi-Stream Configuration for Genea Video Streamer (Phase 6)
+#
+# This configuration demonstrates multi-stream RTSP ingest with independent
+# reconnect policies per stream, shared HLS settings, and HTTP server config.
+
+# Array of RTSP streams to ingest (Phase 6: Multi-stream support)
+streams:
+  - name: "camera-1"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
+    # Per-stream HLS output directory (optional; defaults to "segments/camera-1/")
+    hls_output: "/data/hls_output/camera-1/"
+    transport: "tcp"
+    # Per-stream reconnect policy (optional; uses defaults if not specified)
+    reconnect:
+      # Enable automatic reconnection when RTSP source disconnects
+      enabled: true
+      # Milliseconds to wait before first reconnection attempt
+      # After source drops, wait this long before trying to reconnect
+      initial_delay_ms: 1000
+      # Maximum milliseconds between reconnection attempts
+      # Backoff grows exponentially but caps at this value to prevent long gaps
+      max_delay_ms: 30000
+      # Random variance added to backoff delays (as percentage)
+      # Prevents "thundering herd" when multiple streams reconnect simultaneously
+      # Example: 15% jitter on 5000ms = 4250-5750ms actual delay
+      jitter_percent: 15
+      # Seconds without data before considering RTSP source stale
+      # If no packets received for this duration, trigger reconnection
+      stale_timeout_s: 10
+
+  - name: "camera-2"
+    rtsp_url: "rtsp://9627b0bf2a7b.entrypoint.cloud.wowza.com:1935/app-p5260J38/66abe4b9_stream1"
+    hls_output: "/data/hls_output/camera-2/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-3"
+    rtsp_url: "rtsp://rtsp-server:8554/stream2"
+    hls_output: "/data/hls_output/camera-3/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+# Global HLS settings (applied to all streams)
+hls:
+  # Base output directory (per-stream directories created under this)
+  output_dir: "hls_output"
+  # Duration of each HLS segment in seconds (typical: 2-10s)
+  segment_duration_s: 2
+  # How many hours of segments to retain for VOD/archive playback
+  archive_retention_hours: 2
+  # How often (seconds) to scan and delete old segments beyond retention
+  cleanup_interval_s: 300
+  # Write #EXT-X-DISCONTINUITY markers to playlists after reconnects
+  enable_discontinuity_markers: true
+
+# Playback latency settings (client-side buffering and sync)
+playback:
+  # Live mode latency profile
+  live_mode:
+    # Buffer duration (seconds) to maintain behind live edge for playback
+    # Lower = lower latency but more risk of buffering (default: 20, low-latency: 5-10)
+    back_buffer_length_s: 10
+    
+    # Number of segments ahead to sync to (keeps player synced with live)
+    # Lower = lower latency but more sync adjustments (default: 3, low-latency: 1-2)
+    sync_segment_count: 2
+    
+    # Maximum total buffer duration (seconds)
+    # Lower = lower latency and less memory (default: 60, low-latency: 20-30)
+    max_buffer_length_s: 30
+    
+    # Absolute maximum buffer limit (seconds)
+    # Lower = lower latency (default: 120, low-latency: 40-60)
+    max_buffer_length_absolute_s: 60
+
+# HTTP server configuration (Phase 6)
+http:
+  # Port for embedded HTTP server (web player, REST API, HLS streaming)
+  listen_port: 8080
+
+# Resource limits and constraints (Phase 6)
+resources:
+  # Maximum number of concurrent streams allowed
+  max_streams: 10
+  # CPU cores allocated per stream
+  max_cpu_per_stream: 1.0
+  # Memory (MB) allocated per stream
+  max_memory_per_stream: 512

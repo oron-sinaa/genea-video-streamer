@@ -1,0 +1,173 @@
+services:
+  rtsp-server:
+    image: bluenviron/mediamtx:latest
+    container_name: rtsp-server
+    restart: unless-stopped
+    ports:
+      - "8554:8554"  # RTSP server
+    networks:
+      - streamer-network
+    environment:
+      RTSP_PORT: "8554"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  rtsp-generator-1:
+    image: jrottenberg/ffmpeg:7.0-ubuntu
+    container_name: rtsp-generator-1
+    restart: unless-stopped
+    command: >
+      -hide_banner
+      -loglevel error
+      -f lavfi -re -i testsrc2=size=1280x720:rate=30
+      -f lavfi -re -i sine=frequency=1000:sample_rate=48000
+      -c:v libx264
+      -preset veryfast
+      -profile:v main
+      -level:v 3.1
+      -pix_fmt yuv420p
+      -b:v 1M
+      -maxrate 1M
+      -bufsize 2M
+      -g 60
+      -keyint_min 60
+      -sc_threshold 0
+      -c:a aac
+      -profile:a aac_low
+      -b:a 128k
+      -ar 48000
+      -ac 2
+      -rtsp_transport tcp
+      -f rtsp
+      rtsp://rtsp-server:8554/stream1
+    networks:
+      - streamer-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    depends_on:
+      - rtsp-server
+
+  rtsp-generator-2:
+    image: jrottenberg/ffmpeg:7.0-ubuntu
+    container_name: rtsp-generator-2
+    restart: unless-stopped
+    volumes:
+      - ./tests/cars_person.mp4:/data/cars_person.mp4
+    command: >
+      -hide_banner
+      -loglevel error
+      -re
+      -stream_loop -1
+      -i /data/cars_person.mp4
+      -map 0:v:0
+      -map 0:a:0?
+      -c:v libx264
+      -preset veryfast
+      -profile:v main
+      -level:v 3.1
+      -pix_fmt yuv420p
+      -r 30
+      -b:v 2M
+      -maxrate 2M
+      -bufsize 4M
+      -g 60
+      -keyint_min 60
+      -sc_threshold 0
+      -c:a aac
+      -profile:a aac_low
+      -b:a 128k
+      -ar 48000
+      -ac 2
+      -rtsp_transport tcp
+      -f rtsp
+      rtsp://rtsp-server:8554/stream2
+    networks:
+      - streamer-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    depends_on:
+      - rtsp-server
+
+  streamer:
+    image: genea-video-streamer:latest
+    container_name: genea-video-streamer
+    restart: unless-stopped
+    volumes:
+      - ./config:/etc/streamer:ro
+      - ./hls_output:/data/hls_output
+      - ./profiling/results:/app/profiling/results  # Profiling results (writable)
+      - ./detections:/data/detections
+      - ./detections/database:/app/database
+    ports:
+      - "8080:8080"  # HTTP server: web player, REST API, HLS streaming
+    networks:
+      - streamer-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '1'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - rtsp-server
+      - rtsp-generator-1
+      - rtsp-generator-2
+
+  inference:
+    image: genea-video-streamer:latest
+    container_name: genea-inference
+    restart: unless-stopped
+    entrypoint: ["python3", "-m", "ai_inference"]
+    volumes:
+      - ./config:/etc/streamer:ro
+      - ./hls_output:/data/hls_output:ro
+      - ./detections:/data/detections
+      - ./detections/database:/app/database
+    networks:
+      - streamer-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=src
+      - AI_INFERENCE_CONFIG=/etc/streamer/inference.yaml
+    depends_on:
+      streamer:
+        condition: service_healthy
+
+networks:
+  streamer-network:
+    driver: bridge

@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+build/
+cmake-build-debug/
+cmake-build-release/
+*.o
+*.a
+*.so
+*.exe
+*.dll
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+docs/
+README.md
+IMPLEMENTATION_PLAN.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+
+# Node modules (if any)
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+.python-version
+venv/
+
+# Logs
+*.log
+logs/
+
+# Test artifacts (not test source files)
+coverage/
+.coverage
+
+# Memory analysis
+valgrind-out.txt
+
+# Temporary files
+*.tmp
+.DS_Store

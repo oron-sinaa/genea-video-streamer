@@ -1,0 +1,1083 @@
+#include "streamer/HttpServer.h"
+
+#include "streamer/Logger.h"
+#include "streamer/StreamManager.h"
+
+#include <algorithm>
+#include <cerrno>
+#include <cstring>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <sqlite3.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+namespace streamer {
+
+namespace {
+
+const int BACKLOG = 5;
+const int RECV_BUFFER_SIZE = 4096;
+const int FILE_CHUNK_SIZE = 4096;
+
+// Generate standard HTTP response header
+std::string generateHttpHeader(int status_code, const std::string& content_type, size_t content_length, bool enable_cors) {
+    std::string status_text;
+    switch (status_code) {
+        case 200:
+            status_text = "OK";
+            break;
+        case 206:
+            status_text = "Partial Content";
+            break;
+        case 304:
+            status_text = "Not Modified";
+            break;
+        case 400:
+            status_text = "Bad Request";
+            break;
+        case 404:
+            status_text = "Not Found";
+            break;
+        case 500:
+            status_text = "Internal Server Error";
+            break;
+        default:
+            status_text = "Unknown";
+    }
+
+    std::ostringstream header;
+    header << "HTTP/1.1 " << status_code << " " << status_text << "\r\n";
+    header << "Content-Type: " << content_type << "\r\n";
+    header << "Content-Length: " << content_length << "\r\n";
+    header << "Connection: close\r\n";
+    
+    if (enable_cors) {
+        header << "Access-Control-Allow-Origin: *\r\n";
+        header << "Access-Control-Allow-Methods: GET, HEAD, OPTIONS\r\n";
+    }
+    
+    header << "\r\n";
+    return header.str();
+}
+
+}  // namespace
+
+HttpServer::HttpServer(StreamManager* manager, const ServerConfig& config)
+    : manager_(manager), config_(config) {
+    if (!manager_) {
+        LOG_ERROR("HttpServer: StreamManager pointer is null");
+    }
+}
+
+HttpServer::HttpServer(StreamManager* manager)
+    : manager_(manager) {
+    if (!manager_) {
+        LOG_ERROR("HttpServer: StreamManager pointer is null");
+    }
+}
+
+HttpServer::~HttpServer() {
+    try {
+        stop();
+    } catch (const std::exception& e) {
+        LOG_ERROR("HttpServer destructor: Exception in stop(): %s", e.what());
+    } catch (...) {
+        LOG_ERROR("HttpServer destructor: Unknown exception in stop()");
+    }
+}
+
+bool HttpServer::start() {
+    if (running_.load()) {
+        LOG_WARN("HttpServer: Already running");
+        return true;
+    }
+
+    // Create listening socket
+    listening_socket_ = socket(AF_INET, SOCK_STREAM, 0);
+    if (listening_socket_ < 0) {
+        lastError_ = std::string("Failed to create socket: ") + strerror(errno);
+        LOG_ERROR("HttpServer: %s", lastError_.c_str());
+        return false;
+    }
+
+    // Allow port reuse
+    int reuse = 1;
+    if (setsockopt(listening_socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+        lastError_ = std::string("Failed to set SO_REUSEADDR: ") + strerror(errno);
+        LOG_ERROR("HttpServer: %s", lastError_.c_str());
+        close(listening_socket_);
+        listening_socket_ = -1;
+        return false;
+    }
+
+    // Bind to address and port
+    struct sockaddr_in server_addr;
+    std::memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(config_.listen_port);
+    
+    if (inet_pton(AF_INET, config_.listen_address.c_str(), &server_addr.sin_addr) <= 0) {
+        lastError_ = std::string("Invalid listen address: ") + config_.listen_address;
+        LOG_ERROR("HttpServer: %s", lastError_.c_str());
+        close(listening_socket_);
+        listening_socket_ = -1;
+        return false;
+    }
+
+    if (bind(listening_socket_, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        lastError_ = std::string("Failed to bind socket: ") + strerror(errno);
+        LOG_ERROR("HttpServer: %s", lastError_.c_str());
+        close(listening_socket_);
+        listening_socket_ = -1;
+        return false;
+    }
+
+    // Listen for incoming connections
+    if (listen(listening_socket_, BACKLOG) < 0) {
+        lastError_ = std::string("Failed to listen: ") + strerror(errno);
+        LOG_ERROR("HttpServer: %s", lastError_.c_str());
+        close(listening_socket_);
+        listening_socket_ = -1;
+        return false;
+    }
+
+    // Give accept() a short timeout so that stop() can reliably interrupt the
+    // listener thread by setting running_=false and waiting.  On Linux,
+    // close()ing the fd from another thread does NOT reliably wake up a
+    // blocked accept(), so we poll every 200 ms instead.
+    struct timeval accept_tv{0, 200000};  // 200 ms
+    setsockopt(listening_socket_, SOL_SOCKET, SO_RCVTIMEO, &accept_tv, sizeof(accept_tv));
+
+    // Start listener thread
+    running_.store(true);
+    listener_thread_ = std::thread(&HttpServer::listenerLoop, this);
+    LOG_INFO("HttpServer: Started on %s:%u", config_.listen_address.c_str(), config_.listen_port);
+    return true;
+}
+
+void HttpServer::stop() {
+    if (!running_.load()) {
+        return;
+    }
+
+    running_.store(false);
+
+    // Shutdown socket to force accept() to return with an error
+    // This ensures the listener thread exits quickly
+    if (listening_socket_ >= 0) {
+        ::shutdown(listening_socket_, SHUT_RDWR);
+    }
+
+    // Wait for listener thread to exit.  shutdown() will cause accept() to fail,
+    // so the listener thread will exit cleanly when it checks running_=false.
+    if (listener_thread_.joinable()) {
+        try {
+            listener_thread_.join();
+        } catch (const std::exception& e) {
+            LOG_ERROR("HttpServer::stop: Exception joining listener thread: %s", e.what());
+        }
+    }
+
+    // Close and free the socket only after the thread has exited
+    if (listening_socket_ >= 0) {
+        close(listening_socket_);
+        listening_socket_ = -1;
+    }
+
+    LOG_INFO("HttpServer: Stopped");
+}
+
+void HttpServer::listenerLoop() {
+    LOG_INFO("HttpServer: Listener loop started");
+
+    while (running_.load()) {
+        try {
+            struct sockaddr_in client_addr;
+            socklen_t client_addr_len = sizeof(client_addr);
+
+            int client_socket = accept(listening_socket_, (struct sockaddr*)&client_addr, &client_addr_len);
+            if (client_socket < 0) {
+                // Handle signal interruption gracefully
+                if (errno == EINTR) {
+                    if (running_.load()) {
+                        // Interrupted by signal, check running flag and continue
+                        continue;
+                    } else {
+                        // We got a signal during shutdown, exit cleanly
+                        break;
+                    }
+                }
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    // accept() timed out (200 ms SO_RCVTIMEO); loop back and re-check running_
+                    continue;
+                }
+                if (running_.load()) {
+                    LOG_INFO("HttpServer: accept() failed: %s", strerror(errno));
+                }
+                continue;
+            }
+
+            // Set a receive timeout on the accepted socket so that a slow or
+            // closed client cannot stall the server indefinitely.
+            struct timeval client_tv{0, 500000};  // 500ms read timeout per request
+            setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO,
+                       &client_tv, sizeof(client_tv));
+
+            // Handle connection (synchronous, one at a time)
+            handleConnection(client_socket);
+            close(client_socket);
+        } catch (const std::exception& e) {
+            LOG_ERROR("HttpServer: Exception in listener loop: %s", e.what());
+            if (running_.load()) {
+                continue;  // Keep listening even after exception
+            } else {
+                break;     // Exit cleanly during shutdown
+            }
+        } catch (...) {
+            LOG_ERROR("HttpServer: Unknown exception in listener loop");
+            if (!running_.load()) {
+                break;  // Exit cleanly during shutdown
+            }
+        }
+    }
+
+    LOG_INFO("HttpServer: Listener loop ended");
+}
+
+void HttpServer::handleConnection(int client_socket) {
+    try {
+        std::string request_line = readHttpRequest(client_socket);
+        if (request_line.empty()) {
+            // Send 400 Bad Request instead of silently closing connection
+            std::string body = "400 Bad Request";
+            std::string header = generateHttpHeader(400, "text/plain", body.size(), config_.enable_cors);
+            sendResponse(client_socket, header + body);
+            return;
+        }
+
+        HttpRequest request = parseRequestLine(request_line);
+        if (request.method.empty() || request.path.empty()) {
+            // Send 400 Bad Request for malformed request line
+            LOG_INFO("HttpServer: Failed to parse request line: %s", request_line.c_str());
+            std::string body = "400 Bad Request";
+            std::string header = generateHttpHeader(400, "text/plain", body.size(), config_.enable_cors);
+            sendResponse(client_socket, header + body);
+            return;
+        }
+
+        LOG_INFO("HttpServer: %s %s", request.method.c_str(), request.path.c_str());
+
+        std::string response = routeRequest(request.method, request.path);
+        sendResponse(client_socket, response);
+    } catch (const std::exception& e) {
+        LOG_ERROR("HttpServer: Exception handling connection: %s", e.what());
+        // Send 500 error response for internal errors
+        try {
+            std::string body = "500 Internal Server Error";
+            std::string header = generateHttpHeader(500, "text/plain", body.size(), config_.enable_cors);
+            sendResponse(client_socket, header + body);
+        } catch (...) {
+            // Failed to even send error response
+            LOG_ERROR("HttpServer: Failed to send error response");
+        }
+    } catch (...) {
+        LOG_ERROR("HttpServer: Unknown exception handling connection");
+        try {
+            std::string body = "500 Internal Server Error";
+            std::string header = generateHttpHeader(500, "text/plain", body.size(), config_.enable_cors);
+            sendResponse(client_socket, header + body);
+        } catch (...) {
+            // Failed to even send error response
+        }
+    }
+}
+
+std::string HttpServer::readHttpRequest(int socket) {
+    char buffer[RECV_BUFFER_SIZE];
+    std::memset(buffer, 0, sizeof(buffer));
+
+    ssize_t bytes_received = recv(socket, buffer, sizeof(buffer) - 1, 0);
+    if (bytes_received < 0) {
+        int err = errno;
+        // EAGAIN/EWOULDBLOCK is normal when socket has a timeout and no data is ready
+        if (err != EAGAIN && err != EWOULDBLOCK) {
+            LOG_WARN("HttpServer: recv() error: %s (errno=%d)", strerror(err), err);
+        }
+        // Return empty string to signal timeout/error
+        return "";
+    }
+    if (bytes_received == 0) {
+        // Connection closed by client
+        return "";
+    }
+
+    std::string raw_request(buffer);
+    size_t line_end = raw_request.find("\r\n");
+    if (line_end == std::string::npos) {
+        line_end = raw_request.find("\n");
+    }
+
+    if (line_end == std::string::npos) {
+        // No complete line found (timeout or malformed)
+        LOG_WARN("HttpServer: No complete HTTP request line found in buffer");
+        return "";
+    }
+
+    return raw_request.substr(0, line_end);
+}
+
+HttpServer::HttpRequest HttpServer::parseRequestLine(const std::string& line) {
+    HttpRequest request;
+    std::istringstream iss(line);
+
+    iss >> request.method >> request.path >> request.version;
+
+    // Convert method to uppercase
+    std::transform(request.method.begin(), request.method.end(), request.method.begin(), ::toupper);
+
+    return request;
+}
+
+bool HttpServer::sendResponse(int socket, const std::string& response) {
+    if (response.empty()) {
+        LOG_WARN("HttpServer: Attempt to send empty response");
+        return false;
+    }
+
+    size_t total_sent = 0;
+    size_t response_size = response.size();
+
+    while (total_sent < response_size) {
+        ssize_t sent = send(socket, response.c_str() + total_sent, response_size - total_sent, MSG_NOSIGNAL);
+        if (sent < 0) {
+            LOG_WARN("HttpServer: Failed to send response: %s", strerror(errno));
+            return false;
+        }
+        total_sent += sent;
+    }
+
+    return true;
+}
+
+std::string HttpServer::routeRequest(const std::string& method, const std::string& path) {
+    if (method != "GET" && method != "HEAD") {
+        // Return 405 Method Not Allowed
+        std::string body = "Method not allowed";
+        std::string header = generateHttpHeader(405, "text/plain", body.size(), config_.enable_cors);
+        return header + body;
+    }
+
+    // Route /api/health
+    if (path == "/api/health") {
+        return handleGetAggregateHealth();
+    }
+
+    // Route /api/streams
+    if (path == "/api/streams") {
+        return handleGetStreamsList();
+    }
+
+    // Route /api/config
+    if (path == "/api/config") {
+        return handleGetPlaybackConfig();
+    }
+
+    // Route /api/detections/stats - Detection statistics (with optional query params)
+    if (path.find("/api/detections/stats") == 0) {
+        return handleDetectionStats(path);
+    }
+
+    // Route /api/detections/recent - Recent detections (with optional query params)
+    if (path.find("/api/detections/recent") == 0) {
+        return handleDetectionRecent(path);
+    }
+
+    // Route /detections/frame/<detection_id> - Serve detection frame
+    if (path.find("/detections/frame/") == 0) {
+        std::string det_id_str = path.substr(18);  // Skip "/detections/frame/"
+        return handleDetectionFrame(det_id_str);
+    }
+
+    // Route /api/streams/<stream-name>
+    if (path.find("/api/streams/") == 0) {
+        std::string stream_name = path.substr(13);  // Skip "/api/streams/"
+        if (stream_name.empty()) {
+            return handleNotFound();
+        }
+        return handleGetStreamStatus(stream_name);
+    }
+
+    // Route /hls/<stream-name>/live.m3u8 or /hls/<stream-name>/archive.m3u8
+    if (path.find("/hls/") == 0) {
+        size_t second_slash = path.find('/', 5);  // Find slash after /hls/
+        if (second_slash == std::string::npos) {
+            return handleNotFound();
+        }
+
+        std::string stream_name = path.substr(5, second_slash - 5);  // Extract stream name
+        std::string resource = path.substr(second_slash + 1);        // Extract resource
+
+        if (resource.find("live.m3u8") != std::string::npos || resource.find("archive.m3u8") != std::string::npos) {
+            return handleGetPlaylist(stream_name, resource);
+        } else if (resource.find(".ts") != std::string::npos) {
+            return handleGetSegment(stream_name, resource);
+        }
+    }
+
+    // Route / or /index.html
+    if (path == "/" || path == "/index.html") {
+        return handleGetIndex();
+    }
+
+    return handleNotFound();
+}
+
+std::string HttpServer::handleGetPlaylist(const std::string& stream_name, const std::string& playlist_name) {
+    if (!manager_) {
+        return handleNotFound();
+    }
+
+    StreamWorker* worker = manager_->getStream(stream_name);
+    if (!worker) {
+        LOG_INFO("HttpServer: Stream not found: %s", stream_name.c_str());
+        return handleNotFound();
+    }
+
+    // Get the configured HLS output directory for this stream
+    std::string hls_dir = worker->getHlsOutputDir();
+    std::string playlist_path = hls_dir + playlist_name;
+
+    std::string content = readFileContent(playlist_path);
+    if (content.empty() && !fileExists(playlist_path)) {
+        LOG_INFO("HttpServer: Playlist not found: %s", playlist_path.c_str());
+        return handleNotFound();
+    }
+
+    std::string header = generateHttpHeader(200, "application/vnd.apple.mpegurl", content.size(), config_.enable_cors);
+    return header + content;
+}
+
+std::string HttpServer::handleGetSegment(const std::string& stream_name, const std::string& segment_name) {
+    if (!manager_) {
+        return handleNotFound();
+    }
+
+    StreamWorker* worker = manager_->getStream(stream_name);
+    if (!worker) {
+        return handleNotFound();
+    }
+
+    // Get the configured HLS output directory for this stream and construct segment path
+    std::string hls_dir = worker->getHlsOutputDir();
+    std::string segment_path = hls_dir + segment_name;
+
+    std::string content = readFileContent(segment_path);
+    if (content.empty() && !fileExists(segment_path)) {
+        LOG_INFO("HttpServer: Segment not found: %s", segment_path.c_str());
+        return handleNotFound();
+    }
+
+    std::string header = generateHttpHeader(200, "video/mp2t", content.size(), config_.enable_cors);
+    return header + content;
+}
+
+std::string HttpServer::handleGetAggregateHealth() {
+    if (!manager_) {
+        return handleNotFound();
+    }
+
+    auto health = manager_->getAggregateHealth();
+
+    std::ostringstream json;
+    json << "{\n";
+    json << "  \"total_packets_read\": " << health.total_packets_read << ",\n";
+    json << "  \"total_packets_written\": " << health.total_packets_written << ",\n";
+    json << "  \"total_packets_dropped\": " << health.total_packets_dropped << ",\n";
+    json << "  \"total_reconnects\": " << health.total_reconnects << ",\n";
+    json << "  \"total_throughput_mbps\": " << health.total_throughput_mbps << ",\n";
+    json << "  \"active_streams\": " << health.active_streams << ",\n";
+    json << "  \"error_streams\": " << health.error_streams << ",\n";
+    json << "  \"stream_stats\": [\n";
+
+    for (size_t i = 0; i < health.stream_stats.size(); ++i) {
+        const auto& stat = health.stream_stats[i];
+        json << "    {\n";
+        json << "      \"name\": \"" << jsonEscape(stat.name) << "\",\n";
+        json << "      \"status\": \"" << static_cast<int>(stat.status) << "\",\n";
+        json << "      \"packets_written\": " << stat.packets_written << ",\n";
+        json << "      \"throughput_mbps\": " << stat.throughput_mbps << ",\n";
+        json << "      \"reconnects\": " << stat.reconnects << "\n";
+        json << "    }";
+        if (i < health.stream_stats.size() - 1) {
+            json << ",";
+        }
+        json << "\n";
+    }
+
+    json << "  ]\n";
+    json << "}\n";
+
+    std::string body = json.str();
+    std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
+    return header + body;
+}
+
+std::string HttpServer::handleGetStreamsList() {
+    if (!manager_) {
+        return handleNotFound();
+    }
+
+    std::ostringstream json;
+    json << "{\n";
+    json << "  \"total_streams\": " << manager_->getStreamCount() << ",\n";
+    json << "  \"streams\": [\n";
+
+    size_t count = manager_->getStreamCount();
+    auto health = manager_->getAggregateHealth();
+
+    for (size_t i = 0; i < health.stream_stats.size(); ++i) {
+        const auto& stat = health.stream_stats[i];
+        json << "    {\n";
+        json << "      \"name\": \"" << jsonEscape(stat.name) << "\",\n";
+        json << "      \"status\": \"" << static_cast<int>(stat.status) << "\",\n";
+        json << "      \"packets_written\": " << stat.packets_written << ",\n";
+        json << "      \"reconnects\": " << stat.reconnects << "\n";
+        json << "    }";
+        if (i < health.stream_stats.size() - 1) {
+            json << ",";
+        }
+        json << "\n";
+    }
+
+    json << "  ]\n";
+    json << "}\n";
+
+    std::string body = json.str();
+    std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
+    return header + body;
+}
+
+std::string HttpServer::handleGetStreamStatus(const std::string& stream_name) {
+    if (!manager_) {
+        return handleNotFound();
+    }
+
+    StreamWorker* worker = manager_->getStream(stream_name);
+    if (!worker) {
+        return handleNotFound();
+    }
+
+    auto health = manager_->getAggregateHealth();
+    
+    // Find this stream's stats
+    for (const auto& stat : health.stream_stats) {
+        if (stat.name == stream_name) {
+            std::ostringstream json;
+            json << "{\n";
+            json << "  \"name\": \"" << jsonEscape(stat.name) << "\",\n";
+            json << "  \"status\": \"" << static_cast<int>(stat.status) << "\",\n";
+            json << "  \"packets_written\": " << stat.packets_written << ",\n";
+            json << "  \"throughput_mbps\": " << stat.throughput_mbps << ",\n";
+            json << "  \"reconnects\": " << stat.reconnects << "\n";
+            json << "}\n";
+
+            std::string body = json.str();
+            std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
+            return header + body;
+        }
+    }
+
+    return handleNotFound();
+}
+
+std::string HttpServer::handleGetPlaybackConfig() {
+    if (!manager_) {
+        return handleNotFound();
+    }
+
+    const auto& cfg = manager_->getConfig();
+    
+    std::ostringstream json;
+    json << "{\n";
+    json << "  \"playback\": {\n";
+    json << "    \"live_mode\": {\n";
+    json << "      \"back_buffer_length_s\": " << cfg.playback.live_mode.back_buffer_length_s << ",\n";
+    json << "      \"sync_segment_count\": " << cfg.playback.live_mode.sync_segment_count << ",\n";
+    json << "      \"max_buffer_length_s\": " << cfg.playback.live_mode.max_buffer_length_s << ",\n";
+    json << "      \"max_buffer_length_absolute_s\": " << cfg.playback.live_mode.max_buffer_length_absolute_s << "\n";
+    json << "    }\n";
+    json << "  }\n";
+    json << "}\n";
+
+    std::string body = json.str();
+    std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
+    return header + body;
+}
+
+std::string HttpServer::handleGetIndex() {
+    // Use absolute path within Docker container
+    // In Docker: /app/web/player.html
+    // (Web directory is copied in Dockerfile COPY --from=builder /build/web /app/web)
+    const std::string player_path = "/app/web/player.html";
+    
+    std::string content = readFileContent(player_path);
+    if (content.empty()) {
+        LOG_WARN("HttpServer: Could not load player.html from %s; serving fallback page", 
+                 player_path.c_str());
+    } else {
+        LOG_INFO("HttpServer: Successfully loaded player.html from %s", player_path.c_str());
+    }
+
+    if (content.empty()) {
+        // Return a simple fallback HTML page if player.html not found
+        content = R"(
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Genea Video Streamer</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; max-width: 600px; }
+        h1 { color: #667eea; margin-bottom: 10px; }
+        p { color: #666; font-size: 16px; margin: 10px 0; }
+        .error { background: #fee; border: 1px solid #fcc; color: #c33; padding: 15px; border-radius: 4px; margin-top: 20px; font-size: 14px; }
+        .links { margin-top: 20px; }
+        a { color: #667eea; text-decoration: none; margin: 10px; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Genea Live Video Streamer</h1>
+        <p>Web player interface</p>
+        <div class="error">
+            <p>⚠️ Player HTML file not found. The player.html file should be located in the <code>web/</code> directory.</p>
+            <p>However, the streaming backend is working! You can check the API:</p>
+        </div>
+        <div class="links">
+            <p><a href="/api/health">/api/health</a> - System health</p>
+            <p><a href="/api/streams">/api/streams</a> - Available streams</p>
+        </div>
+    </div>
+</body>
+</html>
+        )";
+    }
+
+    std::string header = generateHttpHeader(200, "text/html", content.size(), config_.enable_cors);
+    return header + content;
+}
+
+std::string HttpServer::handleNotFound() {
+    std::string body = "404 Not Found";
+    std::string header = generateHttpHeader(404, "text/plain", body.size(), config_.enable_cors);
+    return header + body;
+}
+
+std::string HttpServer::readFileContent(const std::string& file_path) {
+    std::ifstream file(file_path, std::ios::binary);
+    if (!file.is_open()) {
+        return "";
+    }
+
+    std::ostringstream content;
+    char buffer[FILE_CHUNK_SIZE];
+    while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
+        content.write(buffer, file.gcount());
+    }
+
+    return content.str();
+}
+
+bool HttpServer::fileExists(const std::string& file_path) {
+    std::ifstream file(file_path);
+    return file.good();
+}
+
+std::string HttpServer::jsonEscape(const std::string& input) {
+    std::string output;
+    for (char c : input) {
+        switch (c) {
+            case '"':
+                output += "\\\"";
+                break;
+            case '\\':
+                output += "\\\\";
+                break;
+            case '\b':
+                output += "\\b";
+                break;
+            case '\f':
+                output += "\\f";
+                break;
+            case '\n':
+                output += "\\n";
+                break;
+            case '\r':
+                output += "\\r";
+                break;
+            case '\t':
+                output += "\\t";
+                break;
+            default:
+                output += c;
+        }
+    }
+    return output;
+}
+
+std::string HttpServer::handleDetectionStats(const std::string& path) {
+    // Parse query parameters from path (e.g., /api/detections/stats?stream_id=camera-1&object_type=person)
+    std::string stream_id = "";
+    std::string object_type = "";
+    
+    size_t query_pos = path.find('?');
+    if (query_pos != std::string::npos) {
+        std::string query = path.substr(query_pos + 1);
+        
+        // Parse stream_id parameter
+        size_t stream_pos = query.find("stream_id=");
+        if (stream_pos != std::string::npos) {
+            size_t end = query.find('&', stream_pos);
+            stream_id = query.substr(stream_pos + 10, end == std::string::npos ? std::string::npos : end - stream_pos - 10);
+        }
+        
+        // Parse object_type parameter
+        size_t type_pos = query.find("object_type=");
+        if (type_pos != std::string::npos) {
+            size_t end = query.find('&', type_pos);
+            object_type = query.substr(type_pos + 12, end == std::string::npos ? std::string::npos : end - type_pos - 12);
+        }
+    }
+    
+    std::string stats = queryDetectionStats(stream_id, object_type);
+    std::string header = generateHttpHeader(200, "application/json", stats.size(), config_.enable_cors);
+    return header + stats;
+}
+
+std::string HttpServer::handleDetectionRecent(const std::string& path) {
+    // Parse query parameters from path (e.g., /api/detections/recent?limit=20&stream_id=camera-1)
+    size_t query_pos = path.find('?');
+    int limit = 50;  // Default
+    std::string stream_id = "";
+    
+    try {
+        if (query_pos != std::string::npos) {
+            std::string query = path.substr(query_pos + 1);
+            
+            // Parse limit parameter
+            size_t limit_pos = query.find("limit=");
+            if (limit_pos != std::string::npos) {
+                size_t end = query.find('&', limit_pos);
+                std::string limit_str = query.substr(limit_pos + 6, end == std::string::npos ? std::string::npos : end - limit_pos - 6);
+                limit = std::stoi(limit_str);
+                if (limit < 1 || limit > 1000) limit = 50;  // Clamp to valid range
+            }
+            
+            // Parse stream_id parameter
+            size_t stream_pos = query.find("stream_id=");
+            if (stream_pos != std::string::npos) {
+                size_t end = query.find('&', stream_pos);
+                stream_id = query.substr(stream_pos + 10, end == std::string::npos ? std::string::npos : end - stream_pos - 10);
+            }
+        }
+    } catch (const std::exception& e) {
+        LOG_WARN("HttpServer: Error parsing detection query parameters: %s", e.what());
+        std::string error = "{\"error\": \"Invalid query parameters\"}";
+        std::string header = generateHttpHeader(400, "application/json", error.size(), config_.enable_cors);
+        return header + error;
+    }
+    
+    std::string detections = queryRecentDetections(limit, stream_id);
+    std::string header = generateHttpHeader(200, "application/json", detections.size(), config_.enable_cors);
+    return header + detections;
+}
+
+std::string HttpServer::handleDetectionFrame(const std::string& det_id_str) {
+    // Parse frame ID from path /detections/frame/<id>
+    try {
+        int det_id = std::stoi(det_id_str);
+        std::string frame_data = queryDetectionFrame(det_id);
+        
+        // If we got JPEG data back, return it as an image
+        if (frame_data.substr(0, 3) == "\xFF\xD8\xFF") {  // JPEG magic bytes
+            std::string header = generateHttpHeader(200, "image/jpeg", frame_data.size(), config_.enable_cors);
+            return header + frame_data;
+        } else {
+            // Error response (JSON)
+            std::string header = generateHttpHeader(404, "application/json", frame_data.size(), config_.enable_cors);
+            return header + frame_data;
+        }
+    } catch (const std::exception& e) {
+        std::string error = "{\"error\": \"Invalid frame ID\"}";
+        std::string header = generateHttpHeader(400, "application/json", error.size(), config_.enable_cors);
+        return header + error;
+    }
+}
+
+std::string HttpServer::queryDetectionStats(const std::string& stream_id, const std::string& object_type) {
+    LOG_INFO("queryDetectionStats: stream_id='%s', object_type='%s'", stream_id.c_str(), object_type.c_str());
+    
+    sqlite3* db = nullptr;
+    sqlite3_stmt* stmt = nullptr;
+    
+    int rc = sqlite3_open(config_.database_path.c_str(), &db);
+    LOG_INFO("queryDetectionStats: Opened DB at %s, rc=%d", config_.database_path.c_str(), rc);
+    
+    if (rc != SQLITE_OK) {
+        const char* err_msg = sqlite3_errmsg(db);
+        LOG_WARN("Failed to open detection database: %s", err_msg ? err_msg : "unknown error");
+        int close_rc = sqlite3_close(db);
+        if (close_rc != SQLITE_OK) {
+            LOG_WARN("Failed to close database after open error: rc=%d", close_rc);
+        }
+        return "{\"error\": \"Database not available\", \"total_detections\": 0, \"by_type\": {}, \"average_confidence\": 0.0}";
+    }
+    
+    std::ostringstream json;
+    json << "{\n";
+    
+    int total = 0;
+    double avg_confidence = 0.0;
+    std::ostringstream by_type;
+    by_type << "{";
+    bool first_type = true;
+    
+    // Get total count
+    const char* count_query_sql = "SELECT COUNT(*) FROM detections";
+    LOG_INFO("queryDetectionStats: Executing count query");
+    if (sqlite3_prepare_v2(db, count_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            total = sqlite3_column_int(stmt, 0);
+            LOG_INFO("queryDetectionStats: Total detections = %d", total);
+        }
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize count statement: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare count query: %s", sqlite3_errmsg(db));
+    }
+    
+    // Get counts by type
+    const char* type_query_sql = "SELECT object_type, COUNT(*) FROM detections GROUP BY object_type ORDER BY COUNT(*) DESC";
+    if (sqlite3_prepare_v2(db, type_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* obj_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            int count = sqlite3_column_int(stmt, 1);
+            
+            if (!first_type) by_type << ", ";
+            by_type << "\"" << (obj_type ? obj_type : "unknown") << "\": " << count;
+            first_type = false;
+        }
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize type query: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare type query: %s", sqlite3_errmsg(db));
+    }
+    by_type << "}";
+    
+    // Get average confidence
+    const char* avg_query_sql = "SELECT AVG(confidence) FROM detections";
+    if (sqlite3_prepare_v2(db, avg_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            avg_confidence = sqlite3_column_double(stmt, 0);
+        }
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize avg query: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare avg query: %s", sqlite3_errmsg(db));
+    }
+    
+    json << "  \"total_detections\": " << total << ",\n";
+    json << "  \"by_type\": " << by_type.str() << ",\n";
+    json << "  \"average_confidence\": " << std::fixed << std::setprecision(2) << avg_confidence << "\n";
+    json << "}\n";
+    
+    // Ensure all statements are finalized before closing
+    if (stmt != nullptr) {
+        LOG_WARN("Statement was not finalized before close - force finalizing");
+        sqlite3_finalize(stmt);
+    }
+    
+    int close_rc = sqlite3_close(db);
+    if (close_rc != SQLITE_OK) {
+        LOG_ERROR("Failed to close database: rc=%d (SQLITE_OK=%d). This will lock the database for next request!", close_rc, SQLITE_OK);
+    }
+    return json.str();
+}
+
+std::string HttpServer::queryRecentDetections(int limit, const std::string& stream_id) {
+    sqlite3* db = nullptr;
+    sqlite3_stmt* stmt = nullptr;
+    
+    int rc = sqlite3_open(config_.database_path.c_str(), &db);
+    
+    if (rc != SQLITE_OK) {
+        LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
+        int close_rc = sqlite3_close(db);
+        if (close_rc != SQLITE_OK) {
+            LOG_WARN("Failed to close database: rc=%d", close_rc);
+        }
+        return "{\"error\": \"Database not available\", \"detections\": [], \"total\": 0}";
+    }
+    
+    std::ostringstream json;
+    json << "{\n";
+    json << "  \"detections\": [\n";
+    
+    // Query detections, optionally filtered by stream_id
+    std::string base_query = "SELECT id, object_type, confidence, bbox_x, bbox_y, bbox_w, bbox_h, unix_timestamp, segment_filename, stream_id, frame_path_annotated FROM detections";
+    if (!stream_id.empty()) {
+        base_query += " WHERE stream_id = ?";
+    }
+    base_query += " ORDER BY unix_timestamp DESC LIMIT ?";
+    
+    bool first = true;
+    int row_count = 0;
+    
+    if (sqlite3_prepare_v2(db, base_query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        // Bind parameters
+        int param_index = 1;
+        if (!stream_id.empty()) {
+            sqlite3_bind_text(stmt, param_index++, stream_id.c_str(), -1, SQLITE_STATIC);
+        }
+        sqlite3_bind_int(stmt, param_index, limit);
+        
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            if (!first) json << ",\n";
+            row_count++;
+            
+            int det_id = sqlite3_column_int(stmt, 0);
+            const char* obj_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            double confidence = sqlite3_column_double(stmt, 2);
+            double bbox_x = sqlite3_column_double(stmt, 3);
+            double bbox_y = sqlite3_column_double(stmt, 4);
+            double bbox_w = sqlite3_column_double(stmt, 5);
+            double bbox_h = sqlite3_column_double(stmt, 6);
+            int timestamp = sqlite3_column_int(stmt, 7);
+            const char* seg_filename = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            const char* sid = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 9));
+            const char* frame_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 10));
+            
+            json << "    {\n";
+            json << "      \"id\": " << det_id << ",\n";
+            json << "      \"object_type\": \"" << (obj_type ? obj_type : "unknown") << "\",\n";
+            json << "      \"confidence\": " << std::fixed << std::setprecision(2) << confidence << ",\n";
+            json << "      \"bbox\": {\"x\": " << bbox_x << ", \"y\": " << bbox_y << ", \"width\": " << bbox_w << ", \"height\": " << bbox_h << "},\n";
+            json << "      \"timestamp\": " << timestamp << ",\n";
+            json << "      \"segment_filename\": \"" << (seg_filename ? seg_filename : "") << "\",\n";
+            json << "      \"stream_id\": \"" << (sid ? sid : "") << "\",\n";
+            json << "      \"frame_path_annotated\": \"" << (frame_path ? frame_path : "") << "\"\n";
+            json << "    }";
+            
+            first = false;
+        }
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize recent detections query: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare recent detections query: %s", sqlite3_errmsg(db));
+    }
+    
+    json << "\n  ],\n";
+    json << "  \"total\": " << row_count << "\n";
+    json << "}\n";
+    
+    // Ensure statement is finalized before close
+    if (stmt != nullptr) {
+        LOG_WARN("Statement not finalized before close - force finalizing");
+        sqlite3_finalize(stmt);
+    }
+    
+    int close_rc = sqlite3_close(db);
+    if (close_rc != SQLITE_OK) {
+        LOG_ERROR("Failed to close database: rc=%d (SQLITE_OK=%d). This will lock the database!", close_rc, SQLITE_OK);
+    }
+    return json.str();
+}
+
+std::string HttpServer::queryDetectionFrame(int det_id) {
+    sqlite3* db = nullptr;
+    sqlite3_stmt* stmt = nullptr;
+    
+    int rc = sqlite3_open(config_.database_path.c_str(), &db);
+    
+    if (rc != SQLITE_OK) {
+        LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
+        int close_rc = sqlite3_close(db);
+        if (close_rc != SQLITE_OK) {
+            LOG_WARN("Failed to close database: rc=%d", close_rc);
+        }
+        return "{\"error\": \"Database not available\"}";
+    }
+    
+    std::string frame_data;
+    
+    // Get frame path from database
+    int prep_rc = sqlite3_prepare_v2(db, "SELECT frame_path_annotated FROM detections WHERE id = ?", -1, &stmt, nullptr);
+    if (prep_rc == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, det_id);
+        
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* frame_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            
+            if (frame_path) {
+                // Try to read the frame file
+                std::ifstream file(frame_path, std::ios::binary);
+                if (file.good()) {
+                    file.seekg(0, std::ios::end);
+                    size_t size = file.tellg();
+                    file.seekg(0, std::ios::beg);
+                    
+                    frame_data.resize(size);
+                    file.read(&frame_data[0], size);
+                    file.close();
+                } else {
+                    frame_data = "{\"error\": \"Frame file not found\"}";
+                }
+            } else {
+                frame_data = "{\"error\": \"No frame associated with detection\"}";
+            }
+        } else {
+            frame_data = "{\"error\": \"Detection not found\"}";
+        }
+        
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize frame query: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare frame query: %s", sqlite3_errmsg(db));
+        frame_data = "{\"error\": \"Database query failed\"}";
+    }
+    
+    // Ensure statement is finalized before close
+    if (stmt != nullptr) {
+        LOG_WARN("Statement not finalized before close - force finalizing");
+        sqlite3_finalize(stmt);
+    }
+    
+    int close_rc = sqlite3_close(db);
+    if (close_rc != SQLITE_OK) {
+        LOG_ERROR("Failed to close database: rc=%d (SQLITE_OK=%d). This will lock the database!", close_rc, SQLITE_OK);
+    }
+    return frame_data;
+}
+
+}  // namespace streamer

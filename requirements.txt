@@ -1,0 +1,26 @@
+# Python dependencies for genea-video-streamer
+
+# Web framework
+flask==2.3.3
+flask-cors==4.0.0
+
+# Video processing
+opencv-python==4.8.0.76
+
+# AI/ML - Object detection
+ultralytics==8.0.195
+torch==2.0.1
+torchvision==0.15.2
+
+# Database
+sqlalchemy==2.0.21
+
+# Configuration
+pyyaml==6.0.1
+
+# Logging and monitoring
+python-dotenv==1.0.0
+
+# Utilities
+requests==2.31.0
+numpy==1.24.3

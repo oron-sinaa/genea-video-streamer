@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genea Live Video Streamer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .player-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .player-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .player-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .player-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .player-body {
+            padding: 20px;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        button:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button.active:hover {
+            opacity: 0.9;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .info-section label {
+            display: inline-block;
+            font-weight: 600;
+            min-width: 100px;
+            color: #555;
+        }
+
+        .info-section .value {
+            color: #222;
+            font-family: "Monaco", "Courier New", monospace;
+        }
+
+        .error {
+            display: none;
+            background: #fee;
+            border: 1px solid #f99;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status.live {
+            background: #fee;
+            color: #c33;
+        }
+
+        .status.archive {
+            background: #efe;
+            color: #3c3;
+        }
+
+        .status.loading {
+            background: #ffd;
+            color: #993;
+        }
+
+        .status.error {
+            background: #f99;
+            color: white;
+        }
+
+        .stream-selector-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .stream-selector-section label {
+            display: inline-block;
+            font-weight: 600;
+            margin-right: 10px;
+            color: #555;
+        }
+
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        select:hover {
+            border-color: #999;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .footer {
+            border-top: 1px solid #eee;
+            padding: 15px 20px;
+            background: #fafafa;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .player-header h1 {
+                font-size: 18px;
+            }
+
+            .controls {
+                gap: 8px;
+            }
+
+            button {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+
+            .info-section label {
+                display: block;
+                margin-bottom: 5px;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <div class="player-header">
+            <h1>Genea Live Video Streamer</h1>
+            <p>Real-time streaming with HLS</p>
+        </div>
+
+        <div class="player-body">
+            <video id="player" controls autoplay muted playsinline></video>
+
+            <div class="controls">
+                <button id="live-btn" class="active">🔴 Live</button>
+                <button id="archive-btn">📚 Archive / Playback</button>
+            </div>
+
+            <div class="stream-selector-section" id="stream-selector-section" style="display: none;">
+                <label for="stream-select">📺 Stream:</label>
+                <select id="stream-select">
+                    <option value="">Loading streams...</option>
+                </select>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="info-section">
+                <div><label>Mode:</label> <span id="mode">Live</span> <span class="status live" id="status-badge">Live</span></div>
+                <div><label>Status:</label> <span id="status">Initializing...</span></div>
+                <div><label>Stream URL:</label> <span class="value" id="stream-url">-</span></div>
+                <div><label>Codec Support:</label> <span id="codec-support">Checking...</span></div>
+            </div>
+
+            <div style="background: #e8f4f8; padding: 12px; border-radius: 6px; font-size: 12px; color: #333; line-height: 1.5;">
+                <strong>How to use:</strong>
+                <ul style="margin-left: 20px; margin-top: 8px;">
+                    <li><strong>Live Mode:</strong> Watch the real-time stream with minimal latency (~10-20 seconds)</li>
+                    <li><strong>Archive Mode:</strong> Playback recorded segments; use seek to jump to any point in the recorded window</li>
+                    <li>Switch modes anytime using the buttons above</li>
+                    <li>Use browser controls to pause, mute, or adjust quality</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Genea Video Streaming Solution — Powered by HLS and LibAV</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/hls.js@latest/dist/hls.min.js"></script>
+    <script>
+        // Player state
+        let hls = null;
+        let video = document.getElementById('player');
+        let currentMode = 'live';
+        let currentStream = null;  // Track selected stream name
+        let streamChangeListenerAttached = false;  // Track if change listener is attached
+        let playbackConfig = null;  // Cache playback config from server
+        const liveBtn = document.getElementById('live-btn');
+        const archiveBtn = document.getElementById('archive-btn');
+        const errorDiv = document.getElementById('error');
+        const statusDiv = document.getElementById('status');
+        const statusBadge = document.getElementById('status-badge');
+        const streamUrlDiv = document.getElementById('stream-url');
+        const codecSupportDiv = document.getElementById('codec-support');
+        const modeDiv = document.getElementById('mode');
+        const streamSelector = document.getElementById('stream-select');
+        const streamSelectorSection = document.getElementById('stream-selector-section');
+
+        // Configuration
+        const BASE_URL = window.location.origin;
+        const MANIFEST_PATHS = {
+            live: (stream) => stream ? `/hls/${stream}/live.m3u8` : '/segments/live.m3u8',
+            archive: (stream) => stream ? `/hls/${stream}/archive.m3u8` : '/segments/archive.m3u8'
+        };
+
+        // Load playback configuration from server
+        async function loadPlaybackConfig() {
+            try {
+                const response = await fetch(BASE_URL + '/api/config');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                playbackConfig = await response.json();
+                console.log('Loaded playback config:', playbackConfig);
+            } catch (error) {
+                console.warn('Failed to load playback config, using defaults:', error);
+                // Use defaults if config not available
+                playbackConfig = {
+                    playback: {
+                        live_mode: {
+                            back_buffer_length_s: 10,
+                            sync_segment_count: 2,
+                            max_buffer_length_s: 30,
+                            max_buffer_length_absolute_s: 60
+                        }
+                    }
+                };
+            }
+        }
+
+        // Handle stream selection change (attach once)
+        function attachStreamChangeListener() {
+            if (!streamChangeListenerAttached) {
+                streamChangeListenerAttached = true;
+                streamSelector.addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        currentStream = e.target.value;
+                        loadStream(MANIFEST_PATHS[currentMode](currentStream));
+                    }
+                });
+            }
+        }
+
+        // Load available streams and populate selector
+        async function loadStreamList() {
+            try {
+                const response = await fetch(BASE_URL + '/api/streams');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                
+                const streams = data.streams || [];
+
+                if (streams.length === 0) {
+                    // No multi-stream mode - hide the selector
+                    streamSelectorSection.style.display = 'none';
+                    if (currentStream === null) {
+                        currentStream = null;
+                    }
+                } else if (streams.length === 1) {
+                    // Single stream - show selector but auto-select
+                    streamSelectorSection.style.display = 'block';
+                    const streamName = streams[0].name;
+                    
+                    // Only update if stream changed
+                    if (currentStream !== streamName) {
+                        streamSelector.innerHTML = `<option value="${streamName}" selected>${streamName}</option>`;
+                        currentStream = streamName;
+                        loadStream(MANIFEST_PATHS[currentMode](currentStream));
+                    }
+                } else {
+                    // Multiple streams - show selector with all options
+                    streamSelectorSection.style.display = 'block';
+                    
+                    // Save current selection
+                    const previousSelection = streamSelector.value;
+                    
+                    // Repopulate dropdown
+                    streamSelector.innerHTML = '<option value="">-- Select a stream --</option>';
+                    streams.forEach(stream => {
+                        const option = document.createElement('option');
+                        option.value = stream.name;
+                        option.textContent = `${stream.name} (${stream.status})`;
+                        streamSelector.appendChild(option);
+                    });
+                    
+                    // Restore previous selection if it still exists
+                    if (previousSelection) {
+                        streamSelector.value = previousSelection;
+                    }
+                    
+                    // Attach listener only once
+                    attachStreamChangeListener();
+                }
+            } catch (error) {
+                console.warn('Failed to load stream list:', error);
+                streamSelectorSection.style.display = 'none';
+            }
+        }
+
+        // Load available streams on startup
+        loadStreamList();
+
+        // Refresh stream list every 5 seconds (just update streams, don't reload if unchanged)
+        setInterval(loadStreamList, 5000);
+
+        // Initialize HLS.js if supported by browser
+        function initHls() {
+            // Check if browser supports Media Source Extensions (required for HLS.js)
+            if (!Hls.isSupported()) {
+                showError('Your browser does not support HLS streaming. Please use a modern browser (Chrome, Firefox, Safari, Edge).');
+                codecSupportDiv.textContent = '❌ Not supported';
+                return false;
+            }
+
+            codecSupportDiv.textContent = '✅ Supported (HLS.js ready)';
+
+            if (hls) {
+                hls.destroy();
+            }
+
+            // Use config from server, or defaults if not loaded
+            let config_values = playbackConfig?.playback?.live_mode || {
+                back_buffer_length_s: 10,
+                sync_segment_count: 2,
+                max_buffer_length_s: 30,
+                max_buffer_length_absolute_s: 60
+            };
+
+            hls = new Hls({
+                debug: false,
+                // Low-latency settings from server config
+                liveBackBufferLength: config_values.back_buffer_length_s,     // Buffer behind live edge (seconds)
+                liveSyncDurationCount: config_values.sync_segment_count,      // Segments ahead to sync
+                maxBufferLength: config_values.max_buffer_length_s,           // Max buffer (seconds)
+                maxMaxBufferLength: config_values.max_buffer_length_absolute_s, // Absolute max (seconds)
+            });
+
+            // Handle HLS errors
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                if (data.fatal) {
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            showError(`Network error: ${data.details}. Retrying...`);
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            showError(`Media error: ${data.details}. The codec may not be supported in your browser.`);
+                            break;
+                        default:
+                            showError(`Playback error: ${data.details}`);
+                    }
+                }
+            });
+
+            // Update status on manifest parse
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                updateStatus('Connected', 'loading');
+                video.play().catch(err => {
+                    console.warn('Autoplay blocked:', err);
+                });
+            });
+
+            // Update status when playing
+            video.addEventListener('play', () => {
+                updateStatus(`Playing (${currentMode} mode)`, 'live');
+                hideError();
+            });
+
+            return true;
+        }
+
+        // Load a stream manifest
+        function loadStream(manifestPath) {
+            hideError();
+            updateStatus('Loading...', 'loading');
+
+            if (!Hls.isSupported()) {
+                showError('HLS not supported in this browser.');
+                return;
+            }
+
+            if (!hls) {
+                if (!initHls()) {
+                    return;
+                }
+            }
+
+            const fullUrl = BASE_URL + manifestPath;
+            streamUrlDiv.textContent = fullUrl;
+
+            hls.loadSource(fullUrl);
+            hls.attachMedia(video);
+        }
+
+        // Switch to live mode
+        function switchToLive() {
+            if (currentMode === 'live') return;
+
+            currentMode = 'live';
+            modeDiv.textContent = 'Live';
+            statusBadge.className = 'status live';
+            statusBadge.textContent = 'Live';
+            liveBtn.classList.add('active');
+            archiveBtn.classList.remove('active');
+
+            loadStream(MANIFEST_PATHS.live(currentStream));
+        }
+
+        // Switch to archive/VOD mode
+        function switchToArchive() {
+            if (currentMode === 'archive') return;
+
+            currentMode = 'archive';
+            modeDiv.textContent = 'Archive / Playback';
+            statusBadge.className = 'status archive';
+            statusBadge.textContent = 'VOD / Playback';
+            archiveBtn.classList.add('active');
+            liveBtn.classList.remove('active');
+
+            loadStream(MANIFEST_PATHS.archive(currentStream));
+        }
+
+        // UI updates
+        function showError(message) {
+            errorDiv.textContent = '⚠️ ' + message;
+            errorDiv.classList.add('show');
+            updateStatus('Error', 'error');
+        }
+
+        function hideError() {
+            errorDiv.classList.remove('show');
+        }
+
+        function updateStatus(message, badge) {
+            statusDiv.textContent = message;
+            statusBadge.className = 'status ' + badge;
+        }
+
+        // Event listeners
+        liveBtn.addEventListener('click', switchToLive);
+        archiveBtn.addEventListener('click', switchToArchive);
+
+        // Handle native video errors
+        video.addEventListener('error', () => {
+            if (video.error) {
+                const errorMsg = video.error.message || video.error.code;
+                showError(`Video playback error: ${errorMsg}. Your browser may not support this codec.`);
+            }
+        });
+
+        // Initialize with live stream on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load playback config first, then streams, then start playback
+            await loadPlaybackConfig();
+            loadStreamList();
+            switchToLive();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (hls) {
+                hls.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
