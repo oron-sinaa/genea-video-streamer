@@ -145,7 +145,7 @@ bash tests/e2e/run_comprehensive_e2e.sh
 
 ## Configuration
 
-### Streaming Config (`config/rtsp-multi-stream.yaml`)
+### Streaming Config (`config/streamer.yaml`)
 
 ```yaml
 http:
