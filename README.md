@@ -66,7 +66,7 @@ StreamManager (lifecycle, health aggregation)
 | 2 | Remux & Segments (HLS muxer, playlists, archive) | ✅ Complete |
 | 3 | Web Player (HLS.js, live + archive UI, stream selector) | ✅ Complete |
 | 4 | Reliability (reconnect, backoff, stale detection, idempotent shutdown) | ✅ Complete |
-| 5 | Testing & CI (unit, integration, GitHub Actions, Docker) | ✅ Complete |
+| 5 | Testing (unit, integration, Docker) | ✅ Complete |
 | 6 | Scalability (StreamManager, StreamWorker, HTTP API, multi-stream) | ✅ Complete |
 | 6b | Playback Latency (configurable buffering, low-latency profiles) | ✅ Complete |
 | 7 | AI Inference (YOLOv8 detection, multi-stream workers, SQLite storage, detection API) | ✅ Complete |
@@ -90,7 +90,6 @@ StreamManager (lifecycle, health aggregation)
 | **Deployment** | | |
 | Container | Docker + docker-compose | Reproducible, full-stack deployment |
 | Orchestration | docker-compose v2+ | Multi-service coordination with health checks |
-| CI | GitHub Actions | Automated build, test, publish |
 
 ## Quick Start
 
@@ -99,7 +98,7 @@ StreamManager (lifecycle, health aggregation)
 ```
 1.
 Clone/download the repository
-git clone https://github.com/your-repo/genea-video-streamer.git
+git clone https://github.com/oron-sinaa/genea-video-streamer.git
 cd genea-video-streamer
 
 2.
