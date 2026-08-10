@@ -12,7 +12,7 @@ PORT=8080
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 RESULTS_DIR="$SCRIPT_DIR/results"
-BINARY="$PROJECT_DIR/build/streamer"
+BINARY="$PROJECT_DIR/streamer"
 CONFIG="$SCRIPT_DIR/scenarios/${SCENARIO}.yaml"
 
 # Verify files exist
@@ -50,7 +50,7 @@ trap cleanup EXIT
 echo "Starting test: $SCENARIO (duration: ${DURATION}s)"
 echo "Config: $CONFIG"
 
-"$BINARY" --config "$CONFIG" > "$RESULTS_DIR/${SCENARIO}.log" 2>&1 &
+"$BINARY" "$CONFIG" > "$RESULTS_DIR/${SCENARIO}.log" 2>&1 &
 STREAMER_PID=$!
 
 # Wait for HTTP server to start

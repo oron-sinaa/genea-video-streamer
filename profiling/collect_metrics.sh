@@ -11,7 +11,7 @@ OUTPUT="${3:-metrics.csv}"
 INTERVAL=5
 
 # Get PID of streamer process
-STREAMER_PID=$(pgrep -f "/app/streamer\|./build/streamer" | head -1)
+STREAMER_PID=$(pgrep -f "/app/streamer" | head -1)
 if [ -z "$STREAMER_PID" ]; then
     echo "ERROR: streamer process not found"
     exit 1

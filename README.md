@@ -74,7 +74,7 @@ cmake --build build -j$(nproc)
 
 ```bash
 # Edit config/rtsp-ingest.yaml with your camera URL, then:
-./build/streamer --config config/rtsp-ingest.yaml
+./build/streamer config/rtsp-ingest.yaml
 ```
 
 Open `http://localhost:8000` to view the player.
@@ -83,7 +83,7 @@ Open `http://localhost:8000` to view the player.
 
 ```bash
 # Edit config/rtsp-multi-stream.yaml or config/multi-stream-example.yaml
-./build/streamer --config config/rtsp-multi-stream.yaml
+./build/streamer config/rtsp-multi-stream.yaml
 ```
 
 Streams are served at `/hls/<stream-name>/live.m3u8`.
