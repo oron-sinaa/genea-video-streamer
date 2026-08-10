@@ -31,7 +31,7 @@ docker compose up -d
 - Select Live or Playback
 - Select a stream name from the drop-down
 
-(if on a headless server, enable port-forwarding, or configure a reverse proxy)
+(if on a headless server, please enable port-forwarding, or configure a reverse proxy)
 
 ---
 
