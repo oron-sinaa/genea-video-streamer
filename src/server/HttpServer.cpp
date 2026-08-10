@@ -302,14 +302,17 @@ std::string HttpServer::readHttpRequest(int socket) {
     std::memset(buffer, 0, sizeof(buffer));
 
     ssize_t bytes_received = recv(socket, buffer, sizeof(buffer) - 1, 0);
-    if (bytes_received <= 0) {
-        if (bytes_received < 0) {
-            // EAGAIN/EWOULDBLOCK is normal when socket has a timeout and no data is ready
-            if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                LOG_WARN("HttpServer: recv() error: %s", strerror(errno));
-            }
+    if (bytes_received < 0) {
+        int err = errno;
+        // EAGAIN/EWOULDBLOCK is normal when socket has a timeout and no data is ready
+        if (err != EAGAIN && err != EWOULDBLOCK) {
+            LOG_WARN("HttpServer: recv() error: %s (errno=%d)", strerror(err), err);
         }
-        // Return empty string to signal error (caller will send 400 response)
+        // Return empty string to signal timeout/error
+        return "";
+    }
+    if (bytes_received == 0) {
+        // Connection closed by client
         return "";
     }
 
@@ -821,73 +824,48 @@ std::string HttpServer::queryDetectionStats(const std::string& stream_id, const 
     LOG_INFO("queryDetectionStats: stream_id='%s', object_type='%s'", stream_id.c_str(), object_type.c_str());
     
     sqlite3* db = nullptr;
+    sqlite3_stmt* stmt = nullptr;
+    
     int rc = sqlite3_open(config_.database_path.c_str(), &db);
     LOG_INFO("queryDetectionStats: Opened DB at %s, rc=%d", config_.database_path.c_str(), rc);
     
     if (rc != SQLITE_OK) {
-        LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
-        sqlite3_close(db);
+        const char* err_msg = sqlite3_errmsg(db);
+        LOG_WARN("Failed to open detection database: %s", err_msg ? err_msg : "unknown error");
+        int close_rc = sqlite3_close(db);
+        if (close_rc != SQLITE_OK) {
+            LOG_WARN("Failed to close database after open error: rc=%d", close_rc);
+        }
         return "{\"error\": \"Database not available\", \"total_detections\": 0, \"by_type\": {}, \"average_confidence\": 0.0}";
     }
     
     std::ostringstream json;
     json << "{\n";
     
-    // Get total count using parameterized queries for security and correctness
-    sqlite3_stmt* stmt = nullptr;
     int total = 0;
-    
-    if (stream_id.empty() && object_type.empty()) {
-        // No filters - simple count all
-        const char* count_query_sql = "SELECT COUNT(*) FROM detections";
-        LOG_INFO("queryDetectionStats: Executing unfiltered count query");
-        if (sqlite3_prepare_v2(db, count_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
-            if (sqlite3_step(stmt) == SQLITE_ROW) {
-                total = sqlite3_column_int(stmt, 0);
-                LOG_INFO("queryDetectionStats: Total detections = %d", total);
-            }
-            sqlite3_finalize(stmt);
-        } else {
-            LOG_WARN("queryDetectionStats: Failed to prepare count query: %s", sqlite3_errmsg(db));
-        }
-    } else if (!stream_id.empty() && object_type.empty()) {
-        // Filter by stream_id only
-        const char* count_query_sql = "SELECT COUNT(*) FROM detections WHERE stream_id = ?";
-        if (sqlite3_prepare_v2(db, count_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
-            sqlite3_bind_text(stmt, 1, stream_id.c_str(), -1, SQLITE_TRANSIENT);
-            if (sqlite3_step(stmt) == SQLITE_ROW) {
-                total = sqlite3_column_int(stmt, 0);
-            }
-            sqlite3_finalize(stmt);
-        }
-    } else if (stream_id.empty() && !object_type.empty()) {
-        // Filter by object_type only
-        const char* count_query_sql = "SELECT COUNT(*) FROM detections WHERE object_type = ?";
-        if (sqlite3_prepare_v2(db, count_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
-            sqlite3_bind_text(stmt, 1, object_type.c_str(), -1, SQLITE_TRANSIENT);
-            if (sqlite3_step(stmt) == SQLITE_ROW) {
-                total = sqlite3_column_int(stmt, 0);
-            }
-            sqlite3_finalize(stmt);
-        }
-    } else {
-        // Filter by both stream_id and object_type
-        const char* count_query_sql = "SELECT COUNT(*) FROM detections WHERE stream_id = ? AND object_type = ?";
-        if (sqlite3_prepare_v2(db, count_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
-            sqlite3_bind_text(stmt, 1, stream_id.c_str(), -1, SQLITE_TRANSIENT);
-            sqlite3_bind_text(stmt, 2, object_type.c_str(), -1, SQLITE_TRANSIENT);
-            if (sqlite3_step(stmt) == SQLITE_ROW) {
-                total = sqlite3_column_int(stmt, 0);
-            }
-            sqlite3_finalize(stmt);
-        }
-    }
-    
-    // Get counts by type - simplified to always show all types
+    double avg_confidence = 0.0;
     std::ostringstream by_type;
     by_type << "{";
     bool first_type = true;
     
+    // Get total count
+    const char* count_query_sql = "SELECT COUNT(*) FROM detections";
+    LOG_INFO("queryDetectionStats: Executing count query");
+    if (sqlite3_prepare_v2(db, count_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            total = sqlite3_column_int(stmt, 0);
+            LOG_INFO("queryDetectionStats: Total detections = %d", total);
+        }
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize count statement: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare count query: %s", sqlite3_errmsg(db));
+    }
+    
+    // Get counts by type
     const char* type_query_sql = "SELECT object_type, COUNT(*) FROM detections GROUP BY object_type ORDER BY COUNT(*) DESC";
     if (sqlite3_prepare_v2(db, type_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
         while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -898,18 +876,29 @@ std::string HttpServer::queryDetectionStats(const std::string& stream_id, const 
             by_type << "\"" << (obj_type ? obj_type : "unknown") << "\": " << count;
             first_type = false;
         }
-        sqlite3_finalize(stmt);
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize type query: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare type query: %s", sqlite3_errmsg(db));
     }
     by_type << "}";
     
-    // Get average confidence - simplified to always show unfiltered average
-    double avg_confidence = 0.0;
+    // Get average confidence
     const char* avg_query_sql = "SELECT AVG(confidence) FROM detections";
     if (sqlite3_prepare_v2(db, avg_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             avg_confidence = sqlite3_column_double(stmt, 0);
         }
-        sqlite3_finalize(stmt);
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize avg query: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare avg query: %s", sqlite3_errmsg(db));
     }
     
     json << "  \"total_detections\": " << total << ",\n";
@@ -917,17 +906,31 @@ std::string HttpServer::queryDetectionStats(const std::string& stream_id, const 
     json << "  \"average_confidence\": " << std::fixed << std::setprecision(2) << avg_confidence << "\n";
     json << "}\n";
     
-    sqlite3_close(db);
+    // Ensure all statements are finalized before closing
+    if (stmt != nullptr) {
+        LOG_WARN("Statement was not finalized before close - force finalizing");
+        sqlite3_finalize(stmt);
+    }
+    
+    int close_rc = sqlite3_close(db);
+    if (close_rc != SQLITE_OK) {
+        LOG_ERROR("Failed to close database: rc=%d (SQLITE_OK=%d). This will lock the database for next request!", close_rc, SQLITE_OK);
+    }
     return json.str();
 }
 
 std::string HttpServer::queryRecentDetections(int limit, const std::string& stream_id) {
     sqlite3* db = nullptr;
+    sqlite3_stmt* stmt = nullptr;
+    
     int rc = sqlite3_open(config_.database_path.c_str(), &db);
     
     if (rc != SQLITE_OK) {
         LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
-        sqlite3_close(db);
+        int close_rc = sqlite3_close(db);
+        if (close_rc != SQLITE_OK) {
+            LOG_WARN("Failed to close database: rc=%d", close_rc);
+        }
         return "{\"error\": \"Database not available\", \"detections\": [], \"total\": 0}";
     }
     
@@ -942,7 +945,6 @@ std::string HttpServer::queryRecentDetections(int limit, const std::string& stre
     }
     base_query += " ORDER BY unix_timestamp DESC LIMIT ?";
     
-    sqlite3_stmt* stmt = nullptr;
     bool first = true;
     int row_count = 0;
     
@@ -983,32 +985,52 @@ std::string HttpServer::queryRecentDetections(int limit, const std::string& stre
             
             first = false;
         }
-        sqlite3_finalize(stmt);
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize recent detections query: rc=%d", finalize_rc);
+        }
+    } else {
+        LOG_WARN("Failed to prepare recent detections query: %s", sqlite3_errmsg(db));
     }
     
     json << "\n  ],\n";
     json << "  \"total\": " << row_count << "\n";
     json << "}\n";
     
-    sqlite3_close(db);
+    // Ensure statement is finalized before close
+    if (stmt != nullptr) {
+        LOG_WARN("Statement not finalized before close - force finalizing");
+        sqlite3_finalize(stmt);
+    }
+    
+    int close_rc = sqlite3_close(db);
+    if (close_rc != SQLITE_OK) {
+        LOG_ERROR("Failed to close database: rc=%d (SQLITE_OK=%d). This will lock the database!", close_rc, SQLITE_OK);
+    }
     return json.str();
 }
 
 std::string HttpServer::queryDetectionFrame(int det_id) {
     sqlite3* db = nullptr;
+    sqlite3_stmt* stmt = nullptr;
+    
     int rc = sqlite3_open(config_.database_path.c_str(), &db);
     
     if (rc != SQLITE_OK) {
         LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
-        sqlite3_close(db);
+        int close_rc = sqlite3_close(db);
+        if (close_rc != SQLITE_OK) {
+            LOG_WARN("Failed to close database: rc=%d", close_rc);
+        }
         return "{\"error\": \"Database not available\"}";
     }
     
-    sqlite3_stmt* stmt = nullptr;
     std::string frame_data;
     
     // Get frame path from database
-    if (sqlite3_prepare_v2(db, "SELECT frame_path_annotated FROM detections WHERE id = ?", -1, &stmt, nullptr) == SQLITE_OK) {
+    int prep_rc = sqlite3_prepare_v2(db, "SELECT frame_path_annotated FROM detections WHERE id = ?", -1, &stmt, nullptr);
+    if (prep_rc == SQLITE_OK) {
         sqlite3_bind_int(stmt, 1, det_id);
         
         if (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -1035,12 +1057,26 @@ std::string HttpServer::queryDetectionFrame(int det_id) {
             frame_data = "{\"error\": \"Detection not found\"}";
         }
         
-        sqlite3_finalize(stmt);
+        int finalize_rc = sqlite3_finalize(stmt);
+        stmt = nullptr;
+        if (finalize_rc != SQLITE_OK) {
+            LOG_WARN("Failed to finalize frame query: rc=%d", finalize_rc);
+        }
     } else {
+        LOG_WARN("Failed to prepare frame query: %s", sqlite3_errmsg(db));
         frame_data = "{\"error\": \"Database query failed\"}";
     }
     
-    sqlite3_close(db);
+    // Ensure statement is finalized before close
+    if (stmt != nullptr) {
+        LOG_WARN("Statement not finalized before close - force finalizing");
+        sqlite3_finalize(stmt);
+    }
+    
+    int close_rc = sqlite3_close(db);
+    if (close_rc != SQLITE_OK) {
+        LOG_ERROR("Failed to close database: rc=%d (SQLITE_OK=%d). This will lock the database!", close_rc, SQLITE_OK);
+    }
     return frame_data;
 }
 

@@ -751,10 +751,10 @@ Returns an annotated frame image with bounding boxes drawn for all detections in
 **Example:**
 ```bash
 # Download annotated frame
-curl "http://localhost:8080/detections/frame/frame_abc123def456" -o detection.jpg
+curl "http://localhost:8080/detections/frame/29>" -o detection.jpg
 
 # Display in browser
-# http://localhost:8080/detections/frame/frame_abc123def456
+# http://localhost:8080/detections/frame/29
 ```
 
 ---
@@ -802,4 +802,3 @@ curl "http://localhost:8080/api/detections/recent?stream_id=camera-1&sort_by=con
 
 - [README.md](../README.md) - Project overview
 - [design.md](./design.md) - Architecture and design details
-- [Config documentation](./config.md) - Configuration reference
