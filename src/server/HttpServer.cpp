@@ -419,10 +419,9 @@ std::string HttpServer::handleGetPlaylist(const std::string& stream_name) {
         return handleNotFound();
     }
 
-    // Construct path to playlist file
-    // Assuming HLS output dir is stored in worker or accessible via config
-    // For now, use pattern: segments/<stream-name>/live.m3u8
-    std::string playlist_path = "segments/" + stream_name + "/live.m3u8";
+    // Get the configured HLS output directory for this stream
+    std::string hls_dir = worker->getHlsOutputDir();
+    std::string playlist_path = hls_dir + "live.m3u8";
 
     std::string content = readFileContent(playlist_path);
     if (content.empty() && !fileExists(playlist_path)) {
@@ -444,8 +443,9 @@ std::string HttpServer::handleGetSegment(const std::string& stream_name, const s
         return handleNotFound();
     }
 
-    // Construct path to segment file
-    std::string segment_path = "segments/" + stream_name + "/" + segment_name;
+    // Get the configured HLS output directory for this stream and construct segment path
+    std::string hls_dir = worker->getHlsOutputDir();
+    std::string segment_path = hls_dir + segment_name;
 
     std::string content = readFileContent(segment_path);
     if (content.empty() && !fileExists(segment_path)) {

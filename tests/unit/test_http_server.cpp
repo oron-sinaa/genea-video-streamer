@@ -295,7 +295,7 @@ streamer::AppConfig configWithStream(const std::string& stream_name, uint16_t po
     streamer::StreamConfig stream;
     stream.name = stream_name;
     stream.rtsp_url = "rtsp://127.0.0.1:19999/" + stream_name;  // unreachable — never used
-    stream.hls_output = "segments/" + stream_name;              // relative, CWD-based
+    stream.hls_output = "segments/" + stream_name + "/";        // relative, CWD-based, with trailing slash
     cfg.streams.push_back(stream);
     return cfg;
 }

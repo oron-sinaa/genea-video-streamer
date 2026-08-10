@@ -69,6 +69,9 @@ class StreamWorker {
     // Get stream name
     std::string getName() const { return config_.stream_name; }
 
+    // Get HLS output directory for this stream
+    std::string getHlsOutputDir() const { return config_.hls_output_dir; }
+
     // Get per-stream health metrics
     const PipelineHealth& getHealth() const { return health_; }
 
