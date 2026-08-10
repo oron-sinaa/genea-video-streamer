@@ -45,14 +45,14 @@ ai_inference:
       hls_input_dir: /app/hls_output/camera-1
       detections_output_dir: /app/detections/camera-1
     
-    # Camera 2: Enabled, reads from local HLS, saves detections locally
+    # Camera 2: Disabled (no processing), but config is preserved for easy re-enable
     - stream_id: camera-2
-      enabled: true
+      enabled: false
       hls_input_dir: /app/hls_output/camera-2
       detections_output_dir: /app/detections/camera-2
     
-    # Camera 3: Disabled (no processing), but config is preserved for easy re-enable
+    # Camera 3: Enabled, reads from local HLS, saves detections locally
     - stream_id: camera-3
-      enabled: false
+      enabled: true
       hls_input_dir: /app/hls_output/camera-3
       detections_output_dir: /app/detections/camera-3

@@ -86,6 +86,7 @@ services:
       - ./hls_output:/data/hls_output
       - ./profiling/results:/app/profiling/results  # Profiling results (writable)
       - ./detections:/app/detections
+      - ./detections/detections.db:/app/detections.db
     ports:
       - "8080:8080"  # HTTP server: web player, REST API, HLS streaming
     networks:
