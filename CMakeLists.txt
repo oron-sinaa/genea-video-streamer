@@ -15,6 +15,7 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
     libavutil
 )
 pkg_check_modules(YAML_CPP REQUIRED IMPORTED_TARGET yaml-cpp)
+pkg_check_modules(SQLITE3 REQUIRED IMPORTED_TARGET sqlite3)
 
 add_executable(streamer
     src/main.cpp
@@ -35,6 +36,7 @@ target_include_directories(streamer PRIVATE include)
 target_link_libraries(streamer PRIVATE
     PkgConfig::LIBAV
     PkgConfig::YAML_CPP
+    PkgConfig::SQLITE3
 )
 
 # Unit tests
@@ -86,6 +88,7 @@ target_include_directories(test_http_server PRIVATE include)
 target_link_libraries(test_http_server PRIVATE
     PkgConfig::LIBAV
     PkgConfig::YAML_CPP
+    PkgConfig::SQLITE3
 )
 add_test(NAME HttpServerTests COMMAND test_http_server)
 

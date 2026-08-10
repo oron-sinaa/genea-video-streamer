@@ -18,6 +18,7 @@ class HttpServer {
         std::string listen_address = "0.0.0.0";
         int max_concurrent_connections = 100;
         bool enable_cors = true;
+        std::string database_path = "/app/detections.db";  // SQLite DB for AI detections
     };
 
     // Constructor: Inject StreamManager reference
@@ -94,6 +95,11 @@ class HttpServer {
     // Utility: Escape special characters in JSON strings
     std::string jsonEscape(const std::string& input);
 
+    // Database query helpers for detection endpoints
+    std::string queryDetectionStats();
+    std::string queryRecentDetections(int limit, const std::string& stream_id = "");
+    std::string queryDetectionFrame(int det_id);
+
     // Members
     StreamManager* manager_;
     ServerConfig config_;
@@ -101,6 +107,8 @@ class HttpServer {
     std::thread listener_thread_;
     int listening_socket_ = -1;
     mutable std::string lastError_;
+    // SQLite database connection (lazy-initialized)
+    void* db_connection_ = nullptr;  // sqlite3* (void* to avoid sqlite3.h in header)
 };
 
 }  // namespace streamer

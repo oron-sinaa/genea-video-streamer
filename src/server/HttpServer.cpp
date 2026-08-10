@@ -7,7 +7,9 @@
 #include <cerrno>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
+#include <sqlite3.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -724,69 +726,236 @@ std::string HttpServer::jsonEscape(const std::string& input) {
 }
 
 std::string HttpServer::handleDetectionStats() {
-    // TODO: Implement detection statistics endpoint
-    // This should query the detection database (/app/database/detections.db) and return stats
-    // Sample response:
-    // {
-    //   "total_detections": 1234,
-    //   "by_type": {"person": 890, "car": 344},
-    //   "average_confidence": 0.87
-    // }
-    
-    std::ostringstream json;
-    json << "{\n";
-    json << "  \"total_detections\": 0,\n";
-    json << "  \"by_type\": {\"person\": 0, \"car\": 0},\n";
-    json << "  \"average_confidence\": 0.0,\n";
-    json << "  \"note\": \"Detection worker must be running in Python to populate this endpoint\"\n";
-    json << "}\n";
-
-    std::string body = json.str();
-    std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
-    return header + body;
+    std::string stats = queryDetectionStats();
+    std::string header = generateHttpHeader(200, "application/json", stats.size(), config_.enable_cors);
+    return header + stats;
 }
 
 std::string HttpServer::handleDetectionRecent(const std::string& path) {
-    // TODO: Implement recent detections endpoint
-    // This should parse query parameters (e.g., ?hours=1&limit=100)
-    // Sample response:
-    // {
-    //   "detections": [
-    //     {
-    //       "id": 123,
-    //       "object_type": "person",
-    //       "confidence": 0.95,
-    //       "segment_filename": "segment_000042.ts",
-    //       "frame_path_annotated": "/app/detections/camera-1/annotated/frame_1234567890_person.jpg"
-    //     }
-    //   ],
-    //   "count": 42
-    // }
+    // Parse query parameters from path (e.g., /api/detections/recent?limit=20&stream_id=camera-1)
+    size_t query_pos = path.find('?');
+    int limit = 50;  // Default
+    std::string stream_id = "";
     
-    std::ostringstream json;
-    json << "{\n";
-    json << "  \"detections\": [],\n";
-    json << "  \"count\": 0,\n";
-    json << "  \"note\": \"Detection worker must be running in Python to populate this endpoint\"\n";
-    json << "}\n";
-
-    std::string body = json.str();
-    std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
-    return header + body;
+    if (query_pos != std::string::npos) {
+        std::string query = path.substr(query_pos + 1);
+        size_t limit_pos = query.find("limit=");
+        if (limit_pos != std::string::npos) {
+            limit = std::stoi(query.substr(limit_pos + 6));
+        }
+        
+        size_t stream_pos = query.find("stream_id=");
+        if (stream_pos != std::string::npos) {
+            size_t end = query.find('&', stream_pos);
+            stream_id = query.substr(stream_pos + 10, end == std::string::npos ? std::string::npos : end - stream_pos - 10);
+        }
+    }
+    
+    std::string detections = queryRecentDetections(limit, stream_id);
+    std::string header = generateHttpHeader(200, "application/json", detections.size(), config_.enable_cors);
+    return header + detections;
 }
 
 std::string HttpServer::handleDetectionFrame(const std::string& det_id_str) {
-    // TODO: Implement frame serving endpoint
-    // This should:
-    // 1. Parse det_id from URL
-    // 2. Query database for detection record
-    // 3. Read frame file from disk
-    // 4. Serve with appropriate content-type (image/jpeg)
+    // Parse frame ID from path /detections/frame/<id>
+    try {
+        int det_id = std::stoi(det_id_str);
+        std::string frame_data = queryDetectionFrame(det_id);
+        
+        // If we got JPEG data back, return it as an image
+        if (frame_data.substr(0, 3) == "\xFF\xD8\xFF") {  // JPEG magic bytes
+            std::string header = generateHttpHeader(200, "image/jpeg", frame_data.size(), config_.enable_cors);
+            return header + frame_data;
+        } else {
+            // Error response (JSON)
+            std::string header = generateHttpHeader(404, "application/json", frame_data.size(), config_.enable_cors);
+            return header + frame_data;
+        }
+    } catch (const std::exception& e) {
+        std::string error = "{\"error\": \"Invalid frame ID\"}";
+        std::string header = generateHttpHeader(400, "application/json", error.size(), config_.enable_cors);
+        return header + error;
+    }
+}
+
+std::string HttpServer::queryDetectionStats() {
+    sqlite3* db = nullptr;
+    int rc = sqlite3_open(config_.database_path.c_str(), &db);
     
-    // For now, return placeholder
-    std::string body = "Detection frame endpoint not yet implemented";
-    std::string header = generateHttpHeader(501, "text/plain", body.size(), config_.enable_cors);
-    return header + body;
+    if (rc != SQLITE_OK) {
+        LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return "{\"error\": \"Database not available\", \"total_detections\": 0, \"by_type\": {}, \"average_confidence\": 0.0}";
+    }
+    
+    std::ostringstream json;
+    json << "{\n";
+    
+    // Get total count
+    sqlite3_stmt* stmt = nullptr;
+    int total = 0;
+    if (sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM detections", -1, &stmt, nullptr) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            total = sqlite3_column_int(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+    }
+    
+    // Get counts by type
+    std::ostringstream by_type;
+    by_type << "{";
+    bool first_type = true;
+    
+    if (sqlite3_prepare_v2(db, "SELECT object_type, COUNT(*) FROM detections GROUP BY object_type ORDER BY COUNT(*) DESC", -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* obj_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            int count = sqlite3_column_int(stmt, 1);
+            
+            if (!first_type) by_type << ", ";
+            by_type << "\"" << (obj_type ? obj_type : "unknown") << "\": " << count;
+            first_type = false;
+        }
+        sqlite3_finalize(stmt);
+    }
+    by_type << "}";
+    
+    // Get average confidence
+    double avg_confidence = 0.0;
+    if (sqlite3_prepare_v2(db, "SELECT AVG(confidence) FROM detections", -1, &stmt, nullptr) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            avg_confidence = sqlite3_column_double(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+    }
+    
+    json << "  \"total_detections\": " << total << ",\n";
+    json << "  \"by_type\": " << by_type.str() << ",\n";
+    json << "  \"average_confidence\": " << std::fixed << std::setprecision(2) << avg_confidence << "\n";
+    json << "}\n";
+    
+    sqlite3_close(db);
+    return json.str();
+}
+
+std::string HttpServer::queryRecentDetections(int limit, const std::string& stream_id) {
+    sqlite3* db = nullptr;
+    int rc = sqlite3_open(config_.database_path.c_str(), &db);
+    
+    if (rc != SQLITE_OK) {
+        LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return "{\"error\": \"Database not available\", \"detections\": [], \"total\": 0}";
+    }
+    
+    std::ostringstream json;
+    json << "{\n";
+    json << "  \"detections\": [\n";
+    
+    // Query detections, optionally filtered by stream_id
+    std::string base_query = "SELECT id, object_type, confidence, bbox_x, bbox_y, bbox_w, bbox_h, unix_timestamp, segment_filename, stream_id, frame_path_annotated FROM detections";
+    if (!stream_id.empty()) {
+        base_query += " WHERE stream_id = ?";
+    }
+    base_query += " ORDER BY unix_timestamp DESC LIMIT ?";
+    
+    sqlite3_stmt* stmt = nullptr;
+    bool first = true;
+    
+    if (sqlite3_prepare_v2(db, base_query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        // Bind parameters
+        int param_index = 1;
+        if (!stream_id.empty()) {
+            sqlite3_bind_text(stmt, param_index++, stream_id.c_str(), -1, SQLITE_STATIC);
+        }
+        sqlite3_bind_int(stmt, param_index, limit);
+        
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            if (!first) json << ",\n";
+            
+            int det_id = sqlite3_column_int(stmt, 0);
+            const char* obj_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            double confidence = sqlite3_column_double(stmt, 2);
+            double bbox_x = sqlite3_column_double(stmt, 3);
+            double bbox_y = sqlite3_column_double(stmt, 4);
+            double bbox_w = sqlite3_column_double(stmt, 5);
+            double bbox_h = sqlite3_column_double(stmt, 6);
+            int timestamp = sqlite3_column_int(stmt, 7);
+            const char* seg_filename = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            const char* sid = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 9));
+            const char* frame_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 10));
+            
+            json << "    {\n";
+            json << "      \"id\": " << det_id << ",\n";
+            json << "      \"object_type\": \"" << (obj_type ? obj_type : "unknown") << "\",\n";
+            json << "      \"confidence\": " << std::fixed << std::setprecision(2) << confidence << ",\n";
+            json << "      \"bbox\": {\"x\": " << bbox_x << ", \"y\": " << bbox_y << ", \"width\": " << bbox_w << ", \"height\": " << bbox_h << "},\n";
+            json << "      \"timestamp\": " << timestamp << ",\n";
+            json << "      \"segment_filename\": \"" << (seg_filename ? seg_filename : "") << "\",\n";
+            json << "      \"stream_id\": \"" << (sid ? sid : "") << "\",\n";
+            json << "      \"frame_path_annotated\": \"" << (frame_path ? frame_path : "") << "\"\n";
+            json << "    }";
+            
+            first = false;
+        }
+        sqlite3_finalize(stmt);
+    }
+    
+    json << "\n  ],\n";
+    json << "  \"total\": " << (first ? 0 : limit) << "\n";
+    json << "}\n";
+    
+    sqlite3_close(db);
+    return json.str();
+}
+
+std::string HttpServer::queryDetectionFrame(int det_id) {
+    sqlite3* db = nullptr;
+    int rc = sqlite3_open(config_.database_path.c_str(), &db);
+    
+    if (rc != SQLITE_OK) {
+        LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return "{\"error\": \"Database not available\"}";
+    }
+    
+    sqlite3_stmt* stmt = nullptr;
+    std::string frame_data;
+    
+    // Get frame path from database
+    if (sqlite3_prepare_v2(db, "SELECT frame_path_annotated FROM detections WHERE id = ?", -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, det_id);
+        
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* frame_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            
+            if (frame_path) {
+                // Try to read the frame file
+                std::ifstream file(frame_path, std::ios::binary);
+                if (file.good()) {
+                    file.seekg(0, std::ios::end);
+                    size_t size = file.tellg();
+                    file.seekg(0, std::ios::beg);
+                    
+                    frame_data.resize(size);
+                    file.read(&frame_data[0], size);
+                    file.close();
+                } else {
+                    frame_data = "{\"error\": \"Frame file not found\"}";
+                }
+            } else {
+                frame_data = "{\"error\": \"No frame associated with detection\"}";
+            }
+        } else {
+            frame_data = "{\"error\": \"Detection not found\"}";
+        }
+        
+        sqlite3_finalize(stmt);
+    } else {
+        frame_data = "{\"error\": \"Database query failed\"}";
+    }
+    
+    sqlite3_close(db);
+    return frame_data;
 }
 
 }  // namespace streamer
