@@ -44,10 +44,11 @@ while true; do
     API_DATA=$(curl -s "http://localhost:$PORT/api/health" 2>/dev/null || echo "{}")
     
     # Extract metrics - handle both "total_packets_written" and "packets_written" field names
-    ACTIVE_STREAMS=$(echo "$API_DATA" | grep -oE '"active_streams":\s*[0-9]+' | grep -oE '[0-9]+')
-    TOTAL_PACKETS=$(echo "$API_DATA" | grep -oE '"total_packets_written":\s*[0-9]+|"packets_written":\s*[0-9]+' | grep -oE '[0-9]+')
-    TOTAL_RECONNECTS=$(echo "$API_DATA" | grep -oE '"total_reconnects":\s*[0-9]+' | grep -oE '[0-9]+')
-    ERROR_STREAMS=$(echo "$API_DATA" | grep -oE '"error_streams":\s*[0-9]+' | grep -oE '[0-9]+')
+    # Use head -1 to get only first match, tr to strip newlines
+    ACTIVE_STREAMS=$(echo "$API_DATA" | grep -oE '"active_streams":\s*[0-9]+' | grep -oE '[0-9]+' | head -1 | tr -d '\n')
+    TOTAL_PACKETS=$(echo "$API_DATA" | grep -oE '"total_packets_written":\s*[0-9]+|"packets_written":\s*[0-9]+' | grep -oE '[0-9]+' | head -1 | tr -d '\n')
+    TOTAL_RECONNECTS=$(echo "$API_DATA" | grep -oE '"total_reconnects":\s*[0-9]+' | grep -oE '[0-9]+' | head -1 | tr -d '\n')
+    ERROR_STREAMS=$(echo "$API_DATA" | grep -oE '"error_streams":\s*[0-9]+' | grep -oE '[0-9]+' | head -1 | tr -d '\n')
 
     # Default values if API unreachable
     ACTIVE_STREAMS=${ACTIVE_STREAMS:-0}
