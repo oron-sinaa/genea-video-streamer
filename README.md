@@ -237,5 +237,6 @@ Full technical design, architecture decisions, module breakdown, and testing mat
 
 ## Default directories
 
-- hls_output/
-- detections/
+- ./config/
+- ./hls_output/
+- ./detections/
