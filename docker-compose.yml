@@ -1,4 +1,43 @@
 services:
+  rtsp-server:
+    image: bluenviron/mediamtx:latest
+    container_name: rtsp-server
+    restart: unless-stopped
+    ports:
+      - "8554:8554"  # RTSP server
+    networks:
+      - streamer-network
+    environment:
+      RTSP_PORT: "8554"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  rtsp-generator:
+    image: jrottenberg/ffmpeg:7.0-ubuntu
+    container_name: rtsp-generator
+    restart: unless-stopped
+    entrypoint: |
+      /bin/bash -c "
+      ffmpeg -f lavfi -i testsrc2=size=1280x720:duration=0 \
+             -f lavfi -i sine=frequency=1000:duration=0 \
+             -c:v libx264 -preset ultrafast -b:v 2M -g 30 -pix_fmt yuv420p \
+             -c:a aac -b:a 128k \
+             -rtsp_transport tcp \
+             -f rtsp rtsp://rtsp-server:8554/stream
+      "
+    depends_on:
+      - rtsp-server
+    networks:
+      - streamer-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
   streamer:
     image: genea-video-streamer:latest
     container_name: genea-video-streamer

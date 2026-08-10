@@ -4,7 +4,7 @@
 
 streams:
   - name: "camera-1"
-    rtsp_url: "rtsp://127.0.0.1:8554/test"  # Modify with real RTSP URL
+    rtsp_url: "rtsp://rtsp-server:8554/stream"  # Generated test stream from docker-compose
     hls_output: "/tmp/hls_output/camera-1/"
     transport: "tcp"
     reconnect:
