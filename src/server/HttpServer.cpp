@@ -383,7 +383,7 @@ std::string HttpServer::routeRequest(const std::string& method, const std::strin
         return handleGetStreamStatus(stream_name);
     }
 
-    // Route /hls/<stream-name>/live.m3u8
+    // Route /hls/<stream-name>/live.m3u8 or /hls/<stream-name>/archive.m3u8
     if (path.find("/hls/") == 0) {
         size_t second_slash = path.find('/', 5);  // Find slash after /hls/
         if (second_slash == std::string::npos) {
@@ -393,8 +393,8 @@ std::string HttpServer::routeRequest(const std::string& method, const std::strin
         std::string stream_name = path.substr(5, second_slash - 5);  // Extract stream name
         std::string resource = path.substr(second_slash + 1);        // Extract resource
 
-        if (resource.find("live.m3u8") != std::string::npos) {
-            return handleGetPlaylist(stream_name);
+        if (resource.find("live.m3u8") != std::string::npos || resource.find("archive.m3u8") != std::string::npos) {
+            return handleGetPlaylist(stream_name, resource);
         } else if (resource.find(".ts") != std::string::npos) {
             return handleGetSegment(stream_name, resource);
         }
@@ -408,7 +408,7 @@ std::string HttpServer::routeRequest(const std::string& method, const std::strin
     return handleNotFound();
 }
 
-std::string HttpServer::handleGetPlaylist(const std::string& stream_name) {
+std::string HttpServer::handleGetPlaylist(const std::string& stream_name, const std::string& playlist_name) {
     if (!manager_) {
         return handleNotFound();
     }
@@ -421,7 +421,7 @@ std::string HttpServer::handleGetPlaylist(const std::string& stream_name) {
 
     // Get the configured HLS output directory for this stream
     std::string hls_dir = worker->getHlsOutputDir();
-    std::string playlist_path = hls_dir + "live.m3u8";
+    std::string playlist_path = hls_dir + playlist_name;
 
     std::string content = readFileContent(playlist_path);
     if (content.empty() && !fileExists(playlist_path)) {

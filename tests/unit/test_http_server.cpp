@@ -784,6 +784,79 @@ bool test_hls_playlist_served_when_file_exists() {
     return true;
 }
 
+bool test_hls_archive_playlist_served_when_file_exists() {
+    std::string tmp_dir = createTempDir();
+    if (tmp_dir.empty()) {
+        std::cerr << "  FAIL: could not create temp dir\n";
+        return false;
+    }
+
+    const std::string stream_name = "test-cam-archive";
+
+    // Create the archive playlist file at: <tmpdir>/segments/<stream>/archive.m3u8
+    std::string seg_dir = tmp_dir + "/segments/" + stream_name;
+    if (!mkdirp(seg_dir)) {
+        cleanupDir(tmp_dir);
+        std::cerr << "  FAIL: could not create segment dir\n";
+        return false;
+    }
+
+    const std::string archive_content =
+        "#EXTM3U\n"
+        "#EXT-X-VERSION:3\n"
+        "#EXT-X-TARGETDURATION:4\n"
+        "#EXT-X-MEDIA-SEQUENCE:0\n"
+        "#EXTINF:4.0,\n"
+        "segment-000.ts\n"
+        "#EXTINF:4.0,\n"
+        "segment-001.ts\n";
+    CHECK(writeFile(seg_dir + "/archive.m3u8", archive_content),
+          "should create test archive playlist file");
+
+    uint16_t port = findFreePort();
+    auto cfg = configWithStream(stream_name, port);
+    streamer::StreamManager manager(cfg);
+
+    streamer::HttpServer::ServerConfig sc;
+    sc.listen_port = port;
+    streamer::HttpServer server(&manager, sc);
+
+    bool started;
+    {
+        // Chdir to tmp_dir so server finds files at relative path segments/...
+        ChdirGuard g(tmp_dir);
+        started = server.start() && waitForServerReady(port, 1000);
+        if (!started) {
+            server.stop();
+            cleanupDir(tmp_dir);
+            std::cerr << "  FAIL: server did not start\n";
+            return false;
+        }
+
+        auto resp = sendRequest(port, "GET",
+                                "/hls/" + stream_name + "/archive.m3u8");
+        server.stop();
+
+        CHECK(resp.success, "request succeeded at TCP level");
+        CHECK(resp.status_code == 200, "existing archive playlist should return 200");
+
+        const std::string& ct = resp.headers.count("content-type") > 0
+                                    ? resp.headers.at("content-type")
+                                    : "";
+        CHECK(ct.find("mpegurl") != std::string::npos ||
+              ct.find("application/vnd") != std::string::npos,
+              "archive playlist content-type should be HLS MIME type");
+
+        CHECK(resp.body.find("#EXTM3U") != std::string::npos,
+              "archive playlist body should contain #EXTM3U");
+        CHECK(resp.body.find("segment-000.ts") != std::string::npos,
+              "archive playlist body should contain segment references");
+    }  // ChdirGuard restores CWD here
+
+    cleanupDir(tmp_dir);
+    return true;
+}
+
 bool test_hls_segment_served_when_file_exists() {
     std::string tmp_dir = createTempDir();
     if (tmp_dir.empty()) {
@@ -975,6 +1048,7 @@ int main() {
 
     std::cout << "\n--- Group F: File Serving ---\n";
     runTest("test_hls_playlist_served_when_file_exists",    test_hls_playlist_served_when_file_exists);
+    runTest("test_hls_archive_playlist_served_when_file_exists", test_hls_archive_playlist_served_when_file_exists);
     runTest("test_hls_segment_served_when_file_exists",     test_hls_segment_served_when_file_exists);
     runTest("test_hls_playlist_file_missing_returns_404",   test_hls_playlist_file_missing_returns_404);
 

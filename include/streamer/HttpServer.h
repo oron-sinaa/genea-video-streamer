@@ -57,7 +57,7 @@ class HttpServer {
     std::string routeRequest(const std::string& method, const std::string& path);
 
     // Handler methods for different endpoints
-    std::string handleGetPlaylist(const std::string& stream_name);
+    std::string handleGetPlaylist(const std::string& stream_name, const std::string& playlist_name);
     std::string handleGetSegment(const std::string& stream_name, const std::string& segment_name);
     std::string handleGetStreamStatus(const std::string& stream_name);
     std::string handleGetStreamsList();
