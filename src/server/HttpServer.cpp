@@ -818,8 +818,11 @@ std::string HttpServer::handleDetectionFrame(const std::string& det_id_str) {
 }
 
 std::string HttpServer::queryDetectionStats(const std::string& stream_id, const std::string& object_type) {
+    LOG_INFO("queryDetectionStats: stream_id='%s', object_type='%s'", stream_id.c_str(), object_type.c_str());
+    
     sqlite3* db = nullptr;
     int rc = sqlite3_open(config_.database_path.c_str(), &db);
+    LOG_INFO("queryDetectionStats: Opened DB at %s, rc=%d", config_.database_path.c_str(), rc);
     
     if (rc != SQLITE_OK) {
         LOG_WARN("Failed to open detection database: %s", sqlite3_errmsg(db));
@@ -837,11 +840,15 @@ std::string HttpServer::queryDetectionStats(const std::string& stream_id, const 
     if (stream_id.empty() && object_type.empty()) {
         // No filters - simple count all
         const char* count_query_sql = "SELECT COUNT(*) FROM detections";
+        LOG_INFO("queryDetectionStats: Executing unfiltered count query");
         if (sqlite3_prepare_v2(db, count_query_sql, -1, &stmt, nullptr) == SQLITE_OK) {
             if (sqlite3_step(stmt) == SQLITE_ROW) {
                 total = sqlite3_column_int(stmt, 0);
+                LOG_INFO("queryDetectionStats: Total detections = %d", total);
             }
             sqlite3_finalize(stmt);
+        } else {
+            LOG_WARN("queryDetectionStats: Failed to prepare count query: %s", sqlite3_errmsg(db));
         }
     } else if (!stream_id.empty() && object_type.empty()) {
         // Filter by stream_id only

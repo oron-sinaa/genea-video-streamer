@@ -18,7 +18,9 @@ class HttpServer {
         std::string listen_address = "0.0.0.0";
         int max_concurrent_connections = 100;
         bool enable_cors = true;
-        std::string database_path = "/app/detections.db";  // SQLite DB for AI detections
+        // Database path can be set via DETECTION_DB_PATH environment variable
+        // Defaults to /app/database/detections.db (Docker) or ./detections/database/detections.db (local dev)
+        std::string database_path = "/app/database/detections.db";
     };
 
     // Constructor: Inject StreamManager reference

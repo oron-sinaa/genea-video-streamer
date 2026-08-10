@@ -69,6 +69,15 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
     http_config.listen_port = config.http.listen_port;
     http_config.listen_address = "0.0.0.0";
     http_config.enable_cors = true;
+    
+    // Set database path from environment or use default
+    const char* db_path_env = std::getenv("DETECTION_DB_PATH");
+    if (db_path_env) {
+        http_config.database_path = db_path_env;
+        LOG_INFO("Using detection database path from env: %s", db_path_env);
+    } else {
+        LOG_INFO("Using default detection database path: %s", http_config.database_path.c_str());
+    }
 
     streamer::HttpServer http_server(&manager, http_config);
     if (!http_server.start()) {
