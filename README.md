@@ -81,7 +81,7 @@ StreamManager (lifecycle, health aggregation)
 | Config | yaml-cpp 0.8 | Human-readable multi-stream config |
 | Protocol | HLS (MPEG-TS segments) | Open standard, browser-native via HLS.js |
 | HTTP | POSIX sockets (custom) | Zero added deps for test portability |
-| **Inference (Optional)** | | |
+| **Inference** | | |
 | Language | Python 3.7+ | Rapid model integration, rich ecosystem |
 | Model | YOLOv8 Nano | 6.3 MB, 40-65ms latency, 15-25 FPS on CPU |
 | Frame Extraction | ffmpeg subprocess | Reliable MPEG-TS frame extraction |
@@ -103,30 +103,33 @@ git clone https://github.com/your-repo/genea-video-streamer.git
 cd genea-video-streamer
 
 2.
-Edit config/rtsp-multi-stream.yaml with your RTSP camera URLs
+Use default, or modify config/streamer.yaml with your RTSP camera URLs
 
 3.
-And config/inference.yaml to enable/disable AI detection per stream
+Use default, or modify config/inference.yaml to enable/disable AI detection per stream
 
 4.
-Start the full stack (streaming + optional AI inference)
+Start the full stack (streaming + AI inference)
 docker-compose up -d
 
 5.
 View streaming at http://localhost:8080
 
 6.
-View detection stats at http://localhost:8080/api/detections/stats (if inference enabled)
+View detection stats at http://localhost:8080/api/detections/stats
 
 7.
 View stream health at http://localhost:8080/api/health
 
 8.
-Monitor logs
-docker-compose logs -f streamer
-docker-compose logs -f inference  # if enabled
+Refer to REST API section for complete API documentation
 
 9.
+Monitor logs
+docker-compose logs -f genea-video-streamer
+docker-compose logs -f genea-inference
+
+10.
 Stop services
 docker-compose down
 ```
