@@ -33,6 +33,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     ffmpeg \
     bc \
+    python3 \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -49,8 +51,16 @@ COPY --from=builder /build/profiling /app/profiling
 # Make profiling scripts executable
 RUN chmod +x /app/profiling/*.sh
 
+# Install Python dependencies for AI inference
+COPY requirements.txt /app/requirements.txt
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
+
+# Copy AI inference module
+COPY src/ai_inference /app/src/ai_inference/
+COPY config/ai_inference_config.yaml /app/config/ai_inference_config.yaml
+
 # Create directories for data and results
-RUN mkdir -p /etc/streamer /data/hls_output /app/profiling/results
+RUN mkdir -p /etc/streamer /data/hls_output /app/profiling/results /app/detections /app/hls_output
 
 # Expose HTTP server port
 EXPOSE 8080

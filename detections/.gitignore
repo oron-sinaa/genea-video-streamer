@@ -1,0 +1,11 @@
+# Detection frames and database
+*.jpg
+*.jpeg
+*.png
+*.db
+*.db-wal
+*.db-shm
+
+# Keep directory structure but ignore all frame files
+# This allows the directory to be committed without the large frame data
+!.gitignore

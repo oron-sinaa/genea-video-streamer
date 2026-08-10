@@ -379,6 +379,22 @@ std::string HttpServer::routeRequest(const std::string& method, const std::strin
         return handleGetPlaybackConfig();
     }
 
+    // Route /api/detections/stats - Detection statistics
+    if (path == "/api/detections/stats") {
+        return handleDetectionStats();
+    }
+
+    // Route /api/detections/recent?hours=N - Recent detections
+    if (path.find("/api/detections/recent") == 0) {
+        return handleDetectionRecent(path);
+    }
+
+    // Route /detections/frame/<detection_id> - Serve detection frame
+    if (path.find("/detections/frame/") == 0) {
+        std::string det_id_str = path.substr(18);  // Skip "/detections/frame/"
+        return handleDetectionFrame(det_id_str);
+    }
+
     // Route /api/streams/<stream-name>
     if (path.find("/api/streams/") == 0) {
         std::string stream_name = path.substr(13);  // Skip "/api/streams/"
@@ -705,6 +721,72 @@ std::string HttpServer::jsonEscape(const std::string& input) {
         }
     }
     return output;
+}
+
+std::string HttpServer::handleDetectionStats() {
+    // TODO: Implement detection statistics endpoint
+    // This should query the detection database (/app/detections.db) and return stats
+    // Sample response:
+    // {
+    //   "total_detections": 1234,
+    //   "by_type": {"person": 890, "car": 344},
+    //   "average_confidence": 0.87
+    // }
+    
+    std::ostringstream json;
+    json << "{\n";
+    json << "  \"total_detections\": 0,\n";
+    json << "  \"by_type\": {\"person\": 0, \"car\": 0},\n";
+    json << "  \"average_confidence\": 0.0,\n";
+    json << "  \"note\": \"Detection worker must be running in Python to populate this endpoint\"\n";
+    json << "}\n";
+
+    std::string body = json.str();
+    std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
+    return header + body;
+}
+
+std::string HttpServer::handleDetectionRecent(const std::string& path) {
+    // TODO: Implement recent detections endpoint
+    // This should parse query parameters (e.g., ?hours=1&limit=100)
+    // Sample response:
+    // {
+    //   "detections": [
+    //     {
+    //       "id": 123,
+    //       "object_type": "person",
+    //       "confidence": 0.95,
+    //       "segment_filename": "segment_000042.ts",
+    //       "frame_path_annotated": "/app/detections/camera-1/annotated/frame_1234567890_person.jpg"
+    //     }
+    //   ],
+    //   "count": 42
+    // }
+    
+    std::ostringstream json;
+    json << "{\n";
+    json << "  \"detections\": [],\n";
+    json << "  \"count\": 0,\n";
+    json << "  \"note\": \"Detection worker must be running in Python to populate this endpoint\"\n";
+    json << "}\n";
+
+    std::string body = json.str();
+    std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
+    return header + body;
+}
+
+std::string HttpServer::handleDetectionFrame(const std::string& det_id_str) {
+    // TODO: Implement frame serving endpoint
+    // This should:
+    // 1. Parse det_id from URL
+    // 2. Query database for detection record
+    // 3. Read frame file from disk
+    // 4. Serve with appropriate content-type (image/jpeg)
+    
+    // For now, return placeholder
+    std::string body = "Detection frame endpoint not yet implemented";
+    std::string header = generateHttpHeader(501, "text/plain", body.size(), config_.enable_cors);
+    return header + body;
 }
 
 }  // namespace streamer

@@ -81,6 +81,15 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
 
     LOG_INFO("HTTP server started on 0.0.0.0:%u", config.http.listen_port);
 
+    // Spawn AI inference worker (Python subprocess)
+    // NOTE: Detection worker reads HLS segments from disk and writes to shared database
+    // It runs independently and communicates via SQLite database
+    // The HTTP server provides query API for detection results
+    LOG_INFO("Starting AI detection worker (Python subprocess)...");
+    // TODO: Implement Python subprocess spawning here
+    // For now, run detection_worker.py separately in container:
+    //   python3 -m ai_inference.detection_worker --config config/ai_inference_config.yaml
+
     // If no streams started, at least provide useful feedback before waiting
     if (started == 0) {
         LOG_WARN("Streams failed to start. You can check:");

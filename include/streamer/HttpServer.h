@@ -65,6 +65,11 @@ class HttpServer {
     std::string handleGetPlaybackConfig();
     std::string handleGetIndex();
     std::string handleNotFound();
+    
+    // Detection endpoints (integrate with Python AI inference module)
+    std::string handleDetectionStats();
+    std::string handleDetectionRecent(const std::string& path);
+    std::string handleDetectionFrame(const std::string& det_id_str);
 
     // Utility: Parse HTTP request line "GET /path HTTP/1.1"
     struct HttpRequest {
