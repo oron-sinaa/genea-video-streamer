@@ -63,6 +63,10 @@ double PipelineHealth::calculateThroughputMbps() const {
     return throughput_bps / 1000000.0;  // Convert to Mbps
 }
 
+double PipelineHealth::getThroughputMbps() const {
+    return calculateThroughputMbps();
+}
+
 std::string PipelineHealth::getHealthReport() const {
     auto now = std::chrono::steady_clock::now();
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();

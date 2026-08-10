@@ -135,8 +135,7 @@ StreamManager::AggregateHealth StreamManager::getAggregateHealth() const {
         }
 
         // Calculate per-stream throughput
-        std::string report = health.getHealthReport();
-        double throughput = 0.0;  // TODO: Parse from report or add getter method
+        double throughput = health.getThroughputMbps();
         aggregate.total_throughput_mbps += throughput;
 
         // Add per-stream stats

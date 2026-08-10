@@ -78,6 +78,7 @@ public:
     uint64_t getPacketsDropped() const { return packets_dropped_.load(); }
     uint32_t getReconnectCount() const { return reconnect_count_.load(); }
     uint64_t getLastFramePts() const { return last_frame_pts_.load(); }
+    double getThroughputMbps() const;  // Calculate and return average throughput in Mbps
 
 private:
     std::atomic<uint64_t> packets_read_{0};
