@@ -13,7 +13,7 @@ Open-source live video streaming and AI inference solution. Built in C++ (LibAV)
 - Supports 1–N concurrent streams through an integrated stream manager
 - Exposes a JSON REST API for stream health and status
 
-**AI Inference (Python, Optional):**
+**AI Inference (Python):**
 - Runs object detection (YOLOv8 Nano) on HLS segments in real-time
 - Detects persons and vehicles with normalized bounding boxes
 - Stores detections in SQLite database with frame captures
@@ -32,15 +32,29 @@ RTSP Sources
   │
 StreamManager (lifecycle, health aggregation)
   │
-HttpServer
-  ├─ GET /hls/<stream>/live.m3u8       → live playlist (rolling 3-5 segments)
-  ├─ GET /hls/<stream>/archive.m3u8    → archive playlist (2-hour retention)
-  ├─ GET /hls/<stream>/<seg>.ts        → segment (MPEG-TS video)
-  ├─ GET /api/health                   → aggregate JSON metrics
-  ├─ GET /api/streams                  → stream list with status
-  ├─ GET /api/streams/<name>           → per-stream status
-  ├─ GET /api/config                   → playback latency config
-  └─ GET /                             → web player (HLS.js + stream selector)
+┌─ HttpServer (Port 8080)
+│
+├─ Streaming Endpoints
+│  ├─ GET /hls/<stream>/live.m3u8       → live playlist
+│  ├─ GET /hls/<stream>/archive.m3u8    → archive playlist
+│  ├─ GET /hls/<stream>/<seg>.ts        → MPEG-TS segment
+│  ├─ GET /api/health                   → aggregate metrics
+│  ├─ GET /api/streams                  → stream list
+│  ├─ GET /api/streams/<name>           → per-stream status
+│  ├─ GET /api/config                   → playback config
+│  └─ GET /                             → web player (HLS.js)
+│
+├─ Detection Endpoints (queries SQLite DB written by Python inference)
+│  ├─ GET /api/detections/stats         → aggregate detection statistics
+│  ├─ GET /api/detections/recent        → recent detections with filtering
+│  └─ GET /detections/frame/<id>        → annotated frame image
+│
+└─ SQLite Database (/app/detections.db)
+   └─ Populated by Python AI Inference Module (independent process)
+      ├─ DetectionWorkerPool (multi-stream orchestration)
+      ├─ YoloDetector (YOLOv8n inference)
+      ├─ FrameExtractor (ffmpeg subprocess)
+      └─ FrameAnnotator (bounding box drawing)
 ```
 
 ## Implementation Status
@@ -174,30 +188,24 @@ ai_inference:
 
 ## REST API
 
-**Streaming Endpoints** (see [docs/http-api.md](docs/http-api.md) for full reference):
+The HTTP server provides endpoints for streaming control, health monitoring, and AI detection queries.
 
-| Endpoint | Description |
-|----------|-------------|
-| `/api/health` | Aggregate stream metrics |
-| `/api/streams` | Stream list and status |
-| `/api/config` | Playback configuration |
-| `/hls/<name>/live.m3u8` | Live HLS playlist |
-| `/hls/<name>/<seg>.ts` | HLS segment file |
-| `/` | Web player UI |
-
-**Detection Endpoints** (if AI inference enabled):
-
-| Endpoint | Description |
-|----------|-------------|
-| `/api/detections/stats` | Aggregate detection statistics (count, confidence, by type) |
-| `/api/detections/recent?limit=20&stream_id=camera-1` | Recent detections with optional filtering |
-| `/detections/frame/<frame_id>` | Retrieve annotated frame image |
-
-Example:
+**Quick Examples:**
 ```bash
+# Stream health
+curl http://localhost:8080/api/health | jq .
+
+# Stream list
+curl http://localhost:8080/api/streams | jq .
+
+# Detection statistics (if AI enabled)
 curl http://localhost:8080/api/detections/stats | jq .
-curl "http://localhost:8080/api/detections/recent?stream_id=camera-1" | jq .
+
+# Recent detections
+curl "http://localhost:8080/api/detections/recent?limit=10" | jq .
 ```
+
+**See [docs/http-api.md](docs/http-api.md) for full API reference** including all endpoints, query parameters, response schemas, and usage examples.
 
 ## Camera Compatibility
 
