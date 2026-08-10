@@ -88,7 +88,7 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
     LOG_INFO("Starting AI detection worker (Python subprocess)...");
     // TODO: Implement Python subprocess spawning here
     // For now, run detection_worker.py separately in container:
-    //   python3 -m ai_inference.detection_worker --config config/ai_inference_config.yaml
+    //   python3 -m ai_inference.detection_worker --config config/inference.yaml
 
     // If no streams started, at least provide useful feedback before waiting
     if (started == 0) {

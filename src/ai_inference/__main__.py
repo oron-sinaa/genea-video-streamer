@@ -24,8 +24,8 @@ def main():
     else:
         # Try common locations
         for path in [
-            'config/ai_inference_config.yaml',
-            '/app/config/ai_inference_config.yaml',
+            'config/inference.yaml',
+            '/app/config/inference.yaml',
             '/etc/ai_inference/config.yaml',
         ]:
             if Path(path).exists():

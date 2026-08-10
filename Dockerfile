@@ -57,7 +57,7 @@ RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
 # Copy AI inference module
 COPY src/ai_inference /app/src/ai_inference/
-COPY config/ai_inference_config.yaml /app/config/ai_inference_config.yaml
+COPY config/inference.yaml /app/config/inference.yaml
 
 # Create directories for data and results
 RUN mkdir -p /etc/streamer /data/hls_output /app/profiling/results /app/detections /app/hls_output
@@ -71,4 +71,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Run streamer with config from mounted volume
 ENTRYPOINT ["/app/streamer"]
-CMD ["/etc/streamer/config.yaml"]
+CMD ["/etc/streamer/streamer.yaml"]
