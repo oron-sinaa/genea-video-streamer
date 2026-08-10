@@ -160,6 +160,40 @@
             color: white;
         }
 
+        .stream-selector-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .stream-selector-section label {
+            display: inline-block;
+            font-weight: 600;
+            margin-right: 10px;
+            color: #555;
+        }
+
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        select:hover {
+            border-color: #999;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
         .footer {
             border-top: 1px solid #eee;
             padding: 15px 20px;
@@ -206,6 +240,13 @@
                 <button id="archive-btn">📚 Archive / Playback</button>
             </div>
 
+            <div class="stream-selector-section" id="stream-selector-section" style="display: none;">
+                <label for="stream-select">📺 Stream:</label>
+                <select id="stream-select">
+                    <option value="">Loading streams...</option>
+                </select>
+            </div>
+
             <div class="error" id="error"></div>
 
             <div class="info-section">
@@ -237,6 +278,7 @@
         let hls = null;
         let video = document.getElementById('player');
         let currentMode = 'live';
+        let currentStream = null;  // Track selected stream name
         const liveBtn = document.getElementById('live-btn');
         const archiveBtn = document.getElementById('archive-btn');
         const errorDiv = document.getElementById('error');
@@ -245,13 +287,65 @@
         const streamUrlDiv = document.getElementById('stream-url');
         const codecSupportDiv = document.getElementById('codec-support');
         const modeDiv = document.getElementById('mode');
+        const streamSelector = document.getElementById('stream-select');
+        const streamSelectorSection = document.getElementById('stream-selector-section');
 
         // Configuration
         const BASE_URL = window.location.origin;
         const MANIFEST_PATHS = {
-            live: '/segments/live.m3u8',
-            archive: '/segments/archive.m3u8'
+            live: (stream) => stream ? `/hls/${stream}/live.m3u8` : '/segments/live.m3u8',
+            archive: (stream) => stream ? `/hls/${stream}/archive.m3u8` : '/segments/archive.m3u8'
         };
+
+        // Load available streams and populate selector
+        async function loadStreamList() {
+            try {
+                const response = await fetch(BASE_URL + '/api/streams');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                
+                const streams = data.streams || [];
+                streamSelector.innerHTML = '';
+
+                if (streams.length === 0) {
+                    // No multi-stream mode - hide the selector
+                    streamSelectorSection.style.display = 'none';
+                    currentStream = null;
+                } else if (streams.length === 1) {
+                    // Single stream - show selector but auto-select
+                    streamSelectorSection.style.display = 'block';
+                    const streamName = streams[0].name;
+                    streamSelector.innerHTML = `<option value="${streamName}" selected>${streamName}</option>`;
+                    currentStream = streamName;
+                    loadStream(MANIFEST_PATHS.live(currentStream));
+                } else {
+                    // Multiple streams - show selector with all options
+                    streamSelectorSection.style.display = 'block';
+                    streamSelector.innerHTML = '<option value="">-- Select a stream --</option>';
+                    streams.forEach(stream => {
+                        const option = document.createElement('option');
+                        option.value = stream.name;
+                        option.textContent = `${stream.name} (${stream.status})`;
+                        streamSelector.appendChild(option);
+                    });
+                    streamSelector.addEventListener('change', (e) => {
+                        if (e.target.value) {
+                            currentStream = e.target.value;
+                            loadStream(MANIFEST_PATHS[currentMode](currentStream));
+                        }
+                    });
+                }
+            } catch (error) {
+                console.warn('Failed to load stream list:', error);
+                streamSelectorSection.style.display = 'none';
+            }
+        }
+
+        // Load available streams on startup
+        loadStreamList();
+
+        // Refresh stream list every 5 seconds
+        setInterval(loadStreamList, 5000);
 
         // Initialize HLS.js if supported by browser
         function initHls() {
@@ -343,7 +437,7 @@
             liveBtn.classList.add('active');
             archiveBtn.classList.remove('active');
 
-            loadStream(MANIFEST_PATHS.live);
+            loadStream(MANIFEST_PATHS.live(currentStream));
         }
 
         // Switch to archive/VOD mode
