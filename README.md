@@ -108,7 +108,8 @@ Use default, or modify config/streamer.yaml with your RTSP camera URLs
 Use default, or modify config/inference.yaml to enable/disable AI detection per stream
 
 4.
-Start the full stack (streaming + AI inference)
+Build and start the full stack (streaming + AI inference)
+docker build -t video-streamer-genea:latest .
 docker-compose up -d
 
 5.
