@@ -62,6 +62,7 @@ class HttpServer {
     std::string handleGetStreamStatus(const std::string& stream_name);
     std::string handleGetStreamsList();
     std::string handleGetAggregateHealth();
+    std::string handleGetPlaybackConfig();
     std::string handleGetIndex();
     std::string handleNotFound();
 

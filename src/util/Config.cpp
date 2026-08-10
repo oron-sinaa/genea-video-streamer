@@ -197,6 +197,41 @@ AppConfig loadConfig(const std::string& path) {
         }
     }
 
+    // Parse playback config (optional, latency/buffering settings for client)
+    if (root["playback"]) {
+        const YAML::Node playbackNode = root["playback"];
+        
+        if (playbackNode["live_mode"]) {
+            const YAML::Node liveModeNode = playbackNode["live_mode"];
+            config.playback.live_mode.back_buffer_length_s = 
+                liveModeNode["back_buffer_length_s"].as<int>(10);
+            config.playback.live_mode.sync_segment_count = 
+                liveModeNode["sync_segment_count"].as<int>(2);
+            config.playback.live_mode.max_buffer_length_s = 
+                liveModeNode["max_buffer_length_s"].as<int>(30);
+            config.playback.live_mode.max_buffer_length_absolute_s = 
+                liveModeNode["max_buffer_length_absolute_s"].as<int>(60);
+            
+            // Validate playback settings
+            if (config.playback.live_mode.back_buffer_length_s <= 0) {
+                throw std::runtime_error(
+                    "Config file '" + path + "' has invalid 'playback.live_mode.back_buffer_length_s' value (must be positive)");
+            }
+            if (config.playback.live_mode.sync_segment_count <= 0) {
+                throw std::runtime_error(
+                    "Config file '" + path + "' has invalid 'playback.live_mode.sync_segment_count' value (must be positive)");
+            }
+            if (config.playback.live_mode.max_buffer_length_s <= 0) {
+                throw std::runtime_error(
+                    "Config file '" + path + "' has invalid 'playback.live_mode.max_buffer_length_s' value (must be positive)");
+            }
+            if (config.playback.live_mode.max_buffer_length_absolute_s <= 0) {
+                throw std::runtime_error(
+                    "Config file '" + path + "' has invalid 'playback.live_mode.max_buffer_length_absolute_s' value (must be positive)");
+            }
+        }
+    }
+
     return config;
 }
 

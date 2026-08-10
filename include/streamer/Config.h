@@ -50,6 +50,16 @@ struct HttpConfig {
     uint16_t listen_port = 8000;
 };
 
+// Playback latency configuration (client-side)
+struct PlaybackConfig {
+    struct LiveModeConfig {
+        int back_buffer_length_s = 10;      // buffer behind live edge (lower = lower latency)
+        int sync_segment_count = 2;         // segments ahead to sync (lower = lower latency)
+        int max_buffer_length_s = 30;       // max total buffer (lower = lower latency)
+        int max_buffer_length_absolute_s = 60;  // hard limit on buffer
+    } live_mode;
+};
+
 // Resource limits configuration (Phase 6)
 struct ResourceConfig {
     uint32_t max_streams = 10;
@@ -67,6 +77,7 @@ struct AppConfig {
     std::vector<StreamConfig> streams;      // Array of stream configs
     HttpConfig http;                        // HTTP server settings
     ResourceConfig resources;               // Resource limits
+    PlaybackConfig playback;                // Playback/client latency settings
     
     // Helper: Returns true if using multi-stream mode
     bool isMultiStream() const {

@@ -280,6 +280,7 @@
         let currentMode = 'live';
         let currentStream = null;  // Track selected stream name
         let streamChangeListenerAttached = false;  // Track if change listener is attached
+        let playbackConfig = null;  // Cache playback config from server
         const liveBtn = document.getElementById('live-btn');
         const archiveBtn = document.getElementById('archive-btn');
         const errorDiv = document.getElementById('error');
@@ -297,6 +298,29 @@
             live: (stream) => stream ? `/hls/${stream}/live.m3u8` : '/segments/live.m3u8',
             archive: (stream) => stream ? `/hls/${stream}/archive.m3u8` : '/segments/archive.m3u8'
         };
+
+        // Load playback configuration from server
+        async function loadPlaybackConfig() {
+            try {
+                const response = await fetch(BASE_URL + '/api/config');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                playbackConfig = await response.json();
+                console.log('Loaded playback config:', playbackConfig);
+            } catch (error) {
+                console.warn('Failed to load playback config, using defaults:', error);
+                // Use defaults if config not available
+                playbackConfig = {
+                    playback: {
+                        live_mode: {
+                            back_buffer_length_s: 10,
+                            sync_segment_count: 2,
+                            max_buffer_length_s: 30,
+                            max_buffer_length_absolute_s: 60
+                        }
+                    }
+                };
+            }
+        }
 
         // Handle stream selection change (attach once)
         function attachStreamChangeListener() {
@@ -388,12 +412,21 @@
                 hls.destroy();
             }
 
+            // Use config from server, or defaults if not loaded
+            let config_values = playbackConfig?.playback?.live_mode || {
+                back_buffer_length_s: 10,
+                sync_segment_count: 2,
+                max_buffer_length_s: 30,
+                max_buffer_length_absolute_s: 60
+            };
+
             hls = new Hls({
                 debug: false,
-                liveBackBufferLength: 20,    // Keep 20s buffer behind live edge
-                liveSyncDurationCount: 3,    // Sync to 3 segments ahead
-                maxBufferLength: 60,         // Max buffer 60s
-                maxMaxBufferLength: 120,     // Absolute max 120s
+                // Low-latency settings from server config
+                liveBackBufferLength: config_values.back_buffer_length_s,     // Buffer behind live edge (seconds)
+                liveSyncDurationCount: config_values.sync_segment_count,      // Segments ahead to sync
+                maxBufferLength: config_values.max_buffer_length_s,           // Max buffer (seconds)
+                maxMaxBufferLength: config_values.max_buffer_length_absolute_s, // Absolute max (seconds)
             });
 
             // Handle HLS errors
@@ -509,7 +542,10 @@
         });
 
         // Initialize with live stream on page load
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load playback config first, then streams, then start playback
+            await loadPlaybackConfig();
+            loadStreamList();
             switchToLive();
         });
 

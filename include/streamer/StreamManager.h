@@ -65,6 +65,9 @@ class StreamManager {
 
     AggregateHealth getAggregateHealth() const;
 
+    // Get application configuration
+    const AppConfig& getConfig() const { return config_; }
+
     // Get last error message (if any stream failed)
     std::string getLastError() const { return lastError_; }
 

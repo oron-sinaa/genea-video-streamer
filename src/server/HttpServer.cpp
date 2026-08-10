@@ -374,6 +374,11 @@ std::string HttpServer::routeRequest(const std::string& method, const std::strin
         return handleGetStreamsList();
     }
 
+    // Route /api/config
+    if (path == "/api/config") {
+        return handleGetPlaybackConfig();
+    }
+
     // Route /api/streams/<stream-name>
     if (path.find("/api/streams/") == 0) {
         std::string stream_name = path.substr(13);  // Skip "/api/streams/"
@@ -564,6 +569,30 @@ std::string HttpServer::handleGetStreamStatus(const std::string& stream_name) {
     }
 
     return handleNotFound();
+}
+
+std::string HttpServer::handleGetPlaybackConfig() {
+    if (!manager_) {
+        return handleNotFound();
+    }
+
+    const auto& cfg = manager_->getConfig();
+    
+    std::ostringstream json;
+    json << "{\n";
+    json << "  \"playback\": {\n";
+    json << "    \"live_mode\": {\n";
+    json << "      \"back_buffer_length_s\": " << cfg.playback.live_mode.back_buffer_length_s << ",\n";
+    json << "      \"sync_segment_count\": " << cfg.playback.live_mode.sync_segment_count << ",\n";
+    json << "      \"max_buffer_length_s\": " << cfg.playback.live_mode.max_buffer_length_s << ",\n";
+    json << "      \"max_buffer_length_absolute_s\": " << cfg.playback.live_mode.max_buffer_length_absolute_s << "\n";
+    json << "    }\n";
+    json << "  }\n";
+    json << "}\n";
+
+    std::string body = json.str();
+    std::string header = generateHttpHeader(200, "application/json", body.size(), config_.enable_cors);
+    return header + body;
 }
 
 std::string HttpServer::handleGetIndex() {
