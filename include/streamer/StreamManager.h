@@ -78,6 +78,7 @@ class StreamManager {
     AppConfig config_;
     std::vector<std::unique_ptr<StreamWorker>> workers_;
     mutable std::string lastError_;
+    bool stopped_ = false;  // Track if stop() has been called to prevent double-stops
 
     // Helper to create workers from config
     void createWorkers();

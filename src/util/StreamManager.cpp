@@ -11,21 +11,9 @@ StreamManager::StreamManager(const AppConfig& config) : config_(config), lastErr
 
 StreamManager::~StreamManager() {
     try {
-        // Only stop if not already stopped
-        // Note: stop() is idempotent and checks if workers are still active
-        if (!workers_.empty()) {
-            // Check if any worker is still in a running state
-            bool anyRunning = false;
-            for (const auto& worker : workers_) {
-                if (worker && worker->isActive()) {
-                    anyRunning = true;
-                    break;
-                }
-            }
-            if (anyRunning) {
-                stop();
-            }
-        }
+        // Call stop() to ensure clean shutdown; stop() is now idempotent via stopped_ flag
+        // This safely handles the case where stop() may or may not have been called already
+        stop();
         workers_.clear();
     } catch (const std::exception& e) {
         LOG_ERROR("StreamManager destructor: Exception during cleanup: %s", e.what());
@@ -86,6 +74,13 @@ int StreamManager::start() {
 }
 
 void StreamManager::stop() {
+    // Prevent double-stops which can cause use-after-free in worker threads
+    if (stopped_) {
+        return;  // Already stopped, don't do it again
+    }
+
+    stopped_ = true;
+
     // Count active streams before stopping
     int activeCount = 0;
     for (const auto& worker : workers_) {
