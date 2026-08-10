@@ -41,7 +41,7 @@ streams:
 
   - name: "camera-3"
     rtsp_url: "rtsp://rtsp-server:8554/stream2"
-    hls_output: "/data/hls_output/camera-2/"
+    hls_output: "/data/hls_output/camera-3/"
     transport: "tcp"
     reconnect:
       enabled: true

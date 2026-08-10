@@ -15,7 +15,7 @@ ai_inference:
   frames_per_segment: 1              # Frames to extract per segment
   
   # Shared Infrastructure
-  database_path: /app/detections.db  # Shared SQLite database for all streams
+  database_path: /app/database/detections.db  # Shared SQLite database for all streams
   
   # Performance
   max_workers: 4                     # CPU inference parallelism (per stream)
@@ -42,17 +42,17 @@ ai_inference:
     # Camera 1: Enabled, reads from local HLS, saves detections locally
     - stream_id: camera-1
       enabled: true
-      hls_input_dir: /app/hls_output/camera-1
-      detections_output_dir: /app/detections/camera-1
+      hls_input_dir: /data/hls_output/camera-1
+      detections_output_dir: /data/detections/camera-1
     
     # Camera 2: Disabled (no processing), but config is preserved for easy re-enable
     - stream_id: camera-2
       enabled: false
-      hls_input_dir: /app/hls_output/camera-2
-      detections_output_dir: /app/detections/camera-2
+      hls_input_dir: /data/hls_output/camera-2
+      detections_output_dir: /data/detections/camera-2
     
     # Camera 3: Enabled, reads from local HLS, saves detections locally
     - stream_id: camera-3
       enabled: true
-      hls_input_dir: /app/hls_output/camera-3
-      detections_output_dir: /app/detections/camera-3
+      hls_input_dir: /data/hls_output/camera-3
+      detections_output_dir: /data/detections/camera-3

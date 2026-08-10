@@ -17,7 +17,7 @@ services:
 
   rtsp-generator-1:
     image: jrottenberg/ffmpeg:7.0-ubuntu
-    container_name: rtsp-generator
+    container_name: rtsp-generator-1
     restart: unless-stopped
     command: >
       -hide_banner
@@ -55,15 +55,35 @@ services:
 
   rtsp-generator-2:
     image: jrottenberg/ffmpeg:7.0-ubuntu
-    container_name: rtsp-generator
+    container_name: rtsp-generator-2
     restart: unless-stopped
     volumes:
       - ./tests/cars_person.mp4:/data/cars_person.mp4
     command: >
       -hide_banner
       -loglevel error
+      -re
+      -stream_loop -1
       -i /data/cars_person.mp4
-      -c copy
+      -map 0:v:0
+      -map 0:a:0?
+      -c:v libx264
+      -preset veryfast
+      -profile:v main
+      -level:v 3.1
+      -pix_fmt yuv420p
+      -r 30
+      -b:v 2M
+      -maxrate 2M
+      -bufsize 4M
+      -g 60
+      -keyint_min 60
+      -sc_threshold 0
+      -c:a aac
+      -profile:a aac_low
+      -b:a 128k
+      -ar 48000
+      -ac 2
       -rtsp_transport tcp
       -f rtsp
       rtsp://rtsp-server:8554/stream2
@@ -85,8 +105,8 @@ services:
       - ./config:/etc/streamer:ro
       - ./hls_output:/data/hls_output
       - ./profiling/results:/app/profiling/results  # Profiling results (writable)
-      - ./detections:/app/detections
-      - ./detections/detections.db:/app/detections.db
+      - ./detections:/data/detections
+      - ./detections/database:/app/database
     ports:
       - "8080:8080"  # HTTP server: web player, REST API, HLS streaming
     networks:
@@ -112,7 +132,8 @@ services:
       start_period: 10s
     depends_on:
       - rtsp-server
-      - rtsp-generator
+      - rtsp-generator-1
+      - rtsp-generator-2
 
 networks:
   streamer-network:

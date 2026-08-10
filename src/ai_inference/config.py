@@ -38,7 +38,7 @@ class AiInferenceConfig:
     frames_per_segment: int = 1
     
     # Database (shared across all streams)
-    database_path: str = "/app/detections.db"
+    database_path: str = "/app/database/detections.db"
     
     # Performance
     max_workers: int = 4

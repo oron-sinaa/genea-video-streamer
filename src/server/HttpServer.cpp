@@ -725,7 +725,7 @@ std::string HttpServer::jsonEscape(const std::string& input) {
 
 std::string HttpServer::handleDetectionStats() {
     // TODO: Implement detection statistics endpoint
-    // This should query the detection database (/app/detections.db) and return stats
+    // This should query the detection database (/app/database/detections.db) and return stats
     // Sample response:
     // {
     //   "total_detections": 1234,
