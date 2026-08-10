@@ -279,6 +279,7 @@
         let video = document.getElementById('player');
         let currentMode = 'live';
         let currentStream = null;  // Track selected stream name
+        let streamChangeListenerAttached = false;  // Track if change listener is attached
         const liveBtn = document.getElementById('live-btn');
         const archiveBtn = document.getElementById('archive-btn');
         const errorDiv = document.getElementById('error');
@@ -297,6 +298,19 @@
             archive: (stream) => stream ? `/hls/${stream}/archive.m3u8` : '/segments/archive.m3u8'
         };
 
+        // Handle stream selection change (attach once)
+        function attachStreamChangeListener() {
+            if (!streamChangeListenerAttached) {
+                streamChangeListenerAttached = true;
+                streamSelector.addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        currentStream = e.target.value;
+                        loadStream(MANIFEST_PATHS[currentMode](currentStream));
+                    }
+                });
+            }
+        }
+
         // Load available streams and populate selector
         async function loadStreamList() {
             try {
@@ -305,22 +319,32 @@
                 const data = await response.json();
                 
                 const streams = data.streams || [];
-                streamSelector.innerHTML = '';
 
                 if (streams.length === 0) {
                     // No multi-stream mode - hide the selector
                     streamSelectorSection.style.display = 'none';
-                    currentStream = null;
+                    if (currentStream === null) {
+                        currentStream = null;
+                    }
                 } else if (streams.length === 1) {
                     // Single stream - show selector but auto-select
                     streamSelectorSection.style.display = 'block';
                     const streamName = streams[0].name;
-                    streamSelector.innerHTML = `<option value="${streamName}" selected>${streamName}</option>`;
-                    currentStream = streamName;
-                    loadStream(MANIFEST_PATHS.live(currentStream));
+                    
+                    // Only update if stream changed
+                    if (currentStream !== streamName) {
+                        streamSelector.innerHTML = `<option value="${streamName}" selected>${streamName}</option>`;
+                        currentStream = streamName;
+                        loadStream(MANIFEST_PATHS[currentMode](currentStream));
+                    }
                 } else {
                     // Multiple streams - show selector with all options
                     streamSelectorSection.style.display = 'block';
+                    
+                    // Save current selection
+                    const previousSelection = streamSelector.value;
+                    
+                    // Repopulate dropdown
                     streamSelector.innerHTML = '<option value="">-- Select a stream --</option>';
                     streams.forEach(stream => {
                         const option = document.createElement('option');
@@ -328,12 +352,14 @@
                         option.textContent = `${stream.name} (${stream.status})`;
                         streamSelector.appendChild(option);
                     });
-                    streamSelector.addEventListener('change', (e) => {
-                        if (e.target.value) {
-                            currentStream = e.target.value;
-                            loadStream(MANIFEST_PATHS[currentMode](currentStream));
-                        }
-                    });
+                    
+                    // Restore previous selection if it still exists
+                    if (previousSelection) {
+                        streamSelector.value = previousSelection;
+                    }
+                    
+                    // Attach listener only once
+                    attachStreamChangeListener();
                 }
             } catch (error) {
                 console.warn('Failed to load stream list:', error);
@@ -344,7 +370,7 @@
         // Load available streams on startup
         loadStreamList();
 
-        // Refresh stream list every 5 seconds
+        // Refresh stream list every 5 seconds (just update streams, don't reload if unchanged)
         setInterval(loadStreamList, 5000);
 
         // Initialize HLS.js if supported by browser
@@ -451,7 +477,7 @@
             archiveBtn.classList.add('active');
             liveBtn.classList.remove('active');
 
-            loadStream(MANIFEST_PATHS.archive);
+            loadStream(MANIFEST_PATHS.archive(currentStream));
         }
 
         // UI updates
