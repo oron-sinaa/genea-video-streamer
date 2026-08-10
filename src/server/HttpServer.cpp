@@ -80,7 +80,13 @@ HttpServer::HttpServer(StreamManager* manager)
 }
 
 HttpServer::~HttpServer() {
-    stop();
+    try {
+        stop();
+    } catch (const std::exception& e) {
+        LOG_ERROR("HttpServer destructor: Exception in stop(): %s", e.what());
+    } catch (...) {
+        LOG_ERROR("HttpServer destructor: Unknown exception in stop()");
+    }
 }
 
 bool HttpServer::start() {
@@ -159,13 +165,23 @@ void HttpServer::stop() {
 
     running_.store(false);
 
-    // Wait for listener thread to exit.  The listener polls accept() with a
-    // 200 ms SO_RCVTIMEO, so it will notice running_=false within 200 ms.
-    if (listener_thread_.joinable()) {
-        listener_thread_.join();
+    // Shutdown socket to force accept() to return with an error
+    // This ensures the listener thread exits quickly
+    if (listening_socket_ >= 0) {
+        ::shutdown(listening_socket_, SHUT_RDWR);
     }
 
-    // Free the port only after the thread has exited
+    // Wait for listener thread to exit.  shutdown() will cause accept() to fail,
+    // so the listener thread will exit cleanly when it checks running_=false.
+    if (listener_thread_.joinable()) {
+        try {
+            listener_thread_.join();
+        } catch (const std::exception& e) {
+            LOG_ERROR("HttpServer::stop: Exception joining listener thread: %s", e.what());
+        }
+    }
+
+    // Close and free the socket only after the thread has exited
     if (listening_socket_ >= 0) {
         close(listening_socket_);
         listening_socket_ = -1;
@@ -178,59 +194,105 @@ void HttpServer::listenerLoop() {
     LOG_INFO("HttpServer: Listener loop started");
 
     while (running_.load()) {
-        struct sockaddr_in client_addr;
-        socklen_t client_addr_len = sizeof(client_addr);
+        try {
+            struct sockaddr_in client_addr;
+            socklen_t client_addr_len = sizeof(client_addr);
 
-        int client_socket = accept(listening_socket_, (struct sockaddr*)&client_addr, &client_addr_len);
-        if (client_socket < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                // accept() timed out (200 ms SO_RCVTIMEO); loop back and re-check running_
+            int client_socket = accept(listening_socket_, (struct sockaddr*)&client_addr, &client_addr_len);
+            if (client_socket < 0) {
+                // Handle signal interruption gracefully
+                if (errno == EINTR) {
+                    if (running_.load()) {
+                        // Interrupted by signal, check running flag and continue
+                        continue;
+                    } else {
+                        // We got a signal during shutdown, exit cleanly
+                        break;
+                    }
+                }
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    // accept() timed out (200 ms SO_RCVTIMEO); loop back and re-check running_
+                    continue;
+                }
+                if (running_.load()) {
+                    LOG_INFO("HttpServer: accept() failed: %s", strerror(errno));
+                }
                 continue;
             }
+
+            // Set a receive timeout on the accepted socket so that a slow or
+            // closed client cannot stall the server indefinitely.
+            struct timeval client_tv{0, 500000};  // 500ms read timeout per request
+            setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO,
+                       &client_tv, sizeof(client_tv));
+
+            // Handle connection (synchronous, one at a time)
+            handleConnection(client_socket);
+            close(client_socket);
+        } catch (const std::exception& e) {
+            LOG_ERROR("HttpServer: Exception in listener loop: %s", e.what());
             if (running_.load()) {
-                LOG_INFO("HttpServer: accept() failed: %s", strerror(errno));
+                continue;  // Keep listening even after exception
+            } else {
+                break;     // Exit cleanly during shutdown
             }
-            continue;
+        } catch (...) {
+            LOG_ERROR("HttpServer: Unknown exception in listener loop");
+            if (!running_.load()) {
+                break;  // Exit cleanly during shutdown
+            }
         }
-
-        // Set a receive timeout on the accepted socket so that a slow or
-        // closed client cannot stall the server indefinitely.
-        struct timeval client_tv{0, 500000};  // 500ms read timeout per request
-        setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO,
-                   &client_tv, sizeof(client_tv));
-
-        // Handle connection (synchronous, one at a time)
-        handleConnection(client_socket);
-        close(client_socket);
     }
 
     LOG_INFO("HttpServer: Listener loop ended");
 }
 
 void HttpServer::handleConnection(int client_socket) {
-    std::string request_line = readHttpRequest(client_socket);
-    if (request_line.empty()) {
-        // Send 400 Bad Request instead of silently closing connection
-        std::string body = "400 Bad Request";
-        std::string header = generateHttpHeader(400, "text/plain", body.size(), config_.enable_cors);
-        sendResponse(client_socket, header + body);
-        return;
+    try {
+        std::string request_line = readHttpRequest(client_socket);
+        if (request_line.empty()) {
+            // Send 400 Bad Request instead of silently closing connection
+            std::string body = "400 Bad Request";
+            std::string header = generateHttpHeader(400, "text/plain", body.size(), config_.enable_cors);
+            sendResponse(client_socket, header + body);
+            return;
+        }
+
+        HttpRequest request = parseRequestLine(request_line);
+        if (request.method.empty() || request.path.empty()) {
+            // Send 400 Bad Request for malformed request line
+            LOG_INFO("HttpServer: Failed to parse request line: %s", request_line.c_str());
+            std::string body = "400 Bad Request";
+            std::string header = generateHttpHeader(400, "text/plain", body.size(), config_.enable_cors);
+            sendResponse(client_socket, header + body);
+            return;
+        }
+
+        LOG_INFO("HttpServer: %s %s", request.method.c_str(), request.path.c_str());
+
+        std::string response = routeRequest(request.method, request.path);
+        sendResponse(client_socket, response);
+    } catch (const std::exception& e) {
+        LOG_ERROR("HttpServer: Exception handling connection: %s", e.what());
+        // Send 500 error response for internal errors
+        try {
+            std::string body = "500 Internal Server Error";
+            std::string header = generateHttpHeader(500, "text/plain", body.size(), config_.enable_cors);
+            sendResponse(client_socket, header + body);
+        } catch (...) {
+            // Failed to even send error response
+            LOG_ERROR("HttpServer: Failed to send error response");
+        }
+    } catch (...) {
+        LOG_ERROR("HttpServer: Unknown exception handling connection");
+        try {
+            std::string body = "500 Internal Server Error";
+            std::string header = generateHttpHeader(500, "text/plain", body.size(), config_.enable_cors);
+            sendResponse(client_socket, header + body);
+        } catch (...) {
+            // Failed to even send error response
+        }
     }
-
-    HttpRequest request = parseRequestLine(request_line);
-    if (request.method.empty() || request.path.empty()) {
-        // Send 400 Bad Request for malformed request line
-        LOG_INFO("HttpServer: Failed to parse request line: %s", request_line.c_str());
-        std::string body = "400 Bad Request";
-        std::string header = generateHttpHeader(400, "text/plain", body.size(), config_.enable_cors);
-        sendResponse(client_socket, header + body);
-        return;
-    }
-
-    LOG_INFO("HttpServer: %s %s", request.method.c_str(), request.path.c_str());
-
-    std::string response = routeRequest(request.method, request.path);
-    sendResponse(client_socket, response);
 }
 
 std::string HttpServer::readHttpRequest(int socket) {

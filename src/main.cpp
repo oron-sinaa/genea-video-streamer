@@ -30,11 +30,32 @@ void handleShutdownSignal(int /*signal*/) {
     g_shutdownRequested.store(true);
 }
 
+void terminateHandler() {
+    LOG_ERROR("FATAL: std::terminate() called!");
+    if (std::exception_ptr ep = std::current_exception()) {
+        try {
+            std::rethrow_exception(ep);
+        } catch (const std::exception& e) {
+            LOG_ERROR("  Exception: %s", e.what());
+        } catch (...) {
+            LOG_ERROR("  Unknown exception type");
+        }
+    } else {
+        LOG_ERROR("  No active exception");
+    }
+    std::abort();
+}
+
 }  // namespace
 
 // Single-stream legacy mode (backward compatibility)
 int runLegacyMode(const streamer::AppConfig& config) {
     LOG_INFO("Running in legacy single-stream mode");
+
+    if (config.rtsp.url.empty()) {
+        LOG_ERROR("Legacy mode requires rtsp.url to be configured");
+        return EXIT_FAILURE;
+    }
 
     // Create pipeline health tracker (shared across components).
     streamer::PipelineHealth health;
@@ -158,6 +179,146 @@ int runLegacyMode(const streamer::AppConfig& config) {
     return EXIT_SUCCESS;
 }
 
+// HTTP server wrapper for legacy mode (serves HLS playlists and player)
+int runLegacyModeWithHttp(const streamer::AppConfig& config) {
+    LOG_INFO("Running in legacy single-stream mode with HTTP server");
+
+    if (config.rtsp.url.empty()) {
+        LOG_ERROR("Legacy mode requires rtsp.url to be configured");
+        return EXIT_FAILURE;
+    }
+
+    // Create pipeline health tracker
+    streamer::PipelineHealth health;
+
+    // Create a minimal StreamManager for HTTP server compatibility
+    // We create a manager but don't use it for streaming in legacy mode
+    streamer::StreamManager http_manager(config);
+
+    // Start HTTP server for HLS playlist/segment serving and player UI
+    streamer::HttpServer::ServerConfig http_config;
+    http_config.listen_port = config.http.listen_port;
+    http_config.listen_address = "0.0.0.0";
+    http_config.enable_cors = true;
+
+    streamer::HttpServer http_server(&http_manager, http_config);
+    if (!http_server.start()) {
+        LOG_ERROR("Failed to start HTTP server: %s", http_server.getLastError().c_str());
+        return EXIT_FAILURE;
+    }
+
+    LOG_INFO("HTTP server started on 0.0.0.0:%u", config.http.listen_port);
+
+    // Open RTSP source
+    streamer::RtspSource source(config.rtsp, &health);
+    if (!source.open()) {
+        LOG_ERROR("Failed to open RTSP source; exiting");
+        http_server.stop();
+        return EXIT_FAILURE;
+    }
+
+    // Initialize packet clock
+    AVStream* videoStream = source.videoStream();
+    if (videoStream == nullptr) {
+        LOG_ERROR("Failed to get video stream for clock initialization");
+        source.close();
+        http_server.stop();
+        return EXIT_FAILURE;
+    }
+    streamer::PacketClock clock(videoStream, 90000);
+    LOG_INFO("Packet clock initialized for timestamp normalization (output_tb=90000)");
+
+    // Validate stream compatibility
+    const streamer::StreamCopyResult copyResult = streamer::StreamCopyPlanner::canCopyToMpegTs(videoStream);
+    if (!copyResult.canCopy) {
+        LOG_ERROR("Source stream is not compatible with MPEG-TS codec copy: %s", copyResult.reason.c_str());
+        source.close();
+        http_server.stop();
+        return EXIT_FAILURE;
+    }
+    LOG_INFO("Source stream validated for MPEG-TS codec copy");
+
+    // Initialize HLS muxer
+    streamer::HlsMuxer muxer(config.hls);
+    if (!muxer.open()) {
+        LOG_ERROR("Failed to initialize HLS muxer; exiting");
+        source.close();
+        http_server.stop();
+        return EXIT_FAILURE;
+    }
+
+    AVPacket* packet = av_packet_alloc();
+    if (packet == nullptr) {
+        LOG_ERROR("Failed to allocate AVPacket");
+        muxer.close();
+        source.close();
+        http_server.stop();
+        return EXIT_FAILURE;
+    }
+
+    LOG_INFO("Starting packet read loop (Ctrl+C to stop)...");
+
+    long videoPacketCount = 0;
+    uint32_t lastReconnectCount = health.getReconnectCount();
+    const long logInterval = 100;
+    uint64_t totalBytesWritten = 0;
+
+    while (!g_shutdownRequested.load()) {
+        if (!source.readPacket(packet)) {
+            LOG_WARN("Packet read failed or stream ended; stopping");
+            break;
+        }
+
+        // Check for reconnect and write discontinuity marker
+        uint32_t currentReconnectCount = health.getReconnectCount();
+        if (currentReconnectCount > lastReconnectCount && config.hls.enable_discontinuity_markers) {
+            LOG_INFO("Reconnect detected, writing discontinuity marker to playlists");
+            muxer.writeDiscontinuity();
+            lastReconnectCount = currentReconnectCount;
+        }
+
+        if (packet->stream_index == source.videoStreamIndex()) {
+            clock.normalizePacket(packet);
+
+            if (!muxer.writePacket(packet, videoStream)) {
+                LOG_ERROR("Muxer failed to write packet; stopping");
+                break;
+            }
+
+            health.recordPacketWritten();
+            totalBytesWritten += packet->size;
+            health.setTotalBytesWritten(totalBytesWritten);
+
+            int64_t now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count();
+            health.setLastFrameInfo(packet->pts, now_ms);
+
+            ++videoPacketCount;
+            if (videoPacketCount % logInterval == 0) {
+                LOG_INFO(
+                    "Read %ld video packets (segments=%d, reconnects=%u)",
+                    videoPacketCount,
+                    muxer.segmentCount(),
+                    currentReconnectCount);
+            }
+        }
+
+        av_packet_unref(packet);
+    }
+
+    LOG_INFO("Shutting down: %ld video packets read", videoPacketCount);
+
+    // Cleanup
+    source.requestShutdown();
+    av_packet_free(&packet);
+    muxer.close();
+    source.close();
+    http_server.stop();
+
+    LOG_INFO("%s", health.getHealthReport().c_str());
+    return EXIT_SUCCESS;
+}
+
 // Multi-stream mode (Phase 6)
 int runMultiStreamMode(const streamer::AppConfig& config) {
     LOG_INFO("Running in multi-stream mode with %zu stream(s)", config.streams.size());
@@ -202,6 +363,7 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
     // Monitor streams until shutdown signal
     const long statusInterval = 500;  // ms
     auto lastStatusTime = std::chrono::system_clock::now();
+    bool allStreamsFailedReported = false;
 
     while (!g_shutdownRequested.load()) {
         auto now = std::chrono::system_clock::now();
@@ -221,10 +383,11 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-        // Check if all streams have failed
-        if (manager.getActiveStreamCount() == 0 && started > 0) {
-            LOG_ERROR("All streams have failed or stopped");
-            break;
+        // Report when all streams have failed (only once), but don't exit
+        // Keep HTTP server running for diagnostics
+        if (!allStreamsFailedReported && manager.getActiveStreamCount() == 0 && started > 0) {
+            LOG_WARN("All streams have failed or stopped; HTTP server still available for diagnostics");
+            allStreamsFailedReported = true;
         }
     }
 
@@ -232,6 +395,8 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
     http_server.stop();
 
     LOG_INFO("Shutting down all streams...");
+    // StreamManager destructor will also call stop(), but we make stop() idempotent
+    // by checking if any workers are still active before attempting shutdown
     manager.stop();
 
     // Print final aggregate health
@@ -242,34 +407,60 @@ int runMultiStreamMode(const streamer::AppConfig& config) {
         finalHealth.total_reconnects,
         finalHealth.error_streams);
 
+    // StreamManager and HttpServer will be destroyed here; both have idempotent destructors
     return EXIT_SUCCESS;
 }
 
 int main(int argc, char** argv) {
     const std::string configPath = (argc > 1) ? argv[1] : "config/rtsp-ingest.yaml";
 
-    streamer::AppConfig config;
+    // Install custom terminate handler for debugging
+    std::set_terminate(terminateHandler);
+
     try {
-        config = streamer::loadConfig(configPath);
+        streamer::AppConfig config;
+        try {
+            config = streamer::loadConfig(configPath);
+        } catch (const std::exception& e) {
+            LOG_ERROR("Failed to load configuration from '%s': %s", configPath.c_str(), e.what());
+            return EXIT_FAILURE;
+        }
+
+        // Validate configuration: at least one stream must be configured
+        if (config.streams.empty() && config.rtsp.url.empty()) {
+            LOG_ERROR("No streams configured. Provide either:");
+            LOG_ERROR("  - Legacy mode: rtsp.url in config");
+            LOG_ERROR("  - Multi-stream mode: streams array in config");
+            return EXIT_FAILURE;
+        }
+
+        std::signal(SIGINT, handleShutdownSignal);
+        std::signal(SIGTERM, handleShutdownSignal);
+
+        avformat_network_init();
+
+        int result;
+        
+        try {
+            // Determine which mode to run based on config
+            if (config.isMultiStream()) {
+                result = runMultiStreamMode(config);
+            } else {
+                // Legacy mode with HTTP server for player and HLS serving
+                result = runLegacyModeWithHttp(config);
+            }
+        } catch (const std::exception& e) {
+            LOG_ERROR("Exception during streaming: %s", e.what());
+            result = EXIT_FAILURE;
+        }
+
+        avformat_network_deinit();
+        return result;
     } catch (const std::exception& e) {
-        LOG_ERROR("Failed to load configuration from '%s': %s", configPath.c_str(), e.what());
+        LOG_ERROR("Fatal exception in main: %s", e.what());
+        return EXIT_FAILURE;
+    } catch (...) {
+        LOG_ERROR("Fatal unknown exception in main");
         return EXIT_FAILURE;
     }
-
-    std::signal(SIGINT, handleShutdownSignal);
-    std::signal(SIGTERM, handleShutdownSignal);
-
-    avformat_network_init();
-
-    int result;
-    
-    // Determine which mode to run based on config
-    if (config.isMultiStream()) {
-        result = runMultiStreamMode(config);
-    } else {
-        result = runLegacyMode(config);
-    }
-
-    avformat_network_deinit();
-    return result;
 }

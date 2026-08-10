@@ -19,8 +19,15 @@ StreamWorker::StreamWorker(const WorkerConfig& config)
 }
 
 StreamWorker::~StreamWorker() {
-    stop();
-    cleanup();
+    try {
+        stop();
+        cleanup();
+    } catch (const std::exception& e) {
+        // Log but don't throw from destructor
+        LOG_ERROR("StreamWorker destructor: Exception during cleanup: %s", e.what());
+    } catch (...) {
+        LOG_ERROR("StreamWorker destructor: Unknown exception during cleanup");
+    }
 }
 
 bool StreamWorker::start() {

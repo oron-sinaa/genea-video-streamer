@@ -10,22 +10,28 @@ StreamManager::StreamManager(const AppConfig& config) : config_(config), lastErr
 }
 
 StreamManager::~StreamManager() {
-    // Only stop if not already stopped
-    // Note: stop() is idempotent and checks if workers are still active
-    if (!workers_.empty()) {
-        // Check if any worker is still in a running state
-        bool anyRunning = false;
-        for (const auto& worker : workers_) {
-            if (worker && worker->isActive()) {
-                anyRunning = true;
-                break;
+    try {
+        // Only stop if not already stopped
+        // Note: stop() is idempotent and checks if workers are still active
+        if (!workers_.empty()) {
+            // Check if any worker is still in a running state
+            bool anyRunning = false;
+            for (const auto& worker : workers_) {
+                if (worker && worker->isActive()) {
+                    anyRunning = true;
+                    break;
+                }
+            }
+            if (anyRunning) {
+                stop();
             }
         }
-        if (anyRunning) {
-            stop();
-        }
+        workers_.clear();
+    } catch (const std::exception& e) {
+        LOG_ERROR("StreamManager destructor: Exception during cleanup: %s", e.what());
+    } catch (...) {
+        LOG_ERROR("StreamManager destructor: Unknown exception during cleanup");
     }
-    workers_.clear();
 }
 
 void StreamManager::createWorkers() {
