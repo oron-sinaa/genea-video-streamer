@@ -425,7 +425,7 @@ bool HlsMuxer::cleanupOldSegments() {
             }
         }
         
-        LOG_INFO("HlsMuxer: cleanup removed %zu entries from segments_ tracking vector", deletedCount);
+        LOG_INFO("HlsMuxer: cleanup removed %d entries from segments_ tracking vector", deletedCount);
     }
 
     // Third pass: regenerate playlists only if segments were deleted
@@ -450,11 +450,11 @@ bool HlsMuxer::cleanupOldSegments() {
             summary << ", ... (" << (deletedFilenames.size() - 10) << " more)";
         }
         summary << "]";
-        LOG_DEBUG(summary.str().c_str());
+        LOG_INFO("%s", summary.str().c_str());
         
         return true;  // Cleanup occurred
     } else {
-        LOG_DEBUG("HlsMuxer: cleanup check found no segments old enough to delete");
+        LOG_INFO("HlsMuxer: cleanup check found no segments old enough to delete");
         return false;  // No cleanup needed
     }
 }
