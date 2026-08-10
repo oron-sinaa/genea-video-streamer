@@ -68,7 +68,7 @@ class HttpServer {
     std::string handleNotFound();
     
     // Detection endpoints (integrate with Python AI inference module)
-    std::string handleDetectionStats();
+    std::string handleDetectionStats(const std::string& path);
     std::string handleDetectionRecent(const std::string& path);
     std::string handleDetectionFrame(const std::string& det_id_str);
 
@@ -96,7 +96,7 @@ class HttpServer {
     std::string jsonEscape(const std::string& input);
 
     // Database query helpers for detection endpoints
-    std::string queryDetectionStats();
+    std::string queryDetectionStats(const std::string& stream_id = "", const std::string& object_type = "");
     std::string queryRecentDetections(int limit, const std::string& stream_id = "");
     std::string queryDetectionFrame(int det_id);
 

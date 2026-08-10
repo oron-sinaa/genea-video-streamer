@@ -381,12 +381,12 @@ std::string HttpServer::routeRequest(const std::string& method, const std::strin
         return handleGetPlaybackConfig();
     }
 
-    // Route /api/detections/stats - Detection statistics
-    if (path == "/api/detections/stats") {
-        return handleDetectionStats();
+    // Route /api/detections/stats - Detection statistics (with optional query params)
+    if (path.find("/api/detections/stats") == 0) {
+        return handleDetectionStats(path);
     }
 
-    // Route /api/detections/recent?hours=N - Recent detections
+    // Route /api/detections/recent - Recent detections (with optional query params)
     if (path.find("/api/detections/recent") == 0) {
         return handleDetectionRecent(path);
     }
@@ -725,8 +725,31 @@ std::string HttpServer::jsonEscape(const std::string& input) {
     return output;
 }
 
-std::string HttpServer::handleDetectionStats() {
-    std::string stats = queryDetectionStats();
+std::string HttpServer::handleDetectionStats(const std::string& path) {
+    // Parse query parameters from path (e.g., /api/detections/stats?stream_id=camera-1&object_type=person)
+    std::string stream_id = "";
+    std::string object_type = "";
+    
+    size_t query_pos = path.find('?');
+    if (query_pos != std::string::npos) {
+        std::string query = path.substr(query_pos + 1);
+        
+        // Parse stream_id parameter
+        size_t stream_pos = query.find("stream_id=");
+        if (stream_pos != std::string::npos) {
+            size_t end = query.find('&', stream_pos);
+            stream_id = query.substr(stream_pos + 10, end == std::string::npos ? std::string::npos : end - stream_pos - 10);
+        }
+        
+        // Parse object_type parameter
+        size_t type_pos = query.find("object_type=");
+        if (type_pos != std::string::npos) {
+            size_t end = query.find('&', type_pos);
+            object_type = query.substr(type_pos + 12, end == std::string::npos ? std::string::npos : end - type_pos - 12);
+        }
+    }
+    
+    std::string stats = queryDetectionStats(stream_id, object_type);
     std::string header = generateHttpHeader(200, "application/json", stats.size(), config_.enable_cors);
     return header + stats;
 }
@@ -737,18 +760,31 @@ std::string HttpServer::handleDetectionRecent(const std::string& path) {
     int limit = 50;  // Default
     std::string stream_id = "";
     
-    if (query_pos != std::string::npos) {
-        std::string query = path.substr(query_pos + 1);
-        size_t limit_pos = query.find("limit=");
-        if (limit_pos != std::string::npos) {
-            limit = std::stoi(query.substr(limit_pos + 6));
+    try {
+        if (query_pos != std::string::npos) {
+            std::string query = path.substr(query_pos + 1);
+            
+            // Parse limit parameter
+            size_t limit_pos = query.find("limit=");
+            if (limit_pos != std::string::npos) {
+                size_t end = query.find('&', limit_pos);
+                std::string limit_str = query.substr(limit_pos + 6, end == std::string::npos ? std::string::npos : end - limit_pos - 6);
+                limit = std::stoi(limit_str);
+                if (limit < 1 || limit > 1000) limit = 50;  // Clamp to valid range
+            }
+            
+            // Parse stream_id parameter
+            size_t stream_pos = query.find("stream_id=");
+            if (stream_pos != std::string::npos) {
+                size_t end = query.find('&', stream_pos);
+                stream_id = query.substr(stream_pos + 10, end == std::string::npos ? std::string::npos : end - stream_pos - 10);
+            }
         }
-        
-        size_t stream_pos = query.find("stream_id=");
-        if (stream_pos != std::string::npos) {
-            size_t end = query.find('&', stream_pos);
-            stream_id = query.substr(stream_pos + 10, end == std::string::npos ? std::string::npos : end - stream_pos - 10);
-        }
+    } catch (const std::exception& e) {
+        LOG_WARN("HttpServer: Error parsing detection query parameters: %s", e.what());
+        std::string error = "{\"error\": \"Invalid query parameters\"}";
+        std::string header = generateHttpHeader(400, "application/json", error.size(), config_.enable_cors);
+        return header + error;
     }
     
     std::string detections = queryRecentDetections(limit, stream_id);
@@ -778,7 +814,7 @@ std::string HttpServer::handleDetectionFrame(const std::string& det_id_str) {
     }
 }
 
-std::string HttpServer::queryDetectionStats() {
+std::string HttpServer::queryDetectionStats(const std::string& stream_id, const std::string& object_type) {
     sqlite3* db = nullptr;
     int rc = sqlite3_open(config_.database_path.c_str(), &db);
     
@@ -791,10 +827,24 @@ std::string HttpServer::queryDetectionStats() {
     std::ostringstream json;
     json << "{\n";
     
+    // Build WHERE clause for filtering
+    std::string where_clause = "";
+    if (!stream_id.empty() || !object_type.empty()) {
+        where_clause = " WHERE ";
+        if (!stream_id.empty()) {
+            where_clause += "stream_id = '" + stream_id + "'";
+        }
+        if (!object_type.empty()) {
+            if (!stream_id.empty()) where_clause += " AND ";
+            where_clause += "object_type = '" + object_type + "'";
+        }
+    }
+    
     // Get total count
     sqlite3_stmt* stmt = nullptr;
     int total = 0;
-    if (sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM detections", -1, &stmt, nullptr) == SQLITE_OK) {
+    std::string count_query = "SELECT COUNT(*) FROM detections" + where_clause;
+    if (sqlite3_prepare_v2(db, count_query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             total = sqlite3_column_int(stmt, 0);
         }
@@ -806,7 +856,8 @@ std::string HttpServer::queryDetectionStats() {
     by_type << "{";
     bool first_type = true;
     
-    if (sqlite3_prepare_v2(db, "SELECT object_type, COUNT(*) FROM detections GROUP BY object_type ORDER BY COUNT(*) DESC", -1, &stmt, nullptr) == SQLITE_OK) {
+    std::string type_query = "SELECT object_type, COUNT(*) FROM detections" + where_clause + " GROUP BY object_type ORDER BY COUNT(*) DESC";
+    if (sqlite3_prepare_v2(db, type_query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             const char* obj_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
             int count = sqlite3_column_int(stmt, 1);
@@ -821,7 +872,8 @@ std::string HttpServer::queryDetectionStats() {
     
     // Get average confidence
     double avg_confidence = 0.0;
-    if (sqlite3_prepare_v2(db, "SELECT AVG(confidence) FROM detections", -1, &stmt, nullptr) == SQLITE_OK) {
+    std::string avg_query = "SELECT AVG(confidence) FROM detections" + where_clause;
+    if (sqlite3_prepare_v2(db, avg_query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             avg_confidence = sqlite3_column_double(stmt, 0);
         }
@@ -860,6 +912,7 @@ std::string HttpServer::queryRecentDetections(int limit, const std::string& stre
     
     sqlite3_stmt* stmt = nullptr;
     bool first = true;
+    int row_count = 0;
     
     if (sqlite3_prepare_v2(db, base_query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         // Bind parameters
@@ -871,6 +924,7 @@ std::string HttpServer::queryRecentDetections(int limit, const std::string& stre
         
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             if (!first) json << ",\n";
+            row_count++;
             
             int det_id = sqlite3_column_int(stmt, 0);
             const char* obj_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
@@ -901,7 +955,7 @@ std::string HttpServer::queryRecentDetections(int limit, const std::string& stre
     }
     
     json << "\n  ],\n";
-    json << "  \"total\": " << (first ? 0 : limit) << "\n";
+    json << "  \"total\": " << row_count << "\n";
     json << "}\n";
     
     sqlite3_close(db);
