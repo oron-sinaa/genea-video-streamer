@@ -98,12 +98,12 @@ class StreamWorker {
     void cleanup();
 
     WorkerConfig config_;
-    std::atomic<Status> status_;
     std::string lastError_;
 
     // Thread management
     std::unique_ptr<std::thread> workerThread_;
     std::atomic<bool> shutdownRequested_{false};
+    bool stopped_ = false;  // Prevents double-stops
 
     // Pipeline components
     std::unique_ptr<RtspSource> rtspSource_;
@@ -113,7 +113,7 @@ class StreamWorker {
     // Per-stream health tracking
     PipelineHealth health_;
 
-    // Synchronization
+    // Synchronization - Use only atomicStatus_ as the source of truth
     mutable std::atomic<Status> atomicStatus_{Status::IDLE};
 };
 

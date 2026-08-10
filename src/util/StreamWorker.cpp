@@ -13,7 +13,7 @@ extern "C" {
 namespace streamer {
 
 StreamWorker::StreamWorker(const WorkerConfig& config)
-    : config_(config), status_(Status::IDLE), lastError_("") {
+    : config_(config), lastError_("") {
     LOG_INFO("StreamWorker[%s] initialized with RTSP URL: %s", config_.stream_name.c_str(),
              config_.rtsp_url.c_str());
 }
@@ -31,7 +31,7 @@ StreamWorker::~StreamWorker() {
 }
 
 bool StreamWorker::start() {
-    if (status_.load() != Status::IDLE) {
+    if (atomicStatus_.load() != Status::IDLE) {
         LOG_WARN("StreamWorker[%s] already running or in error state", config_.stream_name.c_str());
         return false;
     }
@@ -39,6 +39,7 @@ bool StreamWorker::start() {
     try {
         LOG_INFO("StreamWorker[%s] starting...", config_.stream_name.c_str());
         shutdownRequested_.store(false);
+        stopped_ = false;  // Reset stopped_ flag for fresh start
         atomicStatus_.store(Status::RUNNING);
         
         workerThread_ = std::make_unique<std::thread>([this]() { processingLoop(); });
@@ -64,8 +65,15 @@ bool StreamWorker::start() {
 }
 
 void StreamWorker::stop() {
-    if (status_.load() == Status::IDLE) {
+    // Prevent double-stops which can cause thread join issues
+    if (stopped_) {
         return;  // Already stopped
+    }
+
+    stopped_ = true;
+
+    if (atomicStatus_.load() == Status::IDLE) {
+        return;  // Never started
     }
 
     LOG_INFO("StreamWorker[%s] stopping...", config_.stream_name.c_str());
@@ -78,7 +86,12 @@ void StreamWorker::stop() {
 
     // Wait for thread to complete
     if (workerThread_ && workerThread_->joinable()) {
-        workerThread_->join();
+        try {
+            workerThread_->join();
+        } catch (const std::exception& e) {
+            LOG_ERROR("StreamWorker[%s] exception while joining thread: %s", 
+                     config_.stream_name.c_str(), e.what());
+        }
     }
 
     cleanup();
