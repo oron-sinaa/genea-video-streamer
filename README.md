@@ -24,12 +24,14 @@ RTSP Sources
 StreamManager (lifecycle, health aggregation)
   │
 HttpServer
-  ├─ GET /hls/<stream>/live.m3u8       → live playlist
-  ├─ GET /hls/<stream>/<seg>.ts        → segment
+  ├─ GET /hls/<stream>/live.m3u8       → live playlist (rolling 3-5 segments)
+  ├─ GET /hls/<stream>/archive.m3u8    → archive playlist (2-hour retention)
+  ├─ GET /hls/<stream>/<seg>.ts        → segment (MPEG-TS video)
   ├─ GET /api/health                   → aggregate JSON metrics
-  ├─ GET /api/streams                  → stream list
+  ├─ GET /api/streams                  → stream list with status
   ├─ GET /api/streams/<name>           → per-stream status
-  └─ GET /                             → web player
+  ├─ GET /api/config                   → playback latency config
+  └─ GET /                             → web player (HLS.js + stream selector)
 ```
 
 ## Implementation Status
@@ -38,11 +40,12 @@ HttpServer
 |-------|------|--------|
 | 0 | Foundation (CMake, config, logging) | ✅ Complete |
 | 1 | Capture & Probe (RTSP, PacketClock) | ✅ Complete |
-| 2 | Remux & Segments (HLS muxer, playlists) | ✅ Complete |
-| 3 | Web Player (HLS.js, live + archive UI) | ✅ Complete |
-| 4 | Reliability (reconnect, backoff, stale detection) | ✅ Complete |
+| 2 | Remux & Segments (HLS muxer, playlists, archive) | ✅ Complete |
+| 3 | Web Player (HLS.js, live + archive UI, stream selector) | ✅ Complete |
+| 4 | Reliability (reconnect, backoff, stale detection, idempotent shutdown) | ✅ Complete |
 | 5 | Testing & CI (unit, integration, GitHub Actions, Docker) | ✅ Complete |
-| 6 | Scalability (StreamManager, StreamWorker, HTTP API) | ✅ Complete |
+| 6 | Scalability (StreamManager, StreamWorker, HTTP API, multi-stream) | ✅ Complete |
+| 6b | Playback Latency (configurable buffering, low-latency profiles) | ✅ Complete |
 | 7 | AI / Optional (object detection, event search) | 📅 Not started |
 
 ## Tech Stack

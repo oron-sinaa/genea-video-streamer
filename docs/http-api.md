@@ -136,16 +136,62 @@ curl http://localhost:8080/api/streams/camera-1
 
 ---
 
+#### 4. Get Playback Configuration
+**Request:**
+```
+GET /api/config
+```
+
+**Description:**  
+Returns playback latency and buffering configuration for HLS.js client-side settings. Used by the web player to configure optimal latency profiles.
+
+**Response (200 OK):**
+```json
+{
+  "playback": {
+    "live_mode": {
+      "back_buffer_length_s": 10,
+      "sync_segment_count": 2,
+      "max_buffer_length_s": 30,
+      "max_buffer_length_absolute_s": 60
+    }
+  }
+}
+```
+
+**Status Codes:**
+- `200 OK` - Configuration returned successfully
+- `404 Not Found` - StreamManager not initialized
+
+**Response Fields:**
+- `back_buffer_length_s` (int) - Seconds of buffer to maintain behind live edge (lower = lower latency)
+- `sync_segment_count` (int) - Number of segments ahead to sync toward (controls live position aggressiveness)
+- `max_buffer_length_s` (int) - Maximum total buffer duration in seconds
+- `max_buffer_length_absolute_s` (int) - Hard ceiling on buffer (safety limit)
+
+**Notes:**
+- Configuration is read from `playback.live_mode` section in YAML config file
+- Default values provide balanced latency (~10-15s) with good resilience
+- Can be tuned for low-latency (5-8s) or high-reliability (20-30s) profiles
+- Settings are applied dynamically by the player without requiring restart
+
+**Example:**
+```bash
+curl http://localhost:8080/api/config
+```
+
+---
+
 ### HLS Streaming Endpoints
 
-#### 4. Get HLS Playlist
+#### 5. Get Live HLS Playlist
 **Request:**
 ```
 GET /hls/<stream-name>/live.m3u8
 ```
 
 **Description:**  
-Returns the HLS master playlist for a stream. Contains references to available segments with segment duration and timing information.
+Returns the HLS live playlist for a stream. Contains references to available segments in a rolling window with segment duration and timing information.
 
 **URL Parameters:**
 - `<stream-name>` (string) - Name of the stream (e.g., camera-1)
@@ -155,12 +201,13 @@ Returns the HLS master playlist for a stream. Contains references to available s
 #EXTM3U
 #EXT-X-VERSION:3
 #EXT-X-TARGETDURATION:4
+#EXT-X-MEDIA-SEQUENCE:1000
 #EXTINF:3.996,
-segment_000001.ts
+segment_001000.ts
 #EXTINF:3.996,
-segment_000002.ts
+segment_001001.ts
 #EXTINF:3.996,
-segment_000003.ts
+segment_001002.ts
 ```
 
 **Response Headers:**
@@ -176,6 +223,8 @@ Content-Length: <size>
 **Notes:**
 - Playlist is updated as new segments are created
 - Rolling window includes most recent segments (typically 3-5 segments)
+- No ENDLIST tag (maintains live stream state)
+- Includes #EXT-X-DISCONTINUITY markers after reconnects if enabled in config
 - Compatible with HLS.js and standard media players
 
 **Example:**
@@ -185,7 +234,58 @@ curl http://localhost:8080/hls/camera-1/live.m3u8
 
 ---
 
-#### 5. Get HLS Segment
+#### 6. Get Archive HLS Playlist
+**Request:**
+```
+GET /hls/<stream-name>/archive.m3u8
+```
+
+**Description:**  
+Returns the HLS archive playlist for a stream containing the complete recorded history (up to retention limit). Used for playback and seeking to past content.
+
+**URL Parameters:**
+- `<stream-name>` (string) - Name of the stream (e.g., camera-1)
+
+**Response (200 OK):**
+```
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-TARGETDURATION:4
+#EXT-X-MEDIA-SEQUENCE:900
+#EXTINF:3.996,
+segment_000900.ts
+#EXTINF:3.996,
+segment_000901.ts
+...
+#EXTINF:3.996,
+segment_001002.ts
+```
+
+**Response Headers:**
+```
+Content-Type: application/vnd.apple.mpegurl
+Content-Length: <size>
+```
+
+**Status Codes:**
+- `200 OK` - Playlist returned successfully
+- `404 Not Found` - Stream not found or playlist file doesn't exist
+
+**Notes:**
+- Archive contains all segments within the configured retention period (default: 2 hours)
+- Retention duration is configurable via `hls.archive_retention_hours` in config
+- Segments older than retention period are automatically cleaned up
+- Supports full seek/playback capability
+- Can contain hundreds or thousands of segments depending on bitrate and retention
+
+**Example:**
+```bash
+curl http://localhost:8080/hls/camera-1/archive.m3u8
+```
+
+---
+
+#### 7. Get HLS Segment
 **Request:**
 ```
 GET /hls/<stream-name>/<segment-name>.ts
@@ -227,7 +327,7 @@ curl http://localhost:8080/hls/camera-1/segment_000001.ts -o segment.ts
 
 ### Web Interface
 
-#### 6. Get Web Player
+#### 9. Get Web Player
 **Request:**
 ```
 GET /
@@ -235,7 +335,7 @@ GET /index.html
 ```
 
 **Description:**  
-Returns the HTML web player interface for viewing HLS streams in a browser.
+Returns the HTML web player interface for viewing HLS streams in a browser. Includes stream selector for multi-stream setups and controls for switching between live and archive modes.
 
 **Response (200 OK):**
 ```html
@@ -246,7 +346,7 @@ Returns the HTML web player interface for viewing HLS streams in a browser.
     ...
   </head>
   <body>
-    <!-- HLS.js player -->
+    <!-- HLS.js player with stream selector and controls -->
   </body>
 </html>
 ```
@@ -259,16 +359,86 @@ Content-Length: <size>
 
 **Status Codes:**
 - `200 OK` - Player page returned successfully
-- `404 Not Found` - Player HTML file not available
+- `404 Not Found` - Player HTML file not available (fallback page served)
+
+**Features:**
+- Real-time stream selection dropdown (multi-stream mode)
+- Live vs Archive playback toggle
+- Play/pause, volume, fullscreen controls
+- Automatic stream status polling
+- Dynamic latency configuration from server
+- Graceful fallback if player.html not found
 
 **Notes:**
 - Uses HLS.js library for playback
-- Requires modern browser with WebGL support
-- Player can switch between multiple streams
+- Requires modern browser with Media Source Extensions support
+- Automatically loads configuration from `/api/config` endpoint
+- Queries `/api/streams` every 5 seconds to keep stream selector updated
+
+**Example:**
+```bash
+# Open in browser
+curl http://localhost:8080/ > player.html
+open player.html
+```
 
 ---
 
-### Error Responses
+## Configuration Reference
+
+### Playback Latency Profiles
+
+The `/api/config` endpoint returns settings that control client-side buffering. Common profiles:
+
+**Low-Latency (5-8s total latency):**
+```json
+{
+  "playback": {
+    "live_mode": {
+      "back_buffer_length_s": 5,
+      "sync_segment_count": 1,
+      "max_buffer_length_s": 20,
+      "max_buffer_length_absolute_s": 40
+    }
+  }
+}
+```
+Use for: Live sports, events, real-time monitoring requiring immediate reaction.
+Trade-off: Higher risk of stalling on poor networks.
+
+**Balanced (10-15s total latency - DEFAULT):**
+```json
+{
+  "playback": {
+    "live_mode": {
+      "back_buffer_length_s": 10,
+      "sync_segment_count": 2,
+      "max_buffer_length_s": 30,
+      "max_buffer_length_absolute_s": 60
+    }
+  }
+}
+```
+Use for: Surveillance, security monitoring, general-purpose streaming.
+Trade-off: Good balance between low latency and resilience.
+
+**High-Reliability (20-30s total latency):**
+```json
+{
+  "playback": {
+    "live_mode": {
+      "back_buffer_length_s": 15,
+      "sync_segment_count": 3,
+      "max_buffer_length_s": 50,
+      "max_buffer_length_absolute_s": 100
+    }
+  }
+}
+```
+Use for: Poor network conditions, remote locations, maximum resilience.
+Trade-off: Higher latency but very stable playback.
+
+---
 
 #### 404 Not Found
 **Response:**
