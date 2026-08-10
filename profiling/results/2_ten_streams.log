@@ -1,0 +1,1340 @@
+[h264 @ 0x745928008a80] co located POCs unavailable
+[h264 @ 0x745928008a80] mmco: unref short failure
+[h264 @ 0x745920007c80] co located POCs unavailable
+[h264 @ 0x745918007c80] co located POCs unavailable
+[h264 @ 0x74591c007c80] co located POCs unavailable
+[h264 @ 0x74591c007c80] mmco: unref short failure
+[h264 @ 0x745910007c80] co located POCs unavailable
+[h264 @ 0x74590c007c80] co located POCs unavailable
+[h264 @ 0x745904007c80] co located POCs unavailable
+[2026-08-10 03:32:54] [INFO] Loaded 10 stream(s) from config
+[2026-08-10 03:32:54] [INFO] Running in multi-stream mode with 10 stream(s)
+[2026-08-10 03:32:54] [INFO] StreamManager initialized for 10 stream(s)
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-1] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-1'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-2] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-2'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-3] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-3'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-4] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-4'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-5] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-5'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-6] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-6'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-7] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-7'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-8] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-8'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-9] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-9'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-10] initialized with RTSP URL: rtsp://rtsp-server:8554/stream
+[2026-08-10 03:32:54] [INFO] StreamManager created worker for stream 'camera-10'
+[2026-08-10 03:32:54] [INFO] StreamManager created 10 worker(s)
+[2026-08-10 03:32:54] [INFO] StreamManager starting 10 stream(s)...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-1] starting...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-1] processing thread started
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-1] started successfully
+[2026-08-10 03:32:54] [INFO] StreamManager started stream 'camera-1'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-2] starting...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-2] processing thread started
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-2] started successfully
+[2026-08-10 03:32:54] [INFO] StreamManager started stream 'camera-2'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-3] starting...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-3] processing thread started
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-3] started successfully
+[2026-08-10 03:32:54] [INFO] StreamManager started stream 'camera-3'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-4] starting...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-4] processing thread started
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-4] started successfully
+[2026-08-10 03:32:54] [INFO] StreamManager started stream 'camera-4'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-5] starting...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-5] processing thread started
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-5] started successfully
+[2026-08-10 03:32:54] [INFO] StreamManager started stream 'camera-5'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-6] starting...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-6] processing thread started
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-6] started successfully
+[2026-08-10 03:32:54] [INFO] StreamManager started stream 'camera-6'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-7] starting...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-7] processing thread started
+[2026-0[h264 @ 0x745908007c80] co located POCs unavailable
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: -2024 <= 3976 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 12976 <= 18976 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 3976 <= 3977 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 9976 <= 18977 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 15976 <= 18978 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 21976 <= 27976 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 24976 <= 27977 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 33976 <= 36976 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 39976 <= 42976 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 48976 <= 54976 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 45976 <= 54977 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 51976 <= 54978 (count=10)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 3980 <= 9980 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 980 <= 9981 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 980 <= 9981 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 6980 <= 9982 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 3980 <= 9982 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 6980 <= 9983 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 12980 <= 18980 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 9980 <= 9984 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 15980 <= 18981 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 24980 <= 27980 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 30980 <= 33980 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 39980 <= 45980 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 36980 <= 45981 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 42980 <= 45982 (count=10)
+[h264 @ 0x7458fc007c80] co located POCs unavailable
+[h264 @ 0x7458fc007c80] mmco: unref short failure
+[h264 @ 0x7458f8007c80] reference picture missing during reorder
+[h264 @ 0x7458f8007c80] Missing reference picture, default is 0
+[h264 @ 0x7458f8007c80] decode_slice_header error
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 3916 <= 9916 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: -2084 <= 9916 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 6916 <= 9917 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 3916 <= 9917 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 6916 <= 9918 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 9916 <= 9919 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 15916 <= 18916 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 21916 <= 24916 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 30916 <= 36916 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 27916 <= 36917 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 33916 <= 36918 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 42916 <= 48916 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 39916 <= 48917 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 45916 <= 48918 (count=10)
+8-10 03:32:54] [INFO] StreamWorker[camera-7] started successfully
+[2026-08-10 03:32:54] [INFO] StreamManager started stream 'camera-7'
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-8] starting...
+[2026-08-10 03:32:54] [INFO] StreamWorker[camera-8] processing thread started
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-8] started successfully
+[2026-08-10 03:32:55] [INFO] StreamManager started stream 'camera-8'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-9] starting...
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-9] processing thread started
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-1] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: resuming segment numbering from index 36 (last segment was 35)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-1/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-1] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=-5024 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment 37: /tmp/hls_output/camera-1/segment_000037.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-2] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: resuming segment numbering from index 18 (last segment was 17)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-2/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-2] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=-2020 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-2/segment_000019.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-9] started successfully
+[2026-08-10 03:32:55] [INFO] StreamManager started stream 'camera-9'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-10] starting...
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-10] processing thread started
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-10] started successfully
+[2026-08-10 03:32:55] [INFO] StreamManager started stream 'camera-10'
+[2026-08-10 03:32:55] [INFO] StreamManager started 10 stream(s), 0 failed
+[2026-08-10 03:32:55] [INFO] Started 10 stream(s); waiting for shutdown signal...
+[2026-08-10 03:32:55] [INFO] HttpServer: Started on 0.0.0.0:8080
+[2026-08-10 03:32:55] [INFO] HTTP server started on 0.0.0.0:8080
+[2026-08-10 03:32:55] [INFO] HttpServer: Listener loop started
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-3] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: resuming segment numbering from index 18 (last segment was 17)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-3/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-3] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=-5084 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-3/segment_000019.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-serv[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: -2075 <= 3925 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 6925 <= 9925 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 3925 <= 3926 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 12925 <= 15925 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 21925 <= 27925 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 18925 <= 27926 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 24925 <= 27927 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 33925 <= 39925 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 30925 <= 39926 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 36925 <= 39927 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 45925 <= 51925 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 42925 <= 51926 (count=10)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 3871 <= 6871 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 3871 <= 6872 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 12871 <= 18871 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 6871 <= 6873 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 9871 <= 18872 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 15871 <= 18873 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 24871 <= 30871 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 21871 <= 30872 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 27871 <= 30873 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 36871 <= 42871 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 33871 <= 42872 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 39871 <= 42873 (count=10)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 3881 <= 9881 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 881 <= 9882 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 881 <= 9882 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 6881 <= 9883 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 3881 <= 9883 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 6881 <= 9884 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 15881 <= 21881 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 9881 <= 9885 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 12881 <= 21882 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 18881 <= 21883 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 27881 <= 33881 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 24881 <= 33882 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 30881 <= 33883 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 39881 <= 45881 (count=10)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 6850 <= 12850 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: -2150 <= 12850 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 3850 <= 12851 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 3850 <= 12851 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 9850 <= 12852 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 6850 <= 12852 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 9850 <= 12853 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 18850 <= 24850 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 12850 <= 12854 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 15850 <= 24851 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 21850 <= 24852 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 30850 <= 36850 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 27850 <= 36851 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 33850 <= 36852 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 45850 <= 51850 (count=10)
+er:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-4] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: resuming segment numbering from index 18 (last segment was 17)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-4/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-4] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=-5075 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-4/segment_000019.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-5] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: resuming segment numbering from index 18 (last segment was 17)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-5/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-5] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=871 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-5/segment_000019.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-6] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-6/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-6] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=-2119 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment 1: /tmp/hls_output/camera-6/segment_000001.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-7] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-7/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-7] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=-5150 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment 1: /tmp/hls_output/camera-7/segment_000001.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:55] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=243
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-8] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-8/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-8] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=-2151 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment [2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 9849 <= 15849 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 849 <= 15849 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 6849 <= 15850 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 6849 <= 15850 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 12849 <= 15851 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 9849 <= 15851 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 12849 <= 15852 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 21849 <= 27849 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 15849 <= 15853 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 18849 <= 27850 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 24849 <= 27851 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 36849 <= 42849 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 39849 <= 42850 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 48849 <= 54849 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 45849 <= 54850 (count=10)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: -2176 <= 3824 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 12824 <= 18824 (count=1)
+[2026-08-10 03:32:55] [WARN] PacketClock: DTS jitter detected: 3824 <= 3825 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 9824 <= 18825 (count=2)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 15824 <= 18826 (count=3)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 27824 <= 33824 (count=4)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 30824 <= 33825 (count=5)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 39824 <= 45824 (count=6)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 36824 <= 45825 (count=7)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 42824 <= 45826 (count=8)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 48824 <= 51824 (count=9)
+[2026-08-10 03:32:55] [WARN] PacketClock: PTS jitter detected: 57824 <= 63824 (count=10)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 792 <= 3792 (count=1)
+[2026-08-10 03:32:56] [WARN] PacketClock: DTS jitter detected: 792 <= 3793 (count=1)
+[2026-08-10 03:32:56] [WARN] PacketClock: DTS jitter detected: 3792 <= 3794 (count=2)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 18792 <= 24792 (count=2)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 21792 <= 24793 (count=3)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 30792 <= 36792 (count=4)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 27792 <= 36793 (count=5)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 33792 <= 36794 (count=6)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 39792 <= 42792 (count=7)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 48792 <= 54792 (count=8)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 45792 <= 54793 (count=9)
+[2026-08-10 03:32:56] [WARN] PacketClock: PTS jitter detected: 51792 <= 54794 (count=10)
+1: /tmp/hls_output/camera-8/segment_000001.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:55] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:55] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-9] RTSP source opened successfully
+[2026-08-10 03:32:55] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-9/'
+[2026-08-10 03:32:55] [INFO] StreamWorker[camera-9] HLS muxer initialized
+[2026-08-10 03:32:55] [INFO] PacketClock: Generated synthetic PTS=-5176 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:55] [INFO] HlsMuxer: starting segment 1: /tmp/hls_output/camera-9/segment_000001.ts
+[2026-08-10 03:32:55] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] RtspSource: opened 'rtsp://rtsp-server:8554/stream' (transport=tcp, timeout_us=5000000)
+[2026-08-10 03:32:56] [INFO] RtspSource: stream #0 codec=h264 resolution=1280x720 fps=30.00 time_base=1/90000
+[2026-08-10 03:32:56] [INFO] StreamWorker[camera-10] RTSP source opened successfully
+[2026-08-10 03:32:56] [INFO] HlsMuxer: opened with config: segment_duration=2s, retention=1h, output_dir='/tmp/hls_output/camera-10/'
+[2026-08-10 03:32:56] [INFO] StreamWorker[camera-10] HLS muxer initialized
+[2026-08-10 03:32:56] [INFO] PacketClock: Generated synthetic PTS=-2208 (DTS=rescaled) (count=0)
+[2026-08-10 03:32:56] [INFO] HlsMuxer: starting segment 1: /tmp/hls_output/camera-10/segment_000001.ts
+[2026-08-10 03:32:56] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] HlsMuxer: closed segment 37: duration=1.97s, packets_total=58
+[2026-08-10 03:32:56] [INFO] HlsMuxer: starting segment 38: /tmp/hls_output/camera-1/segment_000038.ts
+[2026-08-10 03:32:56] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=460
+[2026-08-10 03:32:56] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:56] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:56] [INFO] HlsMuxer: closed segment 19: duration=1.87s, packets_total=56
+[2026-08-10 03:32:56] [INFO] HlsMuxer: closed segment 19: duration=1.93s, packets_total=59
+[2026-08-10 03:32:56] [INFO] HlsMuxer: starting segment 20: /tmp/hls_output/camera-3/segment_000020.ts
+[2026-08-10 03:32:56] [INFO] HlsMuxer: starting segment 20: /tmp/hls_output/camera-2/segment_000020.ts
+[2026-08-10 03:32:56] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:56] [INFO] HlsMuxer: closed segment 19: duration=1.90s, packets_total=57
+[2026-08-10 03:32:56] [INFO] HlsMuxer: starting segment 20: /tmp/hls_output/camera-4/segment_000020.ts
+[2026-08-10 03:32:56] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:56] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:56] [INFO] HlsMuxer: closed segment 19: duration=1.93s, packets_total=59
+[2026-08-10 03:32:56] [INFO] HlsMuxer: starting segment 20: /tmp/hls_output/camera-5/segment_000020.ts
+[2026-08-10 03:32:56] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:56] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=610
+[2026-08-10 03:32:56] [INFO] HlsMuxer: closed segment 1: duration=1.90s, packets_total=57
+[2026-08-10 03:32:56] [INFO] HlsMuxer: closed segment 1: duration=1.97s, packets_total=60
+[2026-08-10 03:32:56] [INFO] HlsMuxer: starting segment 2: /tmp/hls_output/camera-7/segment_000002.ts
+[2026-08-10 03:32:56] [INFO] HlsMuxer: starting segment 2: /tmp/hls_output/camera-6/segment_000002.ts
+[2026-08-10 03:32:56] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:56] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] HlsMuxer: closed segment 1: duration=1.97s, packets_total=59
+[2026-08-10 03:32:57] [INFO] HlsMuxer: closed segment 1: duration=1.90s, packets_total=56
+[2026-08-10 03:32:57] [INFO] HlsMuxer: starting segment 2: /tmp/hls_output/camera-8/segment_000002.ts
+[2026-08-10 03:32:57] [INFO] HlsMuxer: starting segment 2: /tmp/hls_output/camera-9/segment_000002.ts
+[2026-08-10 03:32:57] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:57] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] HlsMuxer: closed segment 1: duration=1.97s, packets_total=59
+[2026-08-10 03:32:57] [INFO] HlsMuxer: starting segment 2: /tmp/hls_output/camera-10/segment_000002.ts
+[2026-08-10 03:32:57] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=760
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] StreamWorker[camera-1] processed 100 video packets (segments=1)
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] StreamWorker[camera-2] processed 100 video packets (segments=1)
+[2026-08-10 03:32:57] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=910
+[2026-08-10 03:32:57] [INFO] StreamWorker[camera-3] processed 100 video packets (segments=1)
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:57] [INFO] StreamWorker[camera-4] processed 100 video packets (segments=1)
+[2026-08-10 03:32:57] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:58] [INFO] StreamWorker[camera-5] processed 100 video packets (segments=1)
+[2026-08-10 03:32:58] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:58] [INFO] StreamWorker[camera-6] processed 100 video packets (segments=1)
+[2026-08-10 03:32:58] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:58] [INFO] StreamWorker[camera-7] processed 100 video packets (segments=1)
+[2026-08-10 03:32:58] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=1060
+[2026-08-10 03:32:58] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:58] [INFO] HlsMuxer: closed segment 38: duration=1.93s, packets_total=119
+[2026-08-10 03:32:58] [INFO] StreamWorker[camera-8] processed 100 video packets (segments=1)
+[2026-08-10 03:32:58] [INFO] HlsMuxer: starting segment 39: /tmp/hls_output/camera-1/segment_000039.ts
+[2026-08-10 03:32:58] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:58] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:58] [INFO] StreamWorker[camera-9] processed 100 video packets (segments=1)
+[2026-08-10 03:32:58] [INFO] HlsMuxer: closed segment 20: duration=1.93s, packets_total=121
+[2026-08-10 03:32:58] [INFO] HlsMuxer: closed segment 20: duration=1.93s, packets_total=118
+[2026-08-10 03:32:58] [INFO] HlsMuxer: starting segment 21: /tmp/hls_output/camera-3/segment_000021.ts
+[2026-08-10 03:32:58] [INFO] HlsMuxer: starting segment 21: /tmp/hls_output/camera-2/segment_000021.ts
+[2026-08-10 03:32:58] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:58] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:58] [INFO] StreamWorker[camera-10] processed 100 video packets (segments=1)
+[2026-08-10 03:32:58] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:58] [INFO] HlsMuxer: closed segment 20: duration=1.97s, packets_total=119
+[2026-08-10 03:32:58] [INFO] HlsMuxer: starting segment 21: /tmp/hls_output/camera-4/segment_000021.ts
+[2026-08-10 03:32:58] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:58] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:58] [INFO] HlsMuxer: closed segment 20: duration=1.90s, packets_total=119
+[2026-08-10 03:32:58] [INFO] HlsMuxer: starting segment 21: /tmp/hls_output/camera-5/segment_000021.ts
+[2026-08-10 03:32:58] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:58] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:58] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=1210
+[2026-08-10 03:32:58] [INFO] HlsMuxer: closed segment 2: duration=1.97s, packets_total=122
+[2026-08-10 03:32:58] [INFO] HlsMuxer: starting segment 3: /tmp/hls_output/camera-6/segment_000003.ts
+[2026-08-10 03:32:58] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:58] [INFO] HlsMuxer: closed segment 2: duration=1.97s, packets_total=119
+[2026-08-10 03:32:58] [INFO] HlsMuxer: starting segment 3: /tmp/hls_output/camera-7/segment_000003.ts
+[2026-08-10 03:32:58] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:58] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] HlsMuxer: closed segment 2: duration=1.87s, packets_total=116
+[2026-08-10 03:32:59] [INFO] HlsMuxer: closed segment 2: duration=1.87s, packets_total=119
+[2026-08-10 03:32:59] [INFO] HlsMuxer: starting segment 3: /tmp/hls_output/camera-8/segment_000003.ts
+[2026-08-10 03:32:59] [INFO] HlsMuxer: starting segment 3: /tmp/hls_output/camera-9/segment_000003.ts
+[2026-08-10 03:32:59] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:59] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] HlsMuxer: closed segment 2: duration=1.90s, packets_total=119
+[2026-08-10 03:32:59] [INFO] HlsMuxer: starting segment 3: /tmp/hls_output/camera-10/segment_000003.ts
+[2026-08-10 03:32:59] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=1360
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=1500
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:32:59] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=1660
+[2026-08-10 03:33:00] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] HlsMuxer: closed segment 39: duration=1.93s, packets_total=179
+[2026-08-10 03:33:00] [INFO] HlsMuxer: starting segment 40: /tmp/hls_output/camera-1/segment_000040.ts
+[2026-08-10 03:33:00] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:00] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] HlsMuxer: closed segment 21: duration=1.97s, packets_total=179
+[2026-08-10 03:33:00] [INFO] HlsMuxer: closed segment 21: duration=1.97s, packets_total=182
+[2026-08-10 03:33:00] [INFO] HlsMuxer: starting segment 22: /tmp/hls_output/camera-3/segment_000022.ts
+[2026-08-10 03:33:00] [INFO] HlsMuxer: starting segment 22: /tmp/hls_output/camera-2/segment_000022.ts
+[2026-08-10 03:33:00] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:00] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:00] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] HlsMuxer: closed segment 21: duration=1.93s, packets_total=179
+[2026-08-10 03:33:00] [INFO] HlsMuxer: starting segment 22: /tmp/hls_output/camera-4/segment_000022.ts
+[2026-08-10 03:33:00] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:00] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] HlsMuxer: closed segment 21: duration=1.97s, packets_total=181
+[2026-08-10 03:33:00] [INFO] HlsMuxer: starting segment 22: /tmp/hls_output/camera-5/segment_000022.ts
+[2026-08-10 03:33:00] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:00] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=1810
+[2026-08-10 03:33:00] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:00] [INFO] HlsMuxer: closed segment 3: duration=1.97s, packets_total=183
+[2026-08-10 03:33:00] [INFO] HlsMuxer: closed segment 3: duration=1.97s, packets_total=180
+[2026-08-10 03:33:00] [INFO] HlsMuxer: starting segment 4: /tmp/hls_output/camera-7/segment_000004.ts
+[2026-08-10 03:33:00] [INFO] HlsMuxer: starting segment 4: /tmp/hls_output/camera-6/segment_000004.ts
+[2026-08-10 03:33:00] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:00] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:00] [INFO] StreamWorker[camera-1] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-2] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] HlsMuxer: closed segment 3: duration=1.97s, packets_total=182
+[2026-08-10 03:33:01] [INFO] HlsMuxer: closed segment 3: duration=1.97s, packets_total=179
+[2026-08-10 03:33:01] [INFO] HlsMuxer: starting segment 4: /tmp/hls_output/camera-8/segment_000004.ts
+[2026-08-10 03:33:01] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:01] [INFO] HlsMuxer: starting segment 4: /tmp/hls_output/camera-9/segment_000004.ts
+[2026-08-10 03:33:01] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-3] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-4] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:01] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=1950
+[2026-08-10 03:33:01] [INFO] HlsMuxer: closed segment 3: duration=1.97s, packets_total=181
+[2026-08-10 03:33:01] [INFO] HlsMuxer: starting segment 4: /tmp/hls_output/camera-10/segment_000004.ts
+[2026-08-10 03:33:01] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-5] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-6] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-7] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-8] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-9] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=2110
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:01] [INFO] StreamWorker[camera-10] processed 200 video packets (segments=3)
+[2026-08-10 03:33:01] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:02] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:02] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:02] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=2270
+[2026-08-10 03:33:02] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:02] [INFO] HlsMuxer: closed segment 40: duration=1.97s, packets_total=241
+[2026-08-10 03:33:02] [INFO] HlsMuxer: starting segment 41: /tmp/hls_output/camera-1/segment_000041.ts
+[2026-08-10 03:33:02] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:02] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:02] [INFO] HlsMuxer: closed segment 22: duration=1.93s, packets_total=240
+[2026-08-10 03:33:02] [INFO] HlsMuxer: closed segment 22: duration=1.93s, packets_total=243
+[2026-08-10 03:33:02] [INFO] HlsMuxer: starting segment 23: /tmp/hls_output/camera-2/segment_000023.ts
+[2026-08-10 03:33:02] [INFO] HlsMuxer: starting segment 23: /tmp/hls_output/camera-3/segment_000023.ts
+[2026-08-10 03:33:02] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:02] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:02] [INFO] HlsMuxer: closed segment 22: duration=1.90s, packets_total=239
+[2026-08-10 03:33:02] [INFO] HlsMuxer: starting segment 23: /tmp/hls_output/camera-4/segment_000023.ts
+[2026-08-10 03:33:02] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:02] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:02] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:02] [INFO] HlsMuxer: closed segment 22: duration=1.93s, packets_total=241
+[2026-08-10 03:33:02] [INFO] HlsMuxer: starting segment 23: /tmp/hls_output/camera-5/segment_000023.ts
+[2026-08-10 03:33:02] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:02] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=2420
+[2026-08-10 03:33:02] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:02] [INFO] HlsMuxer: closed segment 4: duration=1.87s, packets_total=241
+[2026-08-10 03:33:02] [INFO] HlsMuxer: closed segment 4: duration=1.87s, packets_total=238
+[2026-08-10 03:33:02] [INFO] HlsMuxer: starting segment 5: /tmp/hls_output/camera-6/segment_000005.ts
+[2026-08-10 03:33:02] [INFO] HlsMuxer: starting segment 5: /tmp/hls_output/camera-7/segment_000005.ts
+[2026-08-10 03:33:02] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:02] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:02] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] HlsMuxer: closed segment 4: duration=1.90s, packets_total=242
+[2026-08-10 03:33:03] [INFO] HlsMuxer: closed segment 4: duration=1.90s, packets_total=239
+[2026-08-10 03:33:03] [INFO] HlsMuxer: starting segment 5: /tmp/hls_output/camera-9/segment_000005.ts
+[2026-08-10 03:33:03] [INFO] HlsMuxer: starting segment 5: /tmp/hls_output/camera-8/segment_000005.ts
+[2026-08-10 03:33:03] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:03] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] HlsMuxer: closed segment 4: duration=1.90s, packets_total=240
+[2026-08-10 03:33:03] [INFO] HlsMuxer: starting segment 5: /tmp/hls_output/camera-10/segment_000005.ts
+[2026-08-10 03:33:03] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=2570
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:03] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=2710
+[2026-08-10 03:33:03] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=2860
+[2026-08-10 03:33:04] [INFO] StreamWorker[camera-1] processed 300 video packets (segments=4)
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] StreamWorker[camera-2] processed 300 video packets (segments=4)
+[2026-08-10 03:33:04] [INFO] HlsMuxer: closed segment 23: duration=1.90s, packets_total=299
+[2026-08-10 03:33:04] [INFO] HlsMuxer: closed segment 41: duration=1.97s, packets_total=304
+[2026-08-10 03:33:04] [INFO] HlsMuxer: starting segment 42: /tmp/hls_output/camera-1/segment_000042.ts
+[2026-08-10 03:33:04] [INFO] HlsMuxer: starting segment 24: /tmp/hls_output/camera-3/segment_000024.ts
+[2026-08-10 03:33:04] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:04] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:04] [INFO] StreamWorker[camera-3] processed 300 video packets (segments=5)
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] HlsMuxer: closed segment 23: duration=2.00s, packets_total=304
+[2026-08-10 03:33:04] [INFO] HlsMuxer: starting segment 24: /tmp/hls_output/camera-2/segment_000024.ts
+[2026-08-10 03:33:04] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] StreamWorker[camera-4] processed 300 video packets (segments=4)
+[2026-08-10 03:33:04] [INFO] HlsMuxer: closed segment 23: duration=1.97s, packets_total=302
+[2026-08-10 03:33:04] [INFO] HlsMuxer: starting segment 24: /tmp/hls_output/camera-4/segment_000024.ts
+[2026-08-10 03:33:04] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] StreamWorker[camera-5] processed 300 video packets (segments=4)
+[2026-08-10 03:33:04] [INFO] HlsMuxer: closed segment 23: duration=1.93s, packets_total=301
+[2026-08-10 03:33:04] [INFO] StreamWorker[camera-6] processed 300 video packets (segments=4)
+[2026-08-10 03:33:04] [INFO] HlsMuxer: starting segment 24: /tmp/hls_output/camera-5/segment_000024.ts
+[2026-08-10 03:33:04] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:04] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=3020
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] StreamWorker[camera-7] processed 300 video packets (segments=4)
+[2026-08-10 03:33:04] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:04] [INFO] HlsMuxer: closed segment 5: duration=1.97s, packets_total=304
+[2026-08-10 03:33:04] [INFO] HlsMuxer: closed segment 5: duration=1.97s, packets_total=301
+[2026-08-10 03:33:04] [INFO] HlsMuxer: starting segment 6: /tmp/hls_output/camera-6/segment_000006.ts
+[2026-08-10 03:33:04] [INFO] HlsMuxer: starting segment 6: /tmp/hls_output/camera-7/segment_000006.ts
+[2026-08-10 03:33:04] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:04] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:05] [INFO] StreamWorker[camera-8] processed 300 video packets (segments=4)
+[2026-08-10 03:33:05] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:05] [INFO] StreamWorker[camera-9] processed 300 video packets (segments=4)
+[2026-08-10 03:33:05] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:05] [INFO] StreamWorker[camera-10] processed 300 video packets (segments=4)
+[2026-08-10 03:33:05] [INFO] HlsMuxer: closed segment 5: duration=1.97s, packets_total=302
+[2026-08-10 03:33:05] [INFO] HlsMuxer: closed segment 5: duration=1.97s, packets_total=305
+[2026-08-10 03:33:05] [INFO] HlsMuxer: starting segment 6: /tmp/hls_output/camera-9/segment_000006.ts
+[2026-08-10 03:33:05] [INFO] HlsMuxer: starting segment 6: /tmp/hls_output/camera-8/segment_000006.ts
+[2026-08-10 03:33:05] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:05] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:05] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:05] [INFO] HlsMuxer: closed segment 5: duration=1.93s, packets_total=301
+[2026-08-10 03:33:05] [INFO] HlsMuxer: starting segment 6: /tmp/hls_output/camera-10/segment_000006.ts
+[2026-08-10 03:33:05] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:05] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=3170
+[2026-08-10 03:33:05] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:05] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:05] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:05] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:05] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=3320
+[2026-08-10 03:33:05] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=3470
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HlsMuxer: closed segment 24: duration=1.93s, packets_total=363
+[2026-08-10 03:33:06] [INFO] HlsMuxer: closed segment 42: duration=1.93s, packets_total=365
+[2026-08-10 03:33:06] [INFO] HlsMuxer: closed segment 24: duration=1.93s, packets_total=360
+[2026-08-10 03:33:06] [INFO] HlsMuxer: starting segment 25: /tmp/hls_output/camera-3/segment_000025.ts
+[2026-08-10 03:33:06] [INFO] HlsMuxer: starting segment 25: /tmp/hls_output/camera-2/segment_000025.ts
+[2026-08-10 03:33:06] [INFO] HlsMuxer: starting segment 43: /tmp/hls_output/camera-1/segment_000043.ts
+[2026-08-10 03:33:06] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:06] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:06] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HlsMuxer: closed segment 24: duration=1.90s, packets_total=362
+[2026-08-10 03:33:06] [INFO] HlsMuxer: starting segment 25: /tmp/hls_output/camera-4/segment_000025.ts
+[2026-08-10 03:33:06] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HlsMuxer: closed segment 24: duration=1.93s, packets_total=361
+[2026-08-10 03:33:06] [INFO] HlsMuxer: starting segment 25: /tmp/hls_output/camera-5/segment_000025.ts
+[2026-08-10 03:33:06] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:06] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=3620
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:06] [INFO] HlsMuxer: closed segment 6: duration=1.93s, packets_total=362
+[2026-08-10 03:33:06] [INFO] HlsMuxer: closed segment 6: duration=1.93s, packets_total=365
+[2026-08-10 03:33:06] [INFO] HlsMuxer: starting segment 7: /tmp/hls_output/camera-7/segment_000007.ts
+[2026-08-10 03:33:06] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:06] [INFO] HlsMuxer: starting segment 7: /tmp/hls_output/camera-6/segment_000007.ts
+[2026-08-10 03:33:06] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:07] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:07] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:07] [INFO] HlsMuxer: closed segment 6: duration=1.97s, packets_total=366
+[2026-08-10 03:33:07] [INFO] HlsMuxer: closed segment 6: duration=1.90s, packets_total=360
+[2026-08-10 03:33:07] [INFO] HlsMuxer: closed segment 6: duration=1.97s, packets_total=363
+[2026-08-10 03:33:07] [INFO] HlsMuxer: starting segment 7: /tmp/hls_output/camera-9/segment_000007.ts
+[2026-08-10 03:33:07] [INFO] HlsMuxer: starting segment 7: /tmp/hls_output/camera-10/segment_000007.ts
+[2026-08-10 03:33:07] [INFO] HlsMuxer: starting segment 7: /tmp/hls_output/camera-8/segment_000007.ts
+[2026-08-10 03:33:07] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:07] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:07] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:07] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=3760
+[2026-08-10 03:33:07] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:07] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:07] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:07] [INFO] StreamWorker[camera-1] processed 400 video packets (segments=6)
+[2026-08-10 03:33:07] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:07] [INFO] StreamWorker[camera-2] processed 400 video packets (segments=6)
+[2026-08-10 03:33:07] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:07] [INFO] StreamWorker[camera-3] processed 400 video packets (segments=6)
+[2026-08-10 03:33:07] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=3920
+[2026-08-10 03:33:07] [INFO] StreamWorker[camera-4] processed 400 video packets (segments=6)
+[2026-08-10 03:33:07] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] StreamWorker[camera-5] processed 400 video packets (segments=6)
+[2026-08-10 03:33:08] [INFO] StreamWorker[camera-6] processed 400 video packets (segments=6)
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] StreamWorker[camera-7] processed 400 video packets (segments=6)
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=4070
+[2026-08-10 03:33:08] [INFO] StreamWorker[camera-8] processed 400 video packets (segments=6)
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] StreamWorker[camera-9] processed 400 video packets (segments=6)
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] StreamWorker[camera-10] processed 400 video packets (segments=6)
+[2026-08-10 03:33:08] [INFO] HlsMuxer: closed segment 25: duration=1.93s, packets_total=421
+[2026-08-10 03:33:08] [INFO] HlsMuxer: closed segment 43: duration=1.93s, packets_total=426
+[2026-08-10 03:33:08] [INFO] HlsMuxer: closed segment 25: duration=1.93s, packets_total=424
+[2026-08-10 03:33:08] [INFO] HlsMuxer: starting segment 26: /tmp/hls_output/camera-3/segment_000026.ts
+[2026-08-10 03:33:08] [INFO] HlsMuxer: starting segment 44: /tmp/hls_output/camera-1/segment_000044.ts
+[2026-08-10 03:33:08] [INFO] HlsMuxer: starting segment 26: /tmp/hls_output/camera-2/segment_000026.ts
+[2026-08-10 03:33:08] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:08] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:08] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] HlsMuxer: closed segment 25: duration=1.93s, packets_total=423
+[2026-08-10 03:33:08] [INFO] HlsMuxer: starting segment 26: /tmp/hls_output/camera-4/segment_000026.ts
+[2026-08-10 03:33:08] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] HlsMuxer: closed segment 25: duration=1.97s, packets_total=422
+[2026-08-10 03:33:08] [INFO] HlsMuxer: starting segment 26: /tmp/hls_output/camera-5/segment_000026.ts
+[2026-08-10 03:33:08] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:08] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=4220
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:08] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:09] [INFO] HlsMuxer: closed segment 7: duration=1.97s, packets_total=425
+[2026-08-10 03:33:09] [INFO] HlsMuxer: closed segment 7: duration=1.97s, packets_total=428
+[2026-08-10 03:33:09] [INFO] HlsMuxer: starting segment 8: /tmp/hls_output/camera-7/segment_000008.ts
+[2026-08-10 03:33:09] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:09] [INFO] HlsMuxer: starting segment 8: /tmp/hls_output/camera-6/segment_000008.ts
+[2026-08-10 03:33:09] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:09] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:09] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:09] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=4370
+[2026-08-10 03:33:09] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:09] [INFO] HlsMuxer: closed segment 7: duration=1.97s, packets_total=423
+[2026-08-10 03:33:09] [INFO] HlsMuxer: closed segment 7: duration=1.97s, packets_total=429
+[2026-08-10 03:33:09] [INFO] HlsMuxer: closed segment 7: duration=1.97s, packets_total=426
+[2026-08-10 03:33:09] [INFO] HlsMuxer: starting segment 8: /tmp/hls_output/camera-10/segment_000008.ts
+[2026-08-10 03:33:09] [INFO] HlsMuxer: starting segment 8: /tmp/hls_output/camera-8/segment_000008.ts
+[2026-08-10 03:33:09] [INFO] HlsMuxer: starting segment 8: /tmp/hls_output/camera-9/segment_000008.ts
+[2026-08-10 03:33:09] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:09] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:09] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:09] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:09] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:09] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:09] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:09] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=4520
+[2026-08-10 03:33:09] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=4660
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] HlsMuxer: closed segment 26: duration=1.97s, packets_total=485
+[2026-08-10 03:33:10] [INFO] HlsMuxer: closed segment 26: duration=1.97s, packets_total=482
+[2026-08-10 03:33:10] [INFO] HlsMuxer: closed segment 44: duration=1.97s, packets_total=487
+[2026-08-10 03:33:10] [INFO] HlsMuxer: starting segment 27: /tmp/hls_output/camera-2/segment_000027.ts
+[2026-08-10 03:33:10] [INFO] HlsMuxer: starting segment 27: /tmp/hls_output/camera-3/segment_000027.ts
+[2026-08-10 03:33:10] [INFO] HlsMuxer: starting segment 45: /tmp/hls_output/camera-1/segment_000045.ts
+[2026-08-10 03:33:10] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:10] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:10] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] HlsMuxer: closed segment 26: duration=1.90s, packets_total=483
+[2026-08-10 03:33:10] [INFO] HlsMuxer: starting segment 27: /tmp/hls_output/camera-4/segment_000027.ts
+[2026-08-10 03:33:10] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=4810
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:10] [INFO] HlsMuxer: closed segment 26: duration=1.97s, packets_total=484
+[2026-08-10 03:33:10] [INFO] HlsMuxer: starting segment 27: /tmp/hls_output/camera-5/segment_000027.ts
+[2026-08-10 03:33:10] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:10] [INFO] StreamWorker[camera-1] processed 500 video packets (segments=8)
+[2026-08-10 03:33:10] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-2] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] HlsMuxer: closed segment 8: duration=1.90s, packets_total=488
+[2026-08-10 03:33:11] [INFO] HlsMuxer: closed segment 8: duration=1.90s, packets_total=485
+[2026-08-10 03:33:11] [INFO] HlsMuxer: starting segment 9: /tmp/hls_output/camera-6/segment_000009.ts
+[2026-08-10 03:33:11] [INFO] HlsMuxer: starting segment 9: /tmp/hls_output/camera-7/segment_000009.ts
+[2026-08-10 03:33:11] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:11] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:11] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-3] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-4] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=4960
+[2026-08-10 03:33:11] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-5] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] HlsMuxer: closed segment 8: duration=1.97s, packets_total=484
+[2026-08-10 03:33:11] [INFO] HlsMuxer: closed segment 8: duration=1.97s, packets_total=487
+[2026-08-10 03:33:11] [INFO] HlsMuxer: closed segment 8: duration=1.97s, packets_total=490
+[2026-08-10 03:33:11] [INFO] HlsMuxer: starting segment 9: /tmp/hls_output/camera-9/segment_000009.ts
+[2026-08-10 03:33:11] [INFO] HlsMuxer: starting segment 9: /tmp/hls_output/camera-10/segment_000009.ts
+[2026-08-10 03:33:11] [INFO] HlsMuxer: starting segment 9: /tmp/hls_output/camera-8/segment_000009.ts
+[2026-08-10 03:33:11] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:11] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:11] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:11] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-6] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-7] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:11] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-8] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-9] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:11] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=5120
+[2026-08-10 03:33:11] [INFO] StreamWorker[camera-10] processed 500 video packets (segments=8)
+[2026-08-10 03:33:11] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:12] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:12] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:12] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:12] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=5270
+[2026-08-10 03:33:12] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:12] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:12] [INFO] HlsMuxer: closed segment 27: duration=1.93s, packets_total=545
+[2026-08-10 03:33:12] [INFO] HlsMuxer: closed segment 27: duration=1.93s, packets_total=542
+[2026-08-10 03:33:12] [INFO] HlsMuxer: closed segment 45: duration=1.93s, packets_total=547
+[2026-08-10 03:33:12] [INFO] HlsMuxer: starting segment 28: /tmp/hls_output/camera-2/segment_000028.ts
+[2026-08-10 03:33:12] [INFO] HlsMuxer: starting segment 28: /tmp/hls_output/camera-3/segment_000028.ts
+[2026-08-10 03:33:12] [INFO] HlsMuxer: starting segment 46: /tmp/hls_output/camera-1/segment_000046.ts
+[2026-08-10 03:33:12] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:12] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:12] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:12] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:12] [INFO] HlsMuxer: closed segment 27: duration=1.93s, packets_total=544
+[2026-08-10 03:33:12] [INFO] HlsMuxer: starting segment 28: /tmp/hls_output/camera-4/segment_000028.ts
+[2026-08-10 03:33:12] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:12] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:12] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=5420
+[2026-08-10 03:33:12] [INFO] HlsMuxer: closed segment 27: duration=1.90s, packets_total=543
+[2026-08-10 03:33:12] [INFO] HlsMuxer: starting segment 28: /tmp/hls_output/camera-5/segment_000028.ts
+[2026-08-10 03:33:12] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:12] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] HlsMuxer: closed segment 9: duration=1.90s, packets_total=549
+[2026-08-10 03:33:13] [INFO] HlsMuxer: closed segment 9: duration=1.90s, packets_total=546
+[2026-08-10 03:33:13] [INFO] HlsMuxer: starting segment 10: /tmp/hls_output/camera-7/segment_000010.ts
+[2026-08-10 03:33:13] [INFO] HlsMuxer: starting segment 10: /tmp/hls_output/camera-6/segment_000010.ts
+[2026-08-10 03:33:13] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:13] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=5570
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] HlsMuxer: closed segment 9: duration=1.93s, packets_total=549
+[2026-08-10 03:33:13] [INFO] HlsMuxer: closed segment 9: duration=1.93s, packets_total=546
+[2026-08-10 03:33:13] [INFO] HlsMuxer: closed segment 9: duration=1.93s, packets_total=543
+[2026-08-10 03:33:13] [INFO] HlsMuxer: starting segment 10: /tmp/hls_output/camera-9/segment_000010.ts
+[2026-08-10 03:33:13] [INFO] HlsMuxer: starting segment 10: /tmp/hls_output/camera-10/segment_000010.ts
+[2026-08-10 03:33:13] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:13] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:13] [INFO] HlsMuxer: starting segment 10: /tmp/hls_output/camera-8/segment_000010.ts
+[2026-08-10 03:33:13] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=5720
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:13] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:14] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:14] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:14] [INFO] StreamWorker[camera-1] processed 600 video packets (segments=9)
+[2026-08-10 03:33:14] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:14] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=5870
+[2026-08-10 03:33:14] [INFO] StreamWorker[camera-2] processed 600 video packets (segments=9)
+[2026-08-10 03:33:14] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:14] [INFO] StreamWorker[camera-3] processed 600 video packets (segments=9)
+[2026-08-10 03:33:14] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:14] [INFO] StreamWorker[camera-4] processed 600 video packets (segments=9)
+[2026-08-10 03:33:14] [INFO] HlsMuxer: closed segment 46: duration=1.93s, packets_total=608
+[2026-08-10 03:33:14] [INFO] HlsMuxer: closed segment 28: duration=1.93s, packets_total=606
+[2026-08-10 03:33:14] [INFO] HlsMuxer: closed segment 28: duration=1.93s, packets_total=603
+[2026-08-10 03:33:14] [INFO] HlsMuxer: starting segment 47: /tmp/hls_output/camera-1/segment_000047.ts
+[2026-08-10 03:33:14] [INFO] HlsMuxer: starting segment 29: /tmp/hls_output/camera-2/segment_000029.ts
+[2026-08-10 03:33:14] [INFO] HlsMuxer: starting segment 29: /tmp/hls_output/camera-3/segment_000029.ts
+[2026-08-10 03:33:14] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:14] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:14] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:14] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:14] [INFO] StreamWorker[camera-5] processed 600 video packets (segments=9)
+[2026-08-10 03:33:14] [INFO] HlsMuxer: closed segment 28: duration=1.90s, packets_total=604
+[2026-08-10 03:33:14] [INFO] HlsMuxer: starting segment 29: /tmp/hls_output/camera-4/segment_000029.ts
+[2026-08-10 03:33:14] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:14] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:14] [INFO] StreamWorker[camera-6] processed 600 video packets (segments=9)
+[2026-08-10 03:33:14] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=6010
+[2026-08-10 03:33:14] [INFO] StreamWorker[camera-7] processed 600 video packets (segments=9)
+[2026-08-10 03:33:14] [INFO] HlsMuxer: closed segment 28: duration=1.93s, packets_total=604
+[2026-08-10 03:33:14] [INFO] HlsMuxer: starting segment 29: /tmp/hls_output/camera-5/segment_000029.ts
+[2026-08-10 03:33:14] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:14] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] StreamWorker[camera-8] processed 600 video packets (segments=9)
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] StreamWorker[camera-9] processed 600 video packets (segments=9)
+[2026-08-10 03:33:15] [INFO] HlsMuxer: closed segment 10: duration=1.93s, packets_total=607
+[2026-08-10 03:33:15] [INFO] HlsMuxer: closed segment 10: duration=1.93s, packets_total=610
+[2026-08-10 03:33:15] [INFO] HlsMuxer: starting segment 11: /tmp/hls_output/camera-6/segment_000011.ts
+[2026-08-10 03:33:15] [INFO] HlsMuxer: starting segment 11: /tmp/hls_output/camera-7/segment_000011.ts
+[2026-08-10 03:33:15] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:15] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] StreamWorker[camera-10] processed 600 video packets (segments=9)
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=6170
+[2026-08-10 03:33:15] [INFO] HlsMuxer: closed segment 10: duration=1.93s, packets_total=609
+[2026-08-10 03:33:15] [INFO] HlsMuxer: closed segment 10: duration=1.93s, packets_total=603
+[2026-08-10 03:33:15] [INFO] HlsMuxer: starting segment 11: /tmp/hls_output/camera-10/segment_000011.ts
+[2026-08-10 03:33:15] [INFO] HlsMuxer: starting segment 11: /tmp/hls_output/camera-8/segment_000011.ts
+[2026-08-10 03:33:15] [INFO] HlsMuxer: closed segment 10: duration=1.93s, packets_total=606
+[2026-08-10 03:33:15] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:15] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:15] [INFO] HlsMuxer: starting segment 11: /tmp/hls_output/camera-9/segment_000011.ts
+[2026-08-10 03:33:15] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=6320
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:15] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=6470
+[2026-08-10 03:33:16] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] HlsMuxer: closed segment 29: duration=1.87s, packets_total=661
+[2026-08-10 03:33:16] [INFO] HlsMuxer: closed segment 47: duration=1.87s, packets_total=666
+[2026-08-10 03:33:16] [INFO] HlsMuxer: closed segment 29: duration=1.87s, packets_total=664
+[2026-08-10 03:33:16] [INFO] HlsMuxer: starting segment 48: /tmp/hls_output/camera-1/segment_000048.ts
+[2026-08-10 03:33:16] [INFO] HlsMuxer: starting segment 30: /tmp/hls_output/camera-2/segment_000030.ts
+[2026-08-10 03:33:16] [INFO] HlsMuxer: starting segment 30: /tmp/hls_output/camera-3/segment_000030.ts
+[2026-08-10 03:33:16] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:16] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:16] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:16] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=6620
+[2026-08-10 03:33:16] [INFO] HlsMuxer: closed segment 29: duration=1.97s, packets_total=667
+[2026-08-10 03:33:16] [INFO] HlsMuxer: starting segment 30: /tmp/hls_output/camera-4/segment_000030.ts
+[2026-08-10 03:33:16] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:16] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:16] [INFO] HlsMuxer: closed segment 29: duration=1.93s, packets_total=666
+[2026-08-10 03:33:16] [INFO] HlsMuxer: starting segment 30: /tmp/hls_output/camera-5/segment_000030.ts
+[2026-08-10 03:33:16] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:17] [INFO] HlsMuxer: closed segment 11: duration=1.97s, packets_total=672
+[2026-08-10 03:33:17] [INFO] HlsMuxer: closed segment 11: duration=1.97s, packets_total=669
+[2026-08-10 03:33:17] [INFO] HlsMuxer: starting segment 12: /tmp/hls_output/camera-6/segment_000012.ts
+[2026-08-10 03:33:17] [INFO] HlsMuxer: starting segment 12: /tmp/hls_output/camera-7/segment_000012.ts
+[2026-08-10 03:33:17] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:17] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:17] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=6760
+[2026-08-10 03:33:17] [INFO] HlsMuxer: closed segment 11: duration=1.90s, packets_total=662
+[2026-08-10 03:33:17] [INFO] HlsMuxer: closed segment 11: duration=1.90s, packets_total=668
+[2026-08-10 03:33:17] [INFO] HlsMuxer: closed segment 11: duration=1.90s, packets_total=665
+[2026-08-10 03:33:17] [INFO] HlsMuxer: starting segment 12: /tmp/hls_output/camera-10/segment_000012.ts
+[2026-08-10 03:33:17] [INFO] HlsMuxer: starting segment 12: /tmp/hls_output/camera-8/segment_000012.ts
+[2026-08-10 03:33:17] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:17] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:17] [INFO] HlsMuxer: starting segment 12: /tmp/hls_output/camera-9/segment_000012.ts
+[2026-08-10 03:33:17] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:17] [INFO] StreamWorker[camera-1] processed 700 video packets (segments=11)
+[2026-08-10 03:33:17] [INFO] StreamWorker[camera-2] processed 700 video packets (segments=11)
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:17] [INFO] StreamWorker[camera-3] processed 700 video packets (segments=11)
+[2026-08-10 03:33:17] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=6920
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:17] [INFO] StreamWorker[camera-4] processed 700 video packets (segments=11)
+[2026-08-10 03:33:17] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] StreamWorker[camera-5] processed 700 video packets (segments=11)
+[2026-08-10 03:33:18] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] StreamWorker[camera-6] processed 700 video packets (segments=11)
+[2026-08-10 03:33:18] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] StreamWorker[camera-7] processed 700 video packets (segments=11)
+[2026-08-10 03:33:18] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=7070
+[2026-08-10 03:33:18] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] StreamWorker[camera-8] processed 700 video packets (segments=11)
+[2026-08-10 03:33:18] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] StreamWorker[camera-9] processed 700 video packets (segments=11)
+[2026-08-10 03:33:18] [INFO] StreamWorker[camera-10] processed 700 video packets (segments=11)
+[2026-08-10 03:33:18] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] HlsMuxer: closed segment 48: duration=1.90s, packets_total=727
+[2026-08-10 03:33:18] [INFO] HlsMuxer: closed segment 30: duration=1.90s, packets_total=722
+[2026-08-10 03:33:18] [INFO] HlsMuxer: closed segment 30: duration=1.90s, packets_total=725
+[2026-08-10 03:33:18] [INFO] HlsMuxer: starting segment 49: /tmp/hls_output/camera-1/segment_000049.ts
+[2026-08-10 03:33:18] [INFO] HlsMuxer: starting segment 31: /tmp/hls_output/camera-3/segment_000031.ts
+[2026-08-10 03:33:18] [INFO] HlsMuxer: starting segment 31: /tmp/hls_output/camera-2/segment_000031.ts
+[2026-08-10 03:33:18] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:18] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:18] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:18] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=7220
+[2026-08-10 03:33:18] [INFO] HlsMuxer: closed segment 30: duration=1.90s, packets_total=727
+[2026-08-10 03:33:18] [INFO] HlsMuxer: starting segment 31: /tmp/hls_output/camera-4/segment_000031.ts
+[2026-08-10 03:33:18] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:18] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:18] [INFO] HlsMuxer: closed segment 30: duration=1.93s, packets_total=727
+[2026-08-10 03:33:18] [INFO] HlsMuxer: starting segment 31: /tmp/hls_output/camera-5/segment_000031.ts
+[2026-08-10 03:33:18] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:19] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:19] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:19] [INFO] HlsMuxer: closed segment 12: duration=1.93s, packets_total=733
+[2026-08-10 03:33:19] [INFO] HlsMuxer: closed segment 12: duration=1.93s, packets_total=730
+[2026-08-10 03:33:19] [INFO] HlsMuxer: starting segment 13: /tmp/hls_output/camera-7/segment_000013.ts
+[2026-08-10 03:33:19] [INFO] HlsMuxer: starting segment 13: /tmp/hls_output/camera-6/segment_000013.ts
+[2026-08-10 03:33:19] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:19] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:19] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:19] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=7360
+[2026-08-10 03:33:19] [INFO] HlsMuxer: closed segment 12: duration=1.97s, packets_total=724
+[2026-08-10 03:33:19] [INFO] HlsMuxer: closed segment 12: duration=1.97s, packets_total=730
+[2026-08-10 03:33:19] [INFO] HlsMuxer: closed segment 12: duration=1.97s, packets_total=727
+[2026-08-10 03:33:19] [INFO] HlsMuxer: starting segment 13: /tmp/hls_output/camera-10/segment_000013.ts
+[2026-08-10 03:33:19] [INFO] HlsMuxer: starting segment 13: /tmp/hls_output/camera-8/segment_000013.ts
+[2026-08-10 03:33:19] [INFO] HlsMuxer: starting segment 13: /tmp/hls_output/camera-9/segment_000013.ts
+[2026-08-10 03:33:19] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:19] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:19] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:19] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:19] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:19] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:19] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:19] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=7520
+[2026-08-10 03:33:19] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=7670
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] HlsMuxer: closed segment 31: duration=1.93s, packets_total=786
+[2026-08-10 03:33:20] [INFO] HlsMuxer: closed segment 49: duration=1.93s, packets_total=788
+[2026-08-10 03:33:20] [INFO] HlsMuxer: closed segment 31: duration=1.93s, packets_total=783
+[2026-08-10 03:33:20] [INFO] HlsMuxer: starting segment 50: /tmp/hls_output/camera-1/segment_000050.ts
+[2026-08-10 03:33:20] [INFO] HlsMuxer: starting segment 32: /tmp/hls_output/camera-2/segment_000032.ts
+[2026-08-10 03:33:20] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:20] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:20] [INFO] HlsMuxer: starting segment 32: /tmp/hls_output/camera-3/segment_000032.ts
+[2026-08-10 03:33:20] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:20] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=7820
+[2026-08-10 03:33:20] [INFO] HlsMuxer: closed segment 31: duration=1.97s, packets_total=790
+[2026-08-10 03:33:20] [INFO] HlsMuxer: starting segment 32: /tmp/hls_output/camera-4/segment_000032.ts
+[2026-08-10 03:33:20] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:20] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-1] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] HlsMuxer: closed segment 31: duration=1.93s, packets_total=789
+[2026-08-10 03:33:21] [INFO] HlsMuxer: starting segment 32: /tmp/hls_output/camera-5/segment_000032.ts
+[2026-08-10 03:33:21] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-2] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-3] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-4] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=7970
+[2026-08-10 03:33:21] [INFO] HlsMuxer: closed segment 13: duration=1.93s, packets_total=789
+[2026-08-10 03:33:21] [INFO] HlsMuxer: closed segment 13: duration=1.97s, packets_total=796
+[2026-08-10 03:33:21] [INFO] HlsMuxer: starting segment 14: /tmp/hls_output/camera-8/segment_000014.ts
+[2026-08-10 03:33:21] [INFO] HlsMuxer: starting segment 14: /tmp/hls_output/camera-6/segment_000014.ts
+[2026-08-10 03:33:21] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:21] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:21] [INFO] HlsMuxer: closed segment 13: duration=1.93s, packets_total=786
+[2026-08-10 03:33:21] [INFO] HlsMuxer: starting segment 14: /tmp/hls_output/camera-9/segment_000014.ts
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-5] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:21] [INFO] HlsMuxer: closed segment 13: duration=1.93s, packets_total=783
+[2026-08-10 03:33:21] [INFO] HlsMuxer: closed segment 13: duration=1.97s, packets_total=793
+[2026-08-10 03:33:21] [INFO] HlsMuxer: starting segment 14: /tmp/hls_output/camera-10/segment_000014.ts
+[2026-08-10 03:33:21] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:21] [INFO] HlsMuxer: starting segment 14: /tmp/hls_output/camera-7/segment_000014.ts
+[2026-08-10 03:33:21] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:21] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-6] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-7] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-8] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-9] processed 800 video packets (segments=13)
+[2026-08-10 03:33:21] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=8120
+[2026-08-10 03:33:21] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:21] [INFO] StreamWorker[camera-10] processed 800 video packets (segments=13)
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=8270
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] HlsMuxer: closed segment 50: duration=1.97s, packets_total=850
+[2026-08-10 03:33:22] [INFO] HlsMuxer: closed segment 32: duration=1.97s, packets_total=845
+[2026-08-10 03:33:22] [INFO] HlsMuxer: starting segment 51: /tmp/hls_output/camera-1/segment_000051.ts
+[2026-08-10 03:33:22] [INFO] HlsMuxer: starting segment 33: /tmp/hls_output/camera-3/segment_000033.ts
+[2026-08-10 03:33:22] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:22] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:22] [INFO] HlsMuxer: closed segment 32: duration=1.97s, packets_total=848
+[2026-08-10 03:33:22] [INFO] HlsMuxer: starting segment 33: /tmp/hls_output/camera-2/segment_000033.ts
+[2026-08-10 03:33:22] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=8420
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:22] [INFO] HlsMuxer: closed segment 32: duration=1.93s, packets_total=851
+[2026-08-10 03:33:22] [INFO] HlsMuxer: starting segment 33: /tmp/hls_output/camera-4/segment_000033.ts
+[2026-08-10 03:33:22] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:23] [INFO] HlsMuxer: closed segment 32: duration=1.93s, packets_total=849
+[2026-08-10 03:33:23] [INFO] HlsMuxer: starting segment 33: /tmp/hls_output/camera-5/segment_000033.ts
+[2026-08-10 03:33:23] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:23] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:23] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:23] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:23] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=8580
+[2026-08-10 03:33:23] [INFO] HlsMuxer: closed segment 14: duration=1.97s, packets_total=847
+[2026-08-10 03:33:23] [INFO] HlsMuxer: closed segment 14: duration=1.97s, packets_total=854
+[2026-08-10 03:33:23] [INFO] HlsMuxer: closed segment 14: duration=1.97s, packets_total=857
+[2026-08-10 03:33:23] [INFO] HlsMuxer: closed segment 14: duration=1.97s, packets_total=850
+[2026-08-10 03:33:23] [INFO] HlsMuxer: closed segment 14: duration=1.97s, packets_total=844
+[2026-08-10 03:33:23] [INFO] HlsMuxer: starting segment 15: /tmp/hls_output/camera-7/segment_000015.ts
+[2026-08-10 03:33:23] [INFO] HlsMuxer: starting segment 15: /tmp/hls_output/camera-6/segment_000015.ts
+[2026-08-10 03:33:23] [INFO] HlsMuxer: starting segment 15: /tmp/hls_output/camera-8/segment_000015.ts
+[2026-08-10 03:33:23] [INFO] HlsMuxer: starting segment 15: /tmp/hls_output/camera-10/segment_000015.ts
+[2026-08-10 03:33:23] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:23] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:23] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:23] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:23] [INFO] HlsMuxer: starting segment 15: /tmp/hls_output/camera-9/segment_000015.ts
+[2026-08-10 03:33:23] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:23] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:23] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:23] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:23] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:23] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=8720
+[2026-08-10 03:33:23] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] StreamWorker[camera-1] processed 900 video packets (segments=14)
+[2026-08-10 03:33:24] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=8870
+[2026-08-10 03:33:24] [INFO] StreamWorker[camera-2] processed 900 video packets (segments=14)
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] StreamWorker[camera-3] processed 900 video packets (segments=14)
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] StreamWorker[camera-4] processed 900 video packets (segments=14)
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] StreamWorker[camera-5] processed 900 video packets (segments=14)
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] HlsMuxer: closed segment 51: duration=1.97s, packets_total=912
+[2026-08-10 03:33:24] [INFO] HlsMuxer: closed segment 33: duration=1.97s, packets_total=907
+[2026-08-10 03:33:24] [INFO] StreamWorker[camera-6] processed 900 video packets (segments=14)
+[2026-08-10 03:33:24] [INFO] HlsMuxer: closed segment 33: duration=1.97s, packets_total=910
+[2026-08-10 03:33:24] [INFO] HlsMuxer: starting segment 52: /tmp/hls_output/camera-1/segment_000052.ts
+[2026-08-10 03:33:24] [INFO] HlsMuxer: starting segment 34: /tmp/hls_output/camera-3/segment_000034.ts
+[2026-08-10 03:33:24] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:24] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:24] [INFO] HlsMuxer: starting segment 34: /tmp/hls_output/camera-2/segment_000034.ts
+[2026-08-10 03:33:24] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:24] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=9020
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:24] [INFO] StreamWorker[camera-7] processed 900 video packets (segments=14)
+[2026-08-10 03:33:24] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:25] [INFO] StreamWorker[camera-8] processed 900 video packets (segments=14)
+[2026-08-10 03:33:25] [INFO] HlsMuxer: closed segment 33: duration=1.97s, packets_total=912
+[2026-08-10 03:33:25] [INFO] HlsMuxer: starting segment 34: /tmp/hls_output/camera-4/segment_000034.ts
+[2026-08-10 03:33:25] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:25] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:25] [INFO] StreamWorker[camera-9] processed 900 video packets (segments=14)
+[2026-08-10 03:33:25] [INFO] HlsMuxer: closed segment 33: duration=1.97s, packets_total=912
+[2026-08-10 03:33:25] [INFO] HlsMuxer: starting segment 34: /tmp/hls_output/camera-5/segment_000034.ts
+[2026-08-10 03:33:25] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:25] [INFO] StreamWorker[camera-10] processed 900 video packets (segments=14)
+[2026-08-10 03:33:25] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:25] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:25] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=9170
+[2026-08-10 03:33:25] [INFO] HlsMuxer: closed segment 15: duration=1.93s, packets_total=916
+[2026-08-10 03:33:25] [INFO] HlsMuxer: closed segment 15: duration=1.93s, packets_total=913
+[2026-08-10 03:33:25] [INFO] HlsMuxer: closed segment 15: duration=2.00s, packets_total=904
+[2026-08-10 03:33:25] [INFO] HlsMuxer: closed segment 15: duration=2.00s, packets_total=910
+[2026-08-10 03:33:25] [INFO] HlsMuxer: starting segment 16: /tmp/hls_output/camera-7/segment_000016.ts
+[2026-08-10 03:33:25] [INFO] HlsMuxer: starting segment 16: /tmp/hls_output/camera-6/segment_000016.ts
+[2026-08-10 03:33:25] [INFO] HlsMuxer: starting segment 16: /tmp/hls_output/camera-10/segment_000016.ts
+[2026-08-10 03:33:25] [INFO] HlsMuxer: closed segment 15: duration=2.00s, packets_total=907
+[2026-08-10 03:33:25] [INFO] HlsMuxer: starting segment 16: /tmp/hls_output/camera-8/segment_000016.ts
+[2026-08-10 03:33:25] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:25] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:25] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:25] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:25] [INFO] HlsMuxer: starting segment 16: /tmp/hls_output/camera-9/segment_000016.ts
+[2026-08-10 03:33:25] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:25] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:25] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:25] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:25] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:25] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=9330
+[2026-08-10 03:33:25] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:26] [INFO] HttpServer: GET /api/health
+[2026-08-10 03:33:26] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=9480
+[2026-08-10 03:33:26] [INFO] HlsMuxer: closed segment 52: duration=1.97s, packets_total=973
+[2026-08-10 03:33:26] [INFO] HlsMuxer: closed segment 34: duration=1.97s, packets_total=971
+[2026-08-10 03:33:26] [INFO] HlsMuxer: closed segment 34: duration=1.97s, packets_total=968
+[2026-08-10 03:33:26] [INFO] HlsMuxer: starting segment 53: /tmp/hls_output/camera-1/segment_000053.ts
+[2026-08-10 03:33:26] [INFO] HlsMuxer: starting segment 35: /tmp/hls_output/camera-3/segment_000035.ts
+[2026-08-10 03:33:26] [INFO] HlsMuxer: starting segment 35: /tmp/hls_output/camera-2/segment_000035.ts
+[2026-08-10 03:33:26] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:26] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:26] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:26] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=9620
+[2026-08-10 03:33:27] [INFO] HlsMuxer: closed segment 34: duration=1.97s, packets_total=973
+[2026-08-10 03:33:27] [INFO] HlsMuxer: starting segment 35: /tmp/hls_output/camera-4/segment_000035.ts
+[2026-08-10 03:33:27] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:27] [INFO] HlsMuxer: closed segment 34: duration=1.97s, packets_total=973
+[2026-08-10 03:33:27] [INFO] HlsMuxer: starting segment 35: /tmp/hls_output/camera-5/segment_000035.ts
+[2026-08-10 03:33:27] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:27] [INFO] HlsMuxer: closed segment 16: duration=1.90s, packets_total=972
+[2026-08-10 03:33:27] [INFO] HlsMuxer: closed segment 16: duration=1.90s, packets_total=975
+[2026-08-10 03:33:27] [INFO] HlsMuxer: starting segment 17: /tmp/hls_output/camera-7/segment_000017.ts
+[2026-08-10 03:33:27] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:27] [INFO] HlsMuxer: starting segment 17: /tmp/hls_output/camera-6/segment_000017.ts
+[2026-08-10 03:33:27] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:27] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=9770
+[2026-08-10 03:33:27] [INFO] HlsMuxer: closed segment 16: duration=2.00s, packets_total=963
+[2026-08-10 03:33:27] [INFO] HlsMuxer: closed segment 16: duration=2.00s, packets_total=969
+[2026-08-10 03:33:27] [INFO] HlsMuxer: closed segment 16: duration=2.00s, packets_total=966
+[2026-08-10 03:33:27] [INFO] HlsMuxer: starting segment 17: /tmp/hls_output/camera-10/segment_000017.ts
+[2026-08-10 03:33:27] [INFO] HlsMuxer: starting segment 17: /tmp/hls_output/camera-9/segment_000017.ts
+[2026-08-10 03:33:27] [INFO] HlsMuxer: starting segment 17: /tmp/hls_output/camera-8/segment_000017.ts
+[2026-08-10 03:33:27] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:27] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:27] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:27] [INFO] StreamWorker[camera-1] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:27] [INFO] StreamWorker[camera-2] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:27] [INFO] StreamWorker[camera-3] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:27] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=9930
+[2026-08-10 03:33:27] [INFO] StreamWorker[camera-4] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:28] [INFO] StreamWorker[camera-5] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:28] [INFO] StreamWorker[camera-6] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:28] [INFO] StreamWorker[camera-7] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:28] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=10070
+[2026-08-10 03:33:28] [INFO] StreamWorker[camera-8] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:28] [INFO] StreamWorker[camera-9] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:28] [INFO] StreamWorker[camera-10] processed 1000 video packets (segments=16)
+[2026-08-10 03:33:28] [INFO] HlsMuxer: closed segment 53: duration=1.93s, packets_total=1035
+[2026-08-10 03:33:28] [INFO] HlsMuxer: closed segment 35: duration=1.93s, packets_total=1033
+[2026-08-10 03:33:28] [INFO] HlsMuxer: closed segment 35: duration=1.93s, packets_total=1030
+[2026-08-10 03:33:28] [INFO] HlsMuxer: starting segment 54: /tmp/hls_output/camera-1/segment_000054.ts
+[2026-08-10 03:33:28] [INFO] HlsMuxer: starting segment 36: /tmp/hls_output/camera-3/segment_000036.ts
+[2026-08-10 03:33:28] [INFO] HlsMuxer: starting segment 36: /tmp/hls_output/camera-2/segment_000036.ts
+[2026-08-10 03:33:28] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:28] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:28] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:28] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=10230
+[2026-08-10 03:33:29] [INFO] HlsMuxer: closed segment 35: duration=1.97s, packets_total=1036
+[2026-08-10 03:33:29] [INFO] HlsMuxer: starting segment 36: /tmp/hls_output/camera-4/segment_000036.ts
+[2026-08-10 03:33:29] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:29] [INFO] HlsMuxer: closed segment 35: duration=1.93s, packets_total=1035
+[2026-08-10 03:33:29] [INFO] HlsMuxer: starting segment 36: /tmp/hls_output/camera-5/segment_000036.ts
+[2026-08-10 03:33:29] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:29] [INFO] HlsMuxer: closed segment 17: duration=1.90s, packets_total=1032
+[2026-08-10 03:33:29] [INFO] HlsMuxer: closed segment 17: duration=1.90s, packets_total=1035
+[2026-08-10 03:33:29] [INFO] HlsMuxer: starting segment 18: /tmp/hls_output/camera-7/segment_000018.ts
+[2026-08-10 03:33:29] [INFO] HlsMuxer: starting segment 18: /tmp/hls_output/camera-6/segment_000018.ts
+[2026-08-10 03:33:29] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:29] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:29] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=10370
+[2026-08-10 03:33:29] [INFO] HlsMuxer: closed segment 17: duration=2.00s, packets_total=1023
+[2026-08-10 03:33:29] [INFO] HlsMuxer: closed segment 17: duration=2.00s, packets_total=1029
+[2026-08-10 03:33:29] [INFO] HlsMuxer: closed segment 17: duration=2.00s, packets_total=1026
+[2026-08-10 03:33:29] [INFO] HlsMuxer: starting segment 18: /tmp/hls_output/camera-10/segment_000018.ts
+[2026-08-10 03:33:29] [INFO] HlsMuxer: starting segment 18: /tmp/hls_output/camera-9/segment_000018.ts
+[2026-08-10 03:33:29] [INFO] HlsMuxer: starting segment 18: /tmp/hls_output/camera-8/segment_000018.ts
+[2026-08-10 03:33:29] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:29] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:29] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:29] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=10530
+[2026-08-10 03:33:30] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=10680
+[2026-08-10 03:33:30] [INFO] HlsMuxer: closed segment 36: duration=1.90s, packets_total=1090
+[2026-08-10 03:33:30] [INFO] HlsMuxer: closed segment 36: duration=1.90s, packets_total=1093
+[2026-08-10 03:33:30] [INFO] HlsMuxer: closed segment 54: duration=1.90s, packets_total=1095
+[2026-08-10 03:33:30] [INFO] HlsMuxer: starting segment 55: /tmp/hls_output/camera-1/segment_000055.ts
+[2026-08-10 03:33:30] [INFO] HlsMuxer: starting segment 37: /tmp/hls_output/camera-3/segment_000037.ts
+[2026-08-10 03:33:30] [INFO] HlsMuxer: starting segment 37: /tmp/hls_output/camera-2/segment_000037.ts
+[2026-08-10 03:33:30] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:30] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:30] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:30] [INFO] Multi-stream status: 10 active, 0 error, total_reconnects=0, packets_written=10830
+[2026-08-10 03:33:30] [INFO] StreamWorker[camera-1] processed 1100 video packets (segments=18)
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-2] processed 1100 video packets (segments=18)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 36: duration=1.87s, packets_total=1095
+[2026-08-10 03:33:31] [INFO] HlsMuxer: starting segment 37: /tmp/hls_output/camera-4/segment_000037.ts
+[2026-08-10 03:33:31] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-3] processed 1100 video packets (segments=18)
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-4] processed 1100 video packets (segments=18)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 36: duration=1.93s, packets_total=1095
+[2026-08-10 03:33:31] [INFO] HlsMuxer: starting segment 37: /tmp/hls_output/camera-5/segment_000037.ts
+[2026-08-10 03:33:31] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:31] [INFO] Shutting down HTTP server...
+[2026-08-10 03:33:31] [INFO] HttpServer: Listener loop ended
+[2026-08-10 03:33:31] [INFO] HttpServer: Stopped
+[2026-08-10 03:33:31] [INFO] Shutting down all streams...
+[2026-08-10 03:33:31] [INFO] StreamManager stopping all 10 active stream(s) (out of 10 total)...
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-1'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-1] stopping...
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-1] processing thread finished (processed 1110 packets)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 55: duration=0.40s, packets_total=1110
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1110 packets in 55 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-1] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-2'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-2] stopping...
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 18: duration=1.97s, packets_total=1094
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-2] processing thread finished (processed 1110 packets)
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-5] processed 1100 video packets (segments=18)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 37: duration=0.43s, packets_total=1110
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 18: duration=1.97s, packets_total=1097
+[2026-08-10 03:33:31] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-7/segment_000019.ts
+[2026-08-10 03:33:31] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:31] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-6/segment_000019.ts
+[2026-08-10 03:33:31] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1110 packets in 37 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-2] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-3'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-3] stopping...
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 18: duration=2.00s, packets_total=1085
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 18: duration=2.00s, packets_total=1088
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-3] processing thread finished (processed 1107 packets)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-10/segment_000019.ts
+[2026-08-10 03:33:31] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 37: duration=0.43s, packets_total=1107
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 18: duration=2.00s, packets_total=1091
+[2026-08-10 03:33:31] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-8/segment_000019.ts
+[2026-08-10 03:33:31] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:31] [INFO] HlsMuxer: starting segment 19: /tmp/hls_output/camera-9/segment_000019.ts
+[2026-08-10 03:33:31] [INFO] HlsMuxer: wrote segment header with codec=video
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1107 packets in 37 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-3] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-4'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-4] stopping...
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-4] processing thread finished (processed 1106 packets)
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-6] processed 1100 video packets (segments=18)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 37: duration=0.30s, packets_total=1106
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1106 packets in 37 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-4] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-5'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-5] stopping...
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-5] processing thread finished (processed 1102 packets)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 37: duration=0.17s, packets_total=1102
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1102 packets in 37 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-5] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-6'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-6] stopping...
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-6] processing thread finished (processed 1101 packets)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 19: duration=0.13s, packets_total=1101
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1101 packets in 19 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-6] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-7'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-7] stopping...
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-7] processing thread finished (processed 1099 packets)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 19: duration=0.13s, packets_total=1099
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1099 packets in 19 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-7] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-8'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-8] stopping...
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-8] processing thread finished (processed 1097 packets)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 19: duration=0.23s, packets_total=1097
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1097 packets in 19 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-8] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-9'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-9] stopping...
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-9] processing thread finished (processed 1095 packets)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 19: duration=0.23s, packets_total=1095
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1095 packets in 19 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-9] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager stopping stream 'camera-10'
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-10] stopping...
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-10] processing thread finished (processed 1093 packets)
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed segment 19: duration=0.23s, packets_total=1093
+[2026-08-10 03:33:31] [INFO] HlsMuxer: closed. Wrote 1093 packets in 19 segments
+[2026-08-10 03:33:31] [INFO] StreamWorker[camera-10] stopped
+[2026-08-10 03:33:31] [INFO] StreamManager all streams stopped
+[2026-08-10 03:33:31] [INFO] Final stats: total_packets_written=11020, total_reconnects=0, error_streams=0
