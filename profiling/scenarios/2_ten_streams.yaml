@@ -4,7 +4,7 @@
 
 streams:
   - name: "camera-1"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"  # Generated test stream
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"  # Generated test stream
     hls_output: "/tmp/hls_output/camera-1/"
     transport: "tcp"
     reconnect:
@@ -15,7 +15,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-2"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-2/"
     transport: "tcp"
     reconnect:
@@ -26,7 +26,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-3"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-3/"
     transport: "tcp"
     reconnect:
@@ -37,7 +37,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-4"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-4/"
     transport: "tcp"
     reconnect:
@@ -48,7 +48,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-5"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-5/"
     transport: "tcp"
     reconnect:
@@ -59,7 +59,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-6"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-6/"
     transport: "tcp"
     reconnect:
@@ -70,7 +70,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-7"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-7/"
     transport: "tcp"
     reconnect:
@@ -81,7 +81,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-8"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-8/"
     transport: "tcp"
     reconnect:
@@ -92,7 +92,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-9"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-9/"
     transport: "tcp"
     reconnect:
@@ -103,7 +103,7 @@ streams:
       stale_timeout_s: 10
 
   - name: "camera-10"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     hls_output: "/tmp/hls_output/camera-10/"
     transport: "tcp"
     reconnect:
