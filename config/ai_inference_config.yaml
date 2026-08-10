@@ -1,28 +1,28 @@
-# AI Inference Configuration
+# AI Inference Configuration for Multi-Stream Deployment
+#
+# This configuration demonstrates multi-stream object detection.
+# Each stream is processed independently by its own worker thread.
+# All streams share a single YOLOv8n model and SQLite database (disambiguated by stream_id).
 
 ai_inference:
-  # Model Settings
-  enabled: true
+  # Global Inference Settings (applied to all streams)
   model: yolov8n                    # 'yolov8n' (nano), 'yolov8s' (small), etc.
-  classes: [person, car]            # Classes to detect
+  classes: [person, car]            # Classes to detect (person=0, car=2,5,7)
   confidence_threshold: 0.5          # Detection confidence threshold (0-1)
   
-  # Inference Settings
+  # Inference Behavior
   inference_interval_s: 5            # Process segment every N seconds
-  frames_per_segment: 1              # Frames to extract per 2-second segment
+  frames_per_segment: 1              # Frames to extract per segment
   
-  # I/O Paths
-  hls_input_dir: /app/hls_output/{stream_id}   # {stream_id} replaced at runtime
-  database_path: /app/detections.db
-  detections_output_dir: /app/detections
-  save_raw_frames: false             # Also save raw frames (before annotation)
+  # Shared Infrastructure
+  database_path: /app/detections.db  # Shared SQLite database for all streams
   
   # Performance
-  max_workers: 4                     # CPU inference parallelism
+  max_workers: 4                     # CPU inference parallelism (per stream)
   batch_size: 1                      # Frames per batch
   device: cpu                        # 'cpu' (no GPU required)
   
-  # Cleanup & Retention
+  # Cleanup & Retention (applies to all streams)
   retention_days: 30                 # Keep detection frames N days
   
   # Annotation Style
@@ -34,5 +34,25 @@ ai_inference:
   log_level: INFO                    # DEBUG, INFO, WARN, ERROR
   log_detections: true               # Log each detection to console
   
-  # Stream Identification
-  stream_id: camera-1                # Unique stream ID (used in paths/DB)
+  # Streams Configuration
+  # Each stream is processed independently by its own DetectionWorker thread.
+  # Set enabled=false to disable a stream without removing its config.
+  streams:
+    
+    # Camera 1: Enabled, reads from local HLS, saves detections locally
+    - stream_id: camera-1
+      enabled: true
+      hls_input_dir: /app/hls_output/camera-1
+      detections_output_dir: /app/detections/camera-1
+    
+    # Camera 2: Enabled, reads from local HLS, saves detections locally
+    - stream_id: camera-2
+      enabled: true
+      hls_input_dir: /app/hls_output/camera-2
+      detections_output_dir: /app/detections/camera-2
+    
+    # Camera 3: Disabled (no processing), but config is preserved for easy re-enable
+    - stream_id: camera-3
+      enabled: false
+      hls_input_dir: /app/hls_output/camera-3
+      detections_output_dir: /app/detections/camera-3

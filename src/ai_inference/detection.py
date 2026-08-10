@@ -24,7 +24,7 @@ class Detection:
     frame_path_annotated: Optional[str] = None
     frame_path_raw: Optional[str] = None
     
-    stream_id: str = "camera-1"
+    stream_id: str = ""  # Must be set by worker (no default)
     
     def to_dict(self) -> dict:
         """Convert to dictionary for database storage."""

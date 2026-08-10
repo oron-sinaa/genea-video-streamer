@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 import numpy as np
 
-from ai_inference.config import AiInferenceConfig
+from ai_inference.config import AiInferenceConfig, StreamConfig
 from ai_inference.database import DetectionDatabase
 from ai_inference.detector import YoloDetector
 from ai_inference.frame_extractor import FrameExtractor
@@ -20,13 +20,30 @@ logger = logging.getLogger(__name__)
 
 
 class DetectionWorker:
-    """Main worker thread for running inference."""
+    """
+    Detection worker for a single stream.
     
-    def __init__(self, config: AiInferenceConfig):
-        """Initialize worker."""
+    Processes HLS segments and runs object detection.
+    Each worker handles exactly one stream with independent paths and database writes.
+    """
+    
+    def __init__(self, config: AiInferenceConfig, stream_config: StreamConfig):
+        """
+        Initialize worker for a specific stream.
+        
+        Args:
+            config: Global inference configuration (model, device, etc.)
+            stream_config: Stream-specific configuration (paths, stream_id)
+        """
         self.config = config
+        self.stream_config = stream_config
         self.running = False
         self.thread = None
+        
+        # Extract stream-specific info
+        self.stream_id = stream_config.stream_id
+        self.hls_input_dir = stream_config.hls_input_dir
+        self.detections_output_dir = stream_config.detections_output_dir
         
         # Initialize components
         self.db = DetectionDatabase(config.database_path)
@@ -40,21 +57,24 @@ class DetectionWorker:
             thickness=config.annotate_thickness,
             font_scale=config.annotate_font_scale
         )
-        self.hls_reader = HlsReader(config.hls_input_dir)
+        self.hls_reader = HlsReader(self.hls_input_dir)
         
-        # Create output directories
-        Path(config.detections_output_dir).mkdir(parents=True, exist_ok=True)
-        annotated_dir = Path(config.detections_output_dir) / config.stream_id / "annotated"
+        # Create stream-specific output directories
+        Path(self.detections_output_dir).mkdir(parents=True, exist_ok=True)
+        annotated_dir = Path(self.detections_output_dir) / "annotated"
         annotated_dir.mkdir(parents=True, exist_ok=True)
         
-        if config.save_raw_frames:
-            raw_dir = Path(config.detections_output_dir) / config.stream_id / "raw"
-            raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_dir = Path(self.detections_output_dir) / "raw"
+        raw_dir.mkdir(parents=True, exist_ok=True)
     
     def run(self):
         """Main inference loop (runs in thread)."""
         self.running = True
-        logger.info(f"DetectionWorker started: model={self.config.model}, interval={self.config.inference_interval_s}s")
+        logger.info(
+            f"DetectionWorker[{self.stream_id}] started: "
+            f"model={self.config.model}, interval={self.config.inference_interval_s}s, "
+            f"input={self.hls_input_dir}"
+        )
         
         try:
             while self.running:
@@ -106,10 +126,10 @@ class DetectionWorker:
             # Annotate and save frame
             annotated_frame = self.frame_annotator.annotate_frame(frame, [det])
             
-            # Build frame path
+            # Build frame path (no stream_id subdirectory, detections_output_dir already stream-specific)
             timestamp = int(time.time())
             frame_filename = f"frame_{timestamp}_{det.object_type}.jpg"
-            frame_path = Path(self.config.detections_output_dir) / self.config.stream_id / "annotated" / frame_filename
+            frame_path = Path(self.detections_output_dir) / "annotated" / frame_filename
             
             self.frame_annotator.save_frame(
                 annotated_frame,
@@ -120,13 +140,12 @@ class DetectionWorker:
             det.frame_path_annotated = str(frame_path)
             det.segment_index = segment.index
             det.segment_filename = segment.filename
-            det.stream_id = self.config.stream_id
+            det.stream_id = self.stream_id
             
-            # Optionally save raw frame
-            if self.config.save_raw_frames:
-                raw_path = Path(self.config.detections_output_dir) / self.config.stream_id / "raw" / frame_filename
-                self.frame_annotator.save_frame(frame, str(raw_path), quality=95)
-                det.frame_path_raw = str(raw_path)
+            # Save raw frame (always available now)
+            raw_path = Path(self.detections_output_dir) / "raw" / frame_filename
+            self.frame_annotator.save_frame(frame, str(raw_path), quality=95)
+            det.frame_path_raw = str(raw_path)
             
             # Store in database
             try:
@@ -137,17 +156,16 @@ class DetectionWorker:
     
     def start(self):
         """Start worker thread."""
-        if not self.config.enabled:
-            logger.info("DetectionWorker disabled in config")
-            return
-        
         self.thread = threading.Thread(target=self.run, daemon=True)
         self.thread.start()
-        logger.info("DetectionWorker thread started")
+        logger.info(f"DetectionWorker[{self.stream_id}] thread started")
     
     def stop(self):
         """Stop worker thread."""
         self.running = False
+        if self.thread:
+            self.thread.join(timeout=5)
+        logger.info(f"DetectionWorker[{self.stream_id}] stopped")
         if self.thread:
             self.thread.join(timeout=5)
         logger.info("DetectionWorker stopped")
