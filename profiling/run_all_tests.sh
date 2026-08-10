@@ -30,7 +30,7 @@ mkdir -p "$SCRIPT_DIR/results"
 rm -f "$SCRIPT_DIR/results"/*
 
 # Run all scenarios
-SCENARIOS=("baseline" "multi_stream" "scale_test")
+SCENARIOS=("0_single_stream" "1_five_streams" "2_ten_streams" "3_fifty_streams")
 
 for scenario in "${SCENARIOS[@]}"; do
     echo -e "${GREEN}Running: $scenario${NC}"
