@@ -68,6 +68,11 @@ public:
     // Does nothing if discontinuity already written for current segment (once per segment).
     void writeDiscontinuity();
 
+    // Detects and handles stream restart/reconnection.
+    // Call when source stream is reconnected or codec parameters change.
+    // Automatically writes discontinuity marker for segment continuity.
+    void handleStreamRestart();
+
 private:
     // Creates a new segment file and initializes muxing context for it.
     // Called when current segment would exceed duration limit.
@@ -84,7 +89,9 @@ private:
     bool updateArchivePlaylist();
 
     // Scans segments directory and removes .ts files older than retention policy.
-    void cleanupOldSegments();
+    // Regenerates playlists after cleanup to ensure consistency.
+    // Returns true if cleanup occurred and playlists were regenerated.
+    bool cleanupOldSegments();
 
     // Writes playlist content to a file atomically (write temp, rename).
     bool writePlaylistFile(const std::string& filename, const std::string& content);
@@ -116,6 +123,7 @@ private:
     // Metrics and state.
     long packetCount_ = 0;
     std::time_t lastCleanupTime_ = 0;
+    bool stream_restart_pending_ = false;  // Flag to write discontinuity on next segment
 
     // Output stream codec info (saved at open time for playlist generation).
     int outputTimeBase_ = 90000;  // standard for HLS/MPEG-TS

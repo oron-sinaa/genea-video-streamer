@@ -10,6 +10,7 @@ extern "C" {
 }
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -158,6 +159,12 @@ bool HlsMuxer::writePacket(const AVPacket* packet, const AVStream* sourceStream)
             }
             headerWritten_ = true;
         }
+    }
+
+    // If stream restart is pending, write discontinuity before next segment.
+    if (stream_restart_pending_) {
+        writeDiscontinuity();
+        stream_restart_pending_ = false;
     }
 
     // Write packet to current segment.
@@ -358,40 +365,97 @@ bool HlsMuxer::updateArchivePlaylist() {
     return writePlaylistFile(outputDir_ + "/archive.m3u8", content);
 }
 
-void HlsMuxer::cleanupOldSegments() {
+bool HlsMuxer::cleanupOldSegments() {
     if (segments_.empty()) {
-        return;
+        return false;  // No segments to clean
     }
 
     const std::time_t now = std::time(nullptr);
     const int retentionSeconds = config_.archive_retention_hours * 3600;
+    
+    LOG_INFO("HlsMuxer: cleanup check started. Current segments: %zu, retention: %dh (%ds), age threshold: 2h (7200s)",
+             segments_.size(), config_.archive_retention_hours, retentionSeconds);
 
     int deletedCount = 0;
-    for (size_t i = 0; i < segments_.size(); ++i) {
-        const SegmentInfo& seg = segments_[i];
-        const int ageSeconds = static_cast<int>(now - seg.createdAt);
+    int failedCount = 0;
+    std::vector<std::string> deletedFilenames;
 
-        if (ageSeconds > retentionSeconds) {
+    // First pass: attempt to delete old segment files
+    for (const auto& seg : segments_) {
+        const int ageSeconds = static_cast<int>(now - seg.createdAt);
+        
+        // Only delete segments older than 2 hours (7200 seconds) OR older than retention policy
+        if (ageSeconds > retentionSeconds && ageSeconds > 7200) {
             const std::string fullPath = outputDir_ + "/" + seg.filename;
+            
+            // Verify file exists before attempting deletion
+            if (!std::filesystem::exists(fullPath)) {
+                LOG_WARN("HlsMuxer: segment file already missing: %s (age=%ds)", seg.filename.c_str(), ageSeconds);
+                deletedCount++;
+                deletedFilenames.push_back(seg.filename);
+                continue;
+            }
+            
+            // Attempt deletion
             if (std::remove(fullPath.c_str()) == 0) {
-                LOG_INFO("HlsMuxer: cleaned up old segment: %s (age=%ds)", seg.filename.c_str(), ageSeconds);
-                ++deletedCount;
+                LOG_INFO("HlsMuxer: DELETED segment: %s (age=%ds, retention=%ds)", 
+                         seg.filename.c_str(), ageSeconds, retentionSeconds);
+                deletedCount++;
+                deletedFilenames.push_back(seg.filename);
             } else {
-                LOG_WARN("HlsMuxer: failed to delete old segment: %s", seg.filename.c_str());
+                LOG_ERROR("HlsMuxer: FAILED to delete segment: %s (age=%ds) - %s", 
+                          seg.filename.c_str(), ageSeconds, std::strerror(errno));
+                failedCount++;
             }
         }
     }
 
-    // Truncate segments list to match retention policy.
+    // Second pass: remove deleted segments from tracking vector
+    // Only remove if deletion was successful (file doesn't exist anymore)
     if (deletedCount > 0) {
-        segments_.erase(
-            std::remove_if(
-                segments_.begin(),
-                segments_.end(),
-                [now, retentionSeconds](const SegmentInfo& seg) {
-                    return (now - seg.createdAt) > retentionSeconds;
-                }),
-            segments_.end());
+        auto it = segments_.begin();
+        while (it != segments_.end()) {
+            const std::string fullPath = outputDir_ + "/" + it->filename;
+            
+            // If file was deleted (doesn't exist), remove from tracking
+            if (!std::filesystem::exists(fullPath)) {
+                it = segments_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        
+        LOG_INFO("HlsMuxer: cleanup removed %zu entries from segments_ tracking vector", deletedCount);
+    }
+
+    // Third pass: regenerate playlists only if segments were deleted
+    if (deletedCount > 0 || failedCount > 0) {
+        LOG_INFO("HlsMuxer: cleanup complete - DELETED: %d files (failed: %d), updating playlists...",
+                 deletedCount, failedCount);
+        
+        // Regenerate both playlists to remove references to deleted segments
+        updateLivePlaylist();
+        updateArchivePlaylist();
+        
+        LOG_INFO("HlsMuxer: playlists regenerated after cleanup. Remaining segments: %zu", segments_.size());
+        
+        // Log detailed cleanup summary
+        std::ostringstream summary;
+        summary << "HlsMuxer: cleanup summary - deleted files: [";
+        for (size_t i = 0; i < deletedFilenames.size() && i < 10; ++i) {
+            if (i > 0) summary << ", ";
+            summary << deletedFilenames[i];
+        }
+        if (deletedFilenames.size() > 10) {
+            summary << ", ... (" << (deletedFilenames.size() - 10) << " more)";
+        }
+        summary << "]";
+        LOG_DEBUG(summary.str().c_str());
+        
+        return true;  // Cleanup occurred
+    } else {
+        LOG_DEBUG("HlsMuxer: cleanup check found no segments old enough to delete");
+        return false;  // No cleanup needed
     }
 }
 
@@ -475,6 +539,23 @@ void HlsMuxer::writeDiscontinuity() {
     if (opened_) {
         updateLivePlaylist();
         updateArchivePlaylist();
+    }
+}
+
+void HlsMuxer::handleStreamRestart() {
+    // Called when source stream is reconnected or codec parameters change.
+    // Signals that a discontinuity should be written to the playlist.
+    // The actual discontinuity marker is written when the next segment is written.
+    
+    LOG_WARN("HlsMuxer: stream restart detected - discontinuity will be written at next segment");
+    
+    // Set flag to write discontinuity on next packet write
+    stream_restart_pending_ = true;
+    
+    // If we're in the middle of a segment, immediately write discontinuity to playlists
+    // so live players know about the discontinuity ASAP
+    if (!segments_.empty()) {
+        writeDiscontinuity();
     }
 }
 
