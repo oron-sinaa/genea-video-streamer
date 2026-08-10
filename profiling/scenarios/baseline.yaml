@@ -1,0 +1,36 @@
+# Baseline Scenario: 1 Stream
+# Tests single stream performance baseline
+# Expected: Low CPU, minimal memory, stable
+
+streams:
+  - name: "camera-1"
+    rtsp_url: "rtsp://127.0.0.1:8554/test"  # Modify with real RTSP URL
+    hls_output: "/tmp/hls_output/camera-1/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+http:
+  listen_port: 8080
+
+hls:
+  output_dir: "/tmp/hls_output"
+  segment_duration_s: 2
+  archive_retention_hours: 1
+  cleanup_interval_s: 60
+
+resources:
+  max_streams: 1
+  max_cpu_per_stream: 100
+  max_memory_per_stream: 512
+
+playback:
+  live_mode:
+    back_buffer_length_s: 10
+    sync_segment_count: 2
+    max_buffer_length_s: 30
+    max_buffer_length_absolute_s: 60
