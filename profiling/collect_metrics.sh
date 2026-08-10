@@ -10,8 +10,8 @@ DURATION="${2:-300}"  # Default 5 minutes
 OUTPUT="${3:-metrics.csv}"
 INTERVAL=5
 
-# Get PID of streamer process
-STREAMER_PID=$(pgrep -f "/app/streamer" | head -1)
+# Get PID of streamer process (try multiple patterns)
+STREAMER_PID=$(pgrep -f "streamer|/app/streamer" | head -1)
 if [ -z "$STREAMER_PID" ]; then
     echo "ERROR: streamer process not found"
     exit 1
@@ -42,10 +42,12 @@ while true; do
 
     # Get API metrics
     API_DATA=$(curl -s "http://localhost:$PORT/api/health" 2>/dev/null || echo "{}")
-    ACTIVE_STREAMS=$(echo "$API_DATA" | grep -o '"active_streams":[0-9]*' | cut -d: -f2)
-    TOTAL_PACKETS=$(echo "$API_DATA" | grep -o '"total_packets_written":[0-9]*' | cut -d: -f2)
-    TOTAL_RECONNECTS=$(echo "$API_DATA" | grep -o '"total_reconnects":[0-9]*' | cut -d: -f2)
-    ERROR_STREAMS=$(echo "$API_DATA" | grep -o '"error_streams":[0-9]*' | cut -d: -f2)
+    
+    # Extract metrics - handle both "total_packets_written" and "packets_written" field names
+    ACTIVE_STREAMS=$(echo "$API_DATA" | grep -oE '"active_streams":\s*[0-9]+' | grep -oE '[0-9]+')
+    TOTAL_PACKETS=$(echo "$API_DATA" | grep -oE '"total_packets_written":\s*[0-9]+|"packets_written":\s*[0-9]+' | grep -oE '[0-9]+')
+    TOTAL_RECONNECTS=$(echo "$API_DATA" | grep -oE '"total_reconnects":\s*[0-9]+' | grep -oE '[0-9]+')
+    ERROR_STREAMS=$(echo "$API_DATA" | grep -oE '"error_streams":\s*[0-9]+' | grep -oE '[0-9]+')
 
     # Default values if API unreachable
     ACTIVE_STREAMS=${ACTIVE_STREAMS:-0}
