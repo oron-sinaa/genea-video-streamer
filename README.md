@@ -210,23 +210,26 @@ curl "http://localhost:8080/api/detections/recent?limit=10" | jq .
 
 **See [docs/http-api.md](docs/http-api.md) for full API reference** including all endpoints, query parameters, response schemas, and usage examples.
 
+## Performance & Profiling
+
+Profiling results show throughput and resource usage across different stream counts:
+
+![Profiling Results](profiling/results/results.png)
+
+The system demonstrates:
+- **Linear scaling** from 1 to 50 concurrent streams
+- **Consistent packet rates** (≈ 750–850 Mbps aggregate bitrate across streams)
+- **Stable CPU and memory** with proper resource cleanup
+- **No resource leaks** in long-running scenarios
+
+For detailed profiling methodology and data: [profiling/results/REPORT.txt](profiling/results/REPORT.txt)
+
 ## Camera Compatibility
 
 - **Recommended:** H.264 with regular IDR keyframes (every 1–2 s)
 - **Transport:** TCP preferred (more reliable across NAT/firewalls)
 - **Codec handling:** packets are remuxed without decode — no transcoding, no re-encoding
 - **Browser playback:** depends on source codec; H.264 is universally supported
-
-## CI/CD
-
-GitHub Actions runs on every push:
-
-- Build and compile (CMake, Release)
-- Unit tests (ReconnectPolicy, PipelineHealth, HttpServer — 35+ tests)
-- Integration tests (reconnect scenarios)
-- Docker image build
-
-Pipeline: `.github/workflows/ci-cd.yml`
 
 ## Design Document
 
