@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y \
     libyaml-cpp-dev \
     curl \
     ffmpeg \
+    bc \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -42,8 +43,14 @@ COPY --from=builder /build/build/streamer /app/streamer
 # Copy web player assets
 COPY --from=builder /build/web /app/web
 
-# Create directories for data
-RUN mkdir -p /etc/streamer /data/hls_output
+# Copy profiling suite for performance testing
+COPY --from=builder /build/profiling /app/profiling
+
+# Make profiling scripts executable
+RUN chmod +x /app/profiling/*.sh
+
+# Create directories for data and results
+RUN mkdir -p /etc/streamer /data/hls_output /app/profiling/results
 
 # Expose HTTP server port
 EXPOSE 8080
