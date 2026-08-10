@@ -1,9 +1,11 @@
 """Extract frames from MPEG-TS (.ts) segments."""
 
+import subprocess
 import cv2
 import numpy as np
 from typing import List, Optional
 from pathlib import Path
+import io
 
 
 class FrameExtractor:
@@ -15,7 +17,7 @@ class FrameExtractor:
     
     def extract_frame_at_time(self, ts_file: str, time_s: float) -> Optional[np.ndarray]:
         """
-        Extract frame from .ts file at specific timestamp.
+        Extract frame from .ts file at specific timestamp using ffmpeg.
         
         Args:
             ts_file: Path to .ts file
@@ -27,31 +29,39 @@ class FrameExtractor:
         if not Path(ts_file).exists():
             raise FileNotFoundError(f"Segment file not found: {ts_file}")
         
-        cap = cv2.VideoCapture(ts_file)
-        if not cap.isOpened():
-            return None
-        
         try:
-            # Get video properties
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            if fps <= 0:
-                fps = 30  # Fallback
+            # Use ffmpeg to extract frame as JPEG, pipe to stdout
+            cmd = [
+                'ffmpeg',
+                '-v', 'error',  # Suppress warnings
+                '-ss', str(time_s),
+                '-i', ts_file,
+                '-vframes', '1',
+                '-q:v', '1',
+                '-f', 'image2',
+                '-c:v', 'mjpeg',
+                'pipe:1'
+            ]
             
-            # Calculate frame number
-            frame_num = int(time_s * fps)
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                timeout=10
+            )
             
-            # Seek to frame
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
-            
-            # Read frame
-            ret, frame = cap.read()
-            if not ret:
+            if result.returncode != 0:
                 return None
             
-            return frame
+            # Decode JPEG from stdout
+            nparr = np.frombuffer(result.stdout, np.uint8)
+            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            return frame if frame is not None else None
         
-        finally:
-            cap.release()
+        except subprocess.TimeoutExpired:
+            return None
+        except Exception:
+            return None
     
     def extract_frames_interval(self, ts_file: str, interval_s: float) -> List[np.ndarray]:
         """
