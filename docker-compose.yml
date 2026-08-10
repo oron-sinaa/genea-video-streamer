@@ -135,6 +135,37 @@ services:
       - rtsp-generator-1
       - rtsp-generator-2
 
+  inference:
+    image: genea-video-streamer:latest
+    container_name: genea-inference
+    restart: unless-stopped
+    command: bash -c "sleep 5 && PYTHONPATH=src python3 -m ai_inference /etc/streamer/inference.yaml"
+    volumes:
+      - ./config:/etc/streamer:ro
+      - ./hls_output:/data/hls_output:ro
+      - ./detections:/data/detections
+      - ./detections/database:/app/database
+    networks:
+      - streamer-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      streamer:
+        condition: service_healthy
+
 networks:
   streamer-network:
     driver: bridge
