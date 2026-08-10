@@ -1,6 +1,7 @@
 """YOLOv8 object detector wrapper."""
 
 from typing import List, Dict, Optional
+import gc
 from ultralytics import YOLO
 import numpy as np
 from ai_inference.detection import Detection
@@ -91,6 +92,15 @@ class YoloDetector:
                 )
                 
                 detections.append(detection)
+        
+        # Explicitly clean up YOLO results to free GPU/tensor memory
+        if results:
+            results.clear()
+            del results
+        
+        # Hint garbage collector to run if many objects have accumulated
+        # This helps prevent memory bloat during long-running inference
+        gc.collect()
         
         return detections
     

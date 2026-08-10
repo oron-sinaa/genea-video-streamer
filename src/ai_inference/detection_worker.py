@@ -107,52 +107,61 @@ class DetectionWorker:
         """Process one segment file."""
         logger.debug(f"Processing segment {segment.filename}")
         
-        # Extract frame from middle of segment (or at interval)
-        time_s = segment.duration / 2.0
+        # Extract frame from start of segment (frame 0)
+        # OpenCV seeks poorly in MPEG-TS, so use first frame instead
+        time_s = 0.0
         
         frame = self.frame_extractor.extract_frame_at_time(segment.filepath, time_s)
         if frame is None:
             logger.warning(f"Failed to extract frame from {segment.filename}")
             return
         
-        # Run inference
-        detections = self.detector.detect(frame, self.config.confidence_threshold)
+        try:
+            # Run inference
+            detections = self.detector.detect(frame, self.config.confidence_threshold)
+            
+            if self.config.log_detections and detections:
+                logger.info(f"Segment {segment.index}: {len(detections)} detections")
+            
+            # Save and store detections
+            for det in detections:
+                # Annotate and save frame
+                annotated_frame = self.frame_annotator.annotate_frame(frame, [det])
+                
+                # Build frame path (no stream_id subdirectory, detections_output_dir already stream-specific)
+                timestamp = int(time.time())
+                frame_filename = f"frame_{timestamp}_{det.object_type}.jpg"
+                frame_path = Path(self.detections_output_dir) / "annotated" / frame_filename
+                
+                self.frame_annotator.save_frame(
+                    annotated_frame,
+                    str(frame_path),
+                    quality=self.config.annotation_quality
+                )
+                
+                det.frame_path_annotated = str(frame_path)
+                det.segment_index = segment.index
+                det.segment_filename = segment.filename
+                det.stream_id = self.stream_id
+                
+                # Save raw frame (always available now)
+                raw_path = Path(self.detections_output_dir) / "raw" / frame_filename
+                self.frame_annotator.save_frame(frame, str(raw_path), quality=95)
+                det.frame_path_raw = str(raw_path)
+                
+                # Store in database
+                try:
+                    det_id = self.db.insert_detection(det.to_dict())
+                    logger.debug(f"Stored detection: {det.object_type} ({det.confidence:.2f}) -> ID {det_id}")
+                except Exception as e:
+                    logger.error(f"Failed to store detection: {e}")
+                
+                # Clean up annotated frame to free memory
+                del annotated_frame
         
-        if self.config.log_detections and detections:
-            logger.info(f"Segment {segment.index}: {len(detections)} detections")
-        
-        # Save and store detections
-        for det in detections:
-            # Annotate and save frame
-            annotated_frame = self.frame_annotator.annotate_frame(frame, [det])
-            
-            # Build frame path (no stream_id subdirectory, detections_output_dir already stream-specific)
-            timestamp = int(time.time())
-            frame_filename = f"frame_{timestamp}_{det.object_type}.jpg"
-            frame_path = Path(self.detections_output_dir) / "annotated" / frame_filename
-            
-            self.frame_annotator.save_frame(
-                annotated_frame,
-                str(frame_path),
-                quality=self.config.annotation_quality
-            )
-            
-            det.frame_path_annotated = str(frame_path)
-            det.segment_index = segment.index
-            det.segment_filename = segment.filename
-            det.stream_id = self.stream_id
-            
-            # Save raw frame (always available now)
-            raw_path = Path(self.detections_output_dir) / "raw" / frame_filename
-            self.frame_annotator.save_frame(frame, str(raw_path), quality=95)
-            det.frame_path_raw = str(raw_path)
-            
-            # Store in database
-            try:
-                det_id = self.db.insert_detection(det.to_dict())
-                logger.debug(f"Stored detection: {det.object_type} ({det.confidence:.2f}) -> ID {det_id}")
-            except Exception as e:
-                logger.error(f"Failed to store detection: {e}")
+        finally:
+            # Always clean up the source frame after processing
+            del frame
     
     def start(self):
         """Start worker thread."""
@@ -161,10 +170,17 @@ class DetectionWorker:
         logger.info(f"DetectionWorker[{self.stream_id}] thread started")
     
     def stop(self):
-        """Stop worker thread."""
+        """Stop worker thread gracefully."""
         self.running = False
         if self.thread:
             self.thread.join(timeout=5)
+        
+        # Clean up resources
+        try:
+            self.db.close()
+        except Exception as e:
+            logger.warning(f"Error closing database: {e}")
+        
         logger.info(f"DetectionWorker[{self.stream_id}] stopped")
         if self.thread:
             self.thread.join(timeout=5)
