@@ -234,3 +234,8 @@ For detailed profiling methodology and data: [profiling/results/REPORT.txt](prof
 ## Design Document
 
 Full technical design, architecture decisions, module breakdown, and testing matrix: [docs/design.md](docs/design.md)
+
+## Default directories
+
+- hls_output/
+- detections/
