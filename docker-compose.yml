@@ -139,7 +139,7 @@ services:
     image: genea-video-streamer:latest
     container_name: genea-inference
     restart: unless-stopped
-    command: ["bash", "-c", "sleep 5 && PYTHONPATH=src python3 -m ai_inference /etc/streamer/inference.yaml"]
+    entrypoint: ["python3", "-m", "ai_inference"]
     volumes:
       - ./config:/etc/streamer:ro
       - ./hls_output:/data/hls_output:ro
@@ -162,6 +162,8 @@ services:
         max-file: "3"
     environment:
       - PYTHONUNBUFFERED=1
+      - PYTHONPATH=src
+      - AI_INFERENCE_CONFIG=/etc/streamer/inference.yaml
     depends_on:
       streamer:
         condition: service_healthy

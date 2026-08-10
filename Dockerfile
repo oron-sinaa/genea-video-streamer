@@ -35,6 +35,7 @@ RUN apt-get update && apt-get install -y \
     bc \
     python3 \
     python3-pip \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

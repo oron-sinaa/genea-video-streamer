@@ -1,6 +1,7 @@
 """Entry point for multi-stream AI inference service."""
 
 import sys
+import os
 import logging
 import signal
 from pathlib import Path
@@ -18,22 +19,30 @@ logger = logging.getLogger(__name__)
 
 def main():
     """Run the detection worker pool."""
-    # Parse config path from args
-    if len(sys.argv) > 1:
+    # Parse config path from environment, args, or common locations
+    config_path = None
+    
+    # 1. Check environment variable
+    if 'AI_INFERENCE_CONFIG' in os.environ:
+        config_path = os.environ['AI_INFERENCE_CONFIG']
+    # 2. Check command-line args
+    elif len(sys.argv) > 1:
         config_path = sys.argv[1]
+    # 3. Try common locations
     else:
-        # Try common locations
         for path in [
             'config/inference.yaml',
             '/app/config/inference.yaml',
+            '/etc/streamer/inference.yaml',
             '/etc/ai_inference/config.yaml',
         ]:
             if Path(path).exists():
                 config_path = path
                 break
-        else:
-            logger.error("No config file found. Usage: python3 -m ai_inference [config_path]")
-            sys.exit(1)
+    
+    if not config_path:
+        logger.error("No config file found. Set AI_INFERENCE_CONFIG or provide path as argument.")
+        sys.exit(1)
     
     logger.info(f"Loading configuration from: {config_path}")
     
