@@ -15,7 +15,7 @@ services:
         max-size: "5m"
         max-file: "2"
 
-  rtsp-generator:
+  rtsp-generator-1:
     image: jrottenberg/ffmpeg:7.0-ubuntu
     container_name: rtsp-generator
     restart: unless-stopped
@@ -42,7 +42,31 @@ services:
       -ac 2
       -rtsp_transport tcp
       -f rtsp
-      rtsp://rtsp-server:8554/stream
+      rtsp://rtsp-server:8554/stream1
+    networks:
+      - streamer-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    depends_on:
+      - rtsp-server
+
+  rtsp-generator-2:
+    image: jrottenberg/ffmpeg:7.0-ubuntu
+    container_name: rtsp-generator
+    restart: unless-stopped
+    volumes:
+      - ./tests/cars_person.mp4:/data/cars_person.mp4
+    command: >
+      -hide_banner
+      -loglevel error
+      -i /data/cars_person.mp4
+      -c copy
+      -rtsp_transport tcp
+      -f rtsp
+      rtsp://rtsp-server:8554/stream2
     networks:
       - streamer-network
     logging:

@@ -6,7 +6,7 @@
 # Array of RTSP streams to ingest (Phase 6: Multi-stream support)
 streams:
   - name: "camera-1"
-    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    rtsp_url: "rtsp://rtsp-server:8554/stream1"
     # Per-stream HLS output directory (optional; defaults to "segments/camera-1/")
     hls_output: "/data/hls_output/camera-1/"
     transport: "tcp"
@@ -30,6 +30,17 @@ streams:
 
   - name: "camera-2"
     rtsp_url: "rtsp://9627b0bf2a7b.entrypoint.cloud.wowza.com:1935/app-p5260J38/66abe4b9_stream1"
+    hls_output: "/data/hls_output/camera-2/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-3"
+    rtsp_url: "rtsp://rtsp-server:8554/stream2"
     hls_output: "/data/hls_output/camera-2/"
     transport: "tcp"
     reconnect:
