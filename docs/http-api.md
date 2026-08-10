@@ -331,7 +331,6 @@ curl http://localhost:8080/hls/camera-1/segment_000001.ts -o segment.ts
 **Request:**
 ```
 GET /
-GET /index.html
 ```
 
 **Description:**  
@@ -559,11 +558,242 @@ http:
 
 ---
 
+## Detection Endpoints (AI Inference)
+
+> **Requires:** AI inference module enabled in `config/inference.yaml`
+
+### Get Detection Statistics
+
+**Request:**
+```
+GET /api/detections/stats
+```
+
+**Description:**  
+Returns aggregate detection statistics across all enabled streams.
+
+**Query Parameters:**
+- `stream_id` (optional, string) - Filter by specific stream (e.g., camera-1)
+- `object_type` (optional, string) - Filter by object type (e.g., person, car)
+- `start_time` (optional, unix timestamp) - Start of time range
+- `end_time` (optional, unix timestamp) - End of time range
+
+**Response (200 OK):**
+```json
+{
+  "total_detections": 1247,
+  "total_frames_processed": 8932,
+  "average_confidence": 0.85,
+  "by_type": {
+    "person": {
+      "count": 892,
+      "average_confidence": 0.89,
+      "streams": {
+        "camera-1": 450,
+        "camera-2": 442
+      }
+    },
+    "car": {
+      "count": 355,
+      "average_confidence": 0.78,
+      "streams": {
+        "camera-1": 200,
+        "camera-2": 155
+      }
+    }
+  },
+  "streams": {
+    "camera-1": {
+      "detections": 650,
+      "frames_processed": 4500,
+      "average_confidence": 0.84
+    },
+    "camera-2": {
+      "detections": 597,
+      "frames_processed": 4432,
+      "average_confidence": 0.86
+    }
+  }
+}
+```
+
+**Status Codes:**
+- `200 OK` - Statistics returned successfully
+- `400 Bad Request` - Invalid query parameters (e.g., invalid timestamp)
+
+**Example:**
+```bash
+curl "http://localhost:8080/api/detections/stats?stream_id=camera-1" | jq
+curl "http://localhost:8080/api/detections/stats?object_type=person" | jq
+```
+
+---
+
+### Get Recent Detections
+
+**Request:**
+```
+GET /api/detections/recent
+```
+
+**Description:**  
+Returns recent detection results with optional filtering and sorting.
+
+**Query Parameters:**
+- `limit` (optional, integer, default: 50) - Maximum results to return (1-1000)
+- `offset` (optional, integer, default: 0) - Result offset for pagination
+- `stream_id` (optional, string) - Filter by specific stream
+- `object_type` (optional, string) - Filter by object type (person, car, etc.)
+- `min_confidence` (optional, float) - Minimum confidence threshold (0.0-1.0)
+- `sort_by` (optional, string) - Sort field: `confidence` or `timestamp` (default: timestamp)
+- `order` (optional, string) - `asc` or `desc` (default: desc)
+
+**Response (200 OK):**
+```json
+{
+  "detections": [
+    {
+      "id": "frame_abc123def456",
+      "stream_id": "camera-1",
+      "object_type": "person",
+      "confidence": 0.92,
+      "bbox": {
+        "x": 0.45,
+        "y": 0.32,
+        "width": 0.25,
+        "height": 0.50
+      },
+      "timestamp": 1703088450.123,
+      "timestamp_iso": "2023-12-20T14:47:30.123Z",
+      "segment_filename": "segment_001234.ts"
+    },
+    {
+      "id": "frame_xyz789uvw012",
+      "stream_id": "camera-2",
+      "object_type": "car",
+      "confidence": 0.87,
+      "bbox": {
+        "x": 0.20,
+        "y": 0.25,
+        "width": 0.35,
+        "height": 0.45
+      },
+      "timestamp": 1703088445.456,
+      "timestamp_iso": "2023-12-20T14:47:25.456Z",
+      "segment_filename": "segment_005678.ts"
+    }
+  ],
+  "total_results": 247,
+  "query": {
+    "limit": 2,
+    "offset": 0,
+    "stream_id": null,
+    "object_type": null,
+    "min_confidence": null
+  }
+}
+```
+
+**Bounding Box Coordinates:**
+- `x`, `y`: Normalized coordinates (0.0-1.0 representing frame top-left to bottom-right)
+- `width`, `height`: Normalized dimensions (0.0-1.0)
+- Example: `{x: 0.45, y: 0.32, width: 0.25, height: 0.50}` means person centered at 45% horizontal, 32% vertical, occupying 25% of frame width and 50% height
+
+**Status Codes:**
+- `200 OK` - Detections returned successfully
+- `400 Bad Request` - Invalid query parameters
+- `404 Not Found` - No detections found (returns empty `detections` array)
+
+**Examples:**
+```bash
+# Last 10 detections
+curl "http://localhost:8080/api/detections/recent?limit=10" | jq
+
+# Detections from camera-1 only
+curl "http://localhost:8080/api/detections/recent?stream_id=camera-1&limit=20" | jq
+
+# People detections with high confidence
+curl "http://localhost:8080/api/detections/recent?object_type=person&min_confidence=0.85" | jq
+
+# Sorted by confidence (descending)
+curl "http://localhost:8080/api/detections/recent?sort_by=confidence&order=desc&limit=10" | jq
+```
+
+---
+
+### Get Annotated Detection Frame
+
+**Request:**
+```
+GET /detections/frame/<frame_id>
+```
+
+**Description:**  
+Returns an annotated frame image with bounding boxes drawn for all detections in that frame.
+
+**URL Parameters:**
+- `<frame_id>` (string) - Frame ID from detection result (e.g., frame_abc123def456)
+
+**Response (200 OK):**
+- Binary image data (JPEG format)
+- Content-Type: `image/jpeg`
+
+**Status Codes:**
+- `200 OK` - Frame image returned successfully
+- `404 Not Found` - Frame ID not found or image doesn't exist
+
+**Notes:**
+- Image shows frame with all detections from that segment annotated with bounding boxes
+- Boxes are colored by object type (e.g., red for person, blue for car)
+- Confidence score displayed on each box
+- Images are retained for the duration configured in `retention_days` setting (default: 7 days)
+
+**Example:**
+```bash
+# Download annotated frame
+curl "http://localhost:8080/detections/frame/frame_abc123def456" -o detection.jpg
+
+# Display in browser
+# http://localhost:8080/detections/frame/frame_abc123def456
+```
+
+---
+
+## Detection Query Examples
+
+### Real-time monitoring dashboard
+```bash
+# Check for people in last hour
+curl "http://localhost:8080/api/detections/recent?object_type=person&limit=100" | jq
+```
+
+### Security alert system
+```bash
+# High-confidence detections (>0.9 confidence)
+curl "http://localhost:8080/api/detections/recent?min_confidence=0.9&limit=50" | jq
+```
+
+### Analytics and reporting
+```bash
+# Get statistics by hour or day
+curl "http://localhost:8080/api/detections/stats?start_time=1703000000&end_time=1703086400" | jq
+```
+
+### Debugging inference quality
+```bash
+# Get all detections for a specific stream with confidence
+curl "http://localhost:8080/api/detections/recent?stream_id=camera-1&sort_by=confidence&limit=200" | jq
+```
+
+---
+
 ## Performance Notes
 
 - Playlist requests are fast (read from disk)
 - Segment requests are I/O bound (file size dependent)
 - Health API queries are O(n) where n = number of streams
+- Detection queries are O(m) where m = number of detections (database indexed)
+- Frame retrieval is I/O bound (image file access)
 - Concurrent connections are handled sequentially (single-threaded listener)
 
 ---

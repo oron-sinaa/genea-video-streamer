@@ -1,16 +1,25 @@
 # genea-video-streamer
 
-Open-source live video streaming solution built in C++ and LibAV, implemented as a Genea interview assessment.
+Open-source live video streaming and AI inference solution. Built in C++ (LibAV) for streaming, Python (YOLOv8) for object detection.
 
 ## What It Does
 
+**Streaming (C++):**
 - Ingests from IP cameras via RTSP (TCP or UDP transport)
 - Remuxes compressed packets into HLS segments (no transcoding)
 - Serves per-stream playlists and segments over HTTP
 - Provides a browser-based HLS.js player for live view and archive playback
 - Recovers automatically from network outages with exponential backoff
 - Supports 1–N concurrent streams through an integrated stream manager
-- Exposes a JSON REST API for aggregate and per-stream health metrics
+- Exposes a JSON REST API for stream health and status
+
+**AI Inference (Python, Optional):**
+- Runs object detection (YOLOv8 Nano) on HLS segments in real-time
+- Detects persons and vehicles with normalized bounding boxes
+- Stores detections in SQLite database with frame captures
+- Saves annotated and raw frames to per-stream directories
+- Supports multi-stream inference with independent workers
+- Exposes REST API for detection queries, stats, and frame retrieval
 
 ## Architecture
 
@@ -46,101 +55,68 @@ HttpServer
 | 5 | Testing & CI (unit, integration, GitHub Actions, Docker) | ✅ Complete |
 | 6 | Scalability (StreamManager, StreamWorker, HTTP API, multi-stream) | ✅ Complete |
 | 6b | Playback Latency (configurable buffering, low-latency profiles) | ✅ Complete |
-| 7 | AI / Optional (object detection, event search) | 📅 Not started |
+| 7 | AI Inference (YOLOv8 detection, multi-stream workers, SQLite storage, detection API) | ✅ Complete |
 
 ## Tech Stack
 
 | Layer | Choice | Rationale |
 |-------|--------|-----------|
+| **Streaming** | | |
 | Language | C++17 | Performance, LibAV compatibility |
 | Media | LibAV (libavformat 60, libavcodec 60, libavutil 58) | Packet demux/remux without decode |
 | Config | yaml-cpp 0.8 | Human-readable multi-stream config |
 | Protocol | HLS (MPEG-TS segments) | Open standard, browser-native via HLS.js |
-| HTTP | POSIX sockets (custom, no external dependency) | Zero added deps for test portability |
-| Build | CMake 3.16+, pkg-config | Standard C++ build tooling |
-| CI | GitHub Actions + Docker multi-stage | Reproducible builds and deployment |
+| HTTP | POSIX sockets (custom) | Zero added deps for test portability |
+| **Inference (Optional)** | | |
+| Language | Python 3.7+ | Rapid model integration, rich ecosystem |
+| Model | YOLOv8 Nano | 6.3 MB, 40-65ms latency, 15-25 FPS on CPU |
+| Frame Extraction | ffmpeg subprocess | Reliable MPEG-TS frame extraction |
+| Database | SQLite (WAL mode) | Lightweight, concurrent-safe, no server |
+| Configuration | PyYAML | Multi-stream config per-worker |
+| **Deployment** | | |
+| Container | Docker + docker-compose | Reproducible, full-stack deployment |
+| Orchestration | docker-compose v2+ | Multi-service coordination with health checks |
+| CI | GitHub Actions | Automated build, test, publish |
 
 ## Quick Start
 
-### Build
+### Deployment with Docker
 
 ```bash
-mkdir -p build
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
-```
+# Clone/download the repository
+git clone https://github.com/your-repo/genea-video-streamer.git
+cd genea-video-streamer
 
-### Single-stream mode
+# Edit config/rtsp-multi-stream.yaml with your RTSP camera URLs
+# And config/inference.yaml to enable/disable AI detection per stream
 
-```bash
-# Edit config/rtsp-ingest.yaml with your camera URL, then:
-./build/streamer config/rtsp-ingest.yaml
-```
-
-Open `http://localhost:8000` to view the player.
-
-### Multi-stream mode
-
-```bash
-# Edit config/rtsp-multi-stream.yaml or config/multi-stream-example.yaml
-./build/streamer config/rtsp-multi-stream.yaml
-```
-
-Streams are served at `/hls/<stream-name>/live.m3u8`.
-
-### Tests
-
-```bash
-# Unit tests
-./build/test_reconnect_policy
-./build/test_pipeline_health
-./build/test_http_server
-
-# Integration tests
-bash tests/integration/run_integration_tests.sh
-
-# Full end-to-end suite (10 suites, 35+ scenarios)
-bash tests/e2e/run_comprehensive_e2e.sh
-```
-
-### Docker
-
-```bash
-# Build image
-docker build -t genea-streamer:latest .
-
-# Run with docker-compose (edit docker-compose.yml for your RTSP URL first)
+# Start the full stack (streaming + optional AI inference)
 docker-compose up -d
+
+# View streaming: http://localhost:8080
+# View detection stats: http://localhost:8080/api/detections/stats (if inference enabled)
+# View stream health: http://localhost:8080/api/health
+
+# Monitor logs
 docker-compose logs -f streamer
+docker-compose logs -f inference  # if enabled
+
+# Stop services
 docker-compose down
+```
+
+### Testing
+
+Tests run automatically in the Docker build:
+
+```bash
+# Full end-to-end validation (includes build, unit tests, integration, Docker build)
+bash tests/e2e/run_comprehensive_e2e.sh
 ```
 
 ## Configuration
 
-### Single stream (`config/rtsp-ingest.yaml`)
-
-```yaml
-rtsp:
-  url: "rtsp://camera-ip:554/stream"
-  transport: "tcp"
-  timeout_us: 5000000
-  reconnect:
-    enabled: true
-    initial_delay_ms: 1000
-    max_delay_ms: 30000
-    jitter_percent: 15
-    stale_timeout_s: 10
-
-http:
-  listen_port: 8000
-
-hls:
-  output_dir: "segments"
-  segment_duration_s: 4
-  enable_discontinuity_markers: true
-```
-
-### Multi-stream (`config/multi-stream-example.yaml`)
+### Streaming Config (`config/rtsp-multi-stream.yaml`)
 
 ```yaml
 http:
@@ -160,48 +136,55 @@ streams:
     hls:
       segment_duration_s: 4
       output_dir: "segments/camera-front"
+```
 
-  - name: "camera-rear"
-    rtsp:
-      url: "rtsp://192.168.1.101:554/stream1"
-      reconnect:
-        enabled: true
-        initial_delay_ms: 1000
-        max_delay_ms: 30000
-        stale_timeout_s: 10
-    hls:
-      segment_duration_s: 4
-      output_dir: "segments/camera-rear"
+### Inference Config (`config/inference.yaml`)
+
+```yaml
+ai_inference:
+  model: yolov8n
+  classes: [person, car]
+  confidence_threshold: 0.5
+  database_path: /app/detections.db
+  device: cpu
+  
+  streams:
+    - stream_id: camera-1
+      enabled: true
+      hls_input_dir: /data/hls_output/camera-1
+      detections_output_dir: /data/detections/camera-1
+    
+    - stream_id: camera-2
+      enabled: false  # Disabled but config preserved
+      hls_input_dir: /data/hls_output/camera-2
+      detections_output_dir: /data/detections/camera-2
 ```
 
 ## REST API
 
-All endpoints return JSON. CORS is enabled by default.
+**Streaming Endpoints** (see [docs/http-api.md](docs/http-api.md) for full reference):
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/health` | GET | Aggregate metrics across all streams |
-| `/api/streams` | GET | List of all configured streams with status |
-| `/api/streams/<name>` | GET | Per-stream status and metrics |
-| `/hls/<name>/live.m3u8` | GET | Live HLS playlist for a stream |
-| `/hls/<name>/<seg>.ts` | GET | HLS segment |
-| `/` | GET | Web player UI |
+| Endpoint | Description |
+|----------|-------------|
+| `/api/health` | Aggregate stream metrics |
+| `/api/streams` | Stream list and status |
+| `/api/config` | Playback configuration |
+| `/hls/<name>/live.m3u8` | Live HLS playlist |
+| `/hls/<name>/<seg>.ts` | HLS segment file |
+| `/` | Web player UI |
 
-Example health response:
+**Detection Endpoints** (if AI inference enabled):
 
-```json
-{
-  "total_packets_read": 12480,
-  "total_packets_written": 12480,
-  "total_packets_dropped": 0,
-  "total_reconnects": 1,
-  "active_streams": 2,
-  "error_streams": 0,
-  "stream_stats": [
-    { "name": "camera-front", "status": "1", "packets_written": 6240, "reconnects": 0 },
-    { "name": "camera-rear",  "status": "1", "packets_written": 6240, "reconnects": 1 }
-  ]
-}
+| Endpoint | Description |
+|----------|-------------|
+| `/api/detections/stats` | Aggregate detection statistics (count, confidence, by type) |
+| `/api/detections/recent?limit=20&stream_id=camera-1` | Recent detections with optional filtering |
+| `/detections/frame/<frame_id>` | Retrieve annotated frame image |
+
+Example:
+```bash
+curl http://localhost:8080/api/detections/stats | jq .
+curl "http://localhost:8080/api/detections/recent?stream_id=camera-1" | jq .
 ```
 
 ## Camera Compatibility
