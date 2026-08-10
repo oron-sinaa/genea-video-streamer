@@ -40,7 +40,7 @@ class YoloDetector:
         Run inference on frame.
         
         Args:
-            frame: Input image (BGR, H×W×3)
+            frame: Input image (BGR, HxWx3)
             confidence_threshold: Filter detections below this confidence
             
         Returns:

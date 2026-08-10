@@ -22,7 +22,7 @@ class FrameExtractor:
             time_s: Timestamp in seconds (0 = start)
             
         Returns:
-            Frame as BGR numpy array (H×W×3), or None if failed
+            Frame as BGR numpy array (HxWx3), or None if failed
         """
         if not Path(ts_file).exists():
             raise FileNotFoundError(f"Segment file not found: {ts_file}")

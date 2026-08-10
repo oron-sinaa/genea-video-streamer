@@ -29,7 +29,7 @@ class FrameAnnotator:
         Draw bounding boxes on frame.
         
         Args:
-            frame: Input image (BGR, H×W×3)
+            frame: Input image (BGR, HxWx3)
             detections: List of Detection objects
             draw_confidence: Show confidence % in label
             
