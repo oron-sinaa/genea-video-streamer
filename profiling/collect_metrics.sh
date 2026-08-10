@@ -8,7 +8,7 @@ set -e
 PORT="${1:-8080}"
 DURATION="${2:-300}"  # Default 5 minutes
 OUTPUT="${3:-metrics.csv}"
-INTERVAL=5
+INTERVAL=0.1
 
 # Get PID of streamer process (try multiple patterns)
 STREAMER_PID=$(pgrep -f "streamer|/app/streamer" | head -1)

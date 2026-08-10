@@ -1,0 +1,135 @@
+# Scale Test Scenario: 10 Streams
+# Tests stress and scaling limits
+# Expected: CPU ~5-6x baseline, memory proportional, may show bottlenecks
+
+streams:
+  - name: "camera-1"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"  # Generated test stream
+    hls_output: "/tmp/hls_output/camera-1/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-2"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-2/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-3"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-3/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-4"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-4/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-5"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-5/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-6"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-6/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-7"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-7/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-8"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-8/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-9"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-9/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+  - name: "camera-10"
+    rtsp_url: "rtsp://rtsp-server:8554/stream"
+    hls_output: "/tmp/hls_output/camera-10/"
+    transport: "tcp"
+    reconnect:
+      enabled: true
+      initial_delay_ms: 1000
+      max_delay_ms: 30000
+      jitter_percent: 15
+      stale_timeout_s: 10
+
+http:
+  listen_port: 8080
+
+hls:
+  output_dir: "/tmp/hls_output"
+  segment_duration_s: 2
+  archive_retention_hours: 1
+  cleanup_interval_s: 60
+
+resources:
+  max_streams: 10
+  max_cpu_per_stream: 100
+  max_memory_per_stream: 512
+
+playback:
+  live_mode:
+    back_buffer_length_s: 10
+    sync_segment_count: 2
+    max_buffer_length_s: 30
+    max_buffer_length_absolute_s: 60
