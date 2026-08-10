@@ -1,6 +1,7 @@
 build/
 segments/
 hls_output/
+**/__pycache__/**
 test_video.mp4
 *.swp
 *.swo
