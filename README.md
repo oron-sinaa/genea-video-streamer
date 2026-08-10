@@ -110,7 +110,7 @@ Use default, or modify config/inference.yaml to enable/disable AI detection per 
 4.
 Build and start the full stack (streaming + AI inference)
 docker build -t video-streamer-genea:latest .
-docker-compose up -d
+docker compose up -d
 
 5.
 View streaming at http://localhost:8080
@@ -126,12 +126,12 @@ Refer to REST API section for complete API documentation
 
 9.
 Monitor logs
-docker-compose logs -f genea-video-streamer
-docker-compose logs -f genea-inference
+docker compose logs -f genea-video-streamer
+docker compose logs -f genea-inference
 
 10.
 Stop services
-docker-compose down
+docker compose down
 ```
 
 ### Testing
