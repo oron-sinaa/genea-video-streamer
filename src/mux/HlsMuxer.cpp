@@ -11,6 +11,7 @@ extern "C" {
 
 #include <algorithm>
 #include <cerrno>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -61,6 +62,7 @@ bool HlsMuxer::open() {
     // Recover segment index from existing segment files in directory.
     // This allows segment numbering to continue across stream restarts.
     int maxExistingIndex = -1;
+    std::vector<std::pair<std::string, std::time_t>> existingSegments;  // filename, creation time
     try {
         for (const auto& entry : std::filesystem::directory_iterator(outputDir_)) {
             if (entry.is_regular_file()) {
@@ -75,6 +77,13 @@ bool HlsMuxer::open() {
                             const std::string numStr = filename.substr(underscore_pos + 1, dot_pos - underscore_pos - 1);
                             int segmentNum = std::stoi(numStr);
                             maxExistingIndex = std::max(maxExistingIndex, segmentNum - 1);  // Convert to 0-based index
+                            
+                            // Get file modification time
+                            auto last_write_time = std::filesystem::last_write_time(entry.path());
+                            auto sctp = std::chrono::time_point_cast<std::chrono::seconds>(last_write_time);
+                            std::time_t file_time = sctp.time_since_epoch().count();
+                            
+                            existingSegments.emplace_back(filename, file_time);
                         }
                     } catch (const std::exception&) {
                         // Ignore parse errors; just continue scanning
@@ -87,11 +96,36 @@ bool HlsMuxer::open() {
         // Not fatal; just start from 0
     }
 
+    // If we found existing segments, recover them into segments_ tracking vector
+    if (maxExistingIndex >= 0) {
+        LOG_INFO("HlsMuxer: found %zu existing segments, recovering into tracking vector", 
+                 existingSegments.size());
+        
+        // Populate segments_ from existing files to preserve playlist continuity
+        for (const auto& [filename, file_time] : existingSegments) {
+            SegmentInfo seg;
+            seg.filename = filename;
+            seg.createdAt = file_time;
+            seg.has_discontinuity_before = false;  // Existing segments don't have discontinuity before them
+            seg.duration = config_.segment_duration_s;  // Estimate duration from config (typically 2s)
+            segments_.push_back(seg);
+        }
+        
+        // Mark that next segment should have discontinuity to signal restart/recovery boundary
+        stream_restart_pending_ = true;
+        LOG_INFO("HlsMuxer: stream_restart_pending flag set - discontinuity will be written before next segment");
+    }
+
     // Set currentSegmentIndex_ to resume from last segment (or 0 if none exist)
     currentSegmentIndex_ = maxExistingIndex + 1;
     if (maxExistingIndex >= 0) {
         LOG_INFO("HlsMuxer: resuming segment numbering from index %d (last segment was %d)",
                  currentSegmentIndex_, maxExistingIndex);
+        
+        // Regenerate playlists to restore them with existing segments before new ones are written
+        updateLivePlaylist();
+        updateArchivePlaylist();
+        LOG_INFO("HlsMuxer: playlists regenerated with %zu recovered segments", segments_.size());
     }
 
     LOG_INFO(
