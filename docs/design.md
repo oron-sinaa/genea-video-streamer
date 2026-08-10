@@ -520,7 +520,7 @@ This plan is structured to address Genea's interview assignment requirements and
 | Phase | Name | Deliverables | PDF Alignment | Status |
 |-------|------|--------------|---------------|--------|
 | **6** | Scalability | StreamWorker, StreamManager, HttpServer with REST API, multi-stream config, 22 HTTP unit tests | Scalability | ✅ **COMPLETE** |
-| **7** | AI/Optional | Object detection (ONNX/OpenVINO), event index, search API | Optional Task | ⏹️ Not started |
+| **7** | AI/Optional | Object detection (ONNX/OpenVINO), event index, search API | Optional Task | ✅ **COMPLETE** |
 
 ---
 
@@ -533,8 +533,6 @@ This plan is structured to address Genea's interview assignment requirements and
 | Kubernetes / Orchestration | Not implemented | Optional | Current design is single-process; K8s deployment would layer above HTTP API |
 | Metrics Export (Prometheus) | Not implemented | Optional | Health API provides metrics; Prometheus exporter could wrap HTTP API |
 | TLS/HTTPS Support | Not implemented | Optional | HTTP server can be fronted by reverse proxy (nginx, Envoy) for TLS |
-| Object Detection / AI | Not started | Phase 7 | Deferred to Phase 7; optional enhancement |
-| Performance Optimization | Not started | Post-Phase 6 | Profiling and optimization after core stability validated |
 
 ---
 
@@ -597,22 +595,6 @@ The system is **production-ready** for multi-stream live video streaming with th
 - **[docs/http-api.md](./http-api.md)** – HTTP API reference with curl examples
 - **Inline comments** – Class docstrings and complex algorithm explanations
 
-### 🚀 Quick Start
-```bash
-# Deploy with docker-compose
-docker-compose up -d
-
-# View player
-http://localhost:8080
-
-# Monitor services
-docker-compose logs -f streamer
-docker-compose logs -f inference  # if enabled
-
-# Shutdown
-docker-compose down
-```
-
 ### ✅ Known Limitations & Design Trade-offs
 
 1. **No Transcoding:** Codec copied from source; output quality depends on camera codec.
@@ -620,9 +602,6 @@ docker-compose down
 3. **No Encryption:** TLS should be layered via reverse proxy.
 4. **CPU-Only Inference:** YOLOv8n runs on CPU; GPU acceleration deferred.
 5. **Sequential HTTP:** Single-threaded listener (100 concurrent connections typical limit); acceptable for local/edge use.
-
-### 🔧 Phase 7 (Optional): AI & Search
-Future enhancement: add inference worker (ONNX/TensorFlow Lite) for object detection and event search over timestamped segment index.
 
 ---
 
