@@ -82,26 +82,38 @@ HttpServer
 
 ### Deployment with Docker
 
-```bash
-# Clone/download the repository
+```
+1.
+Clone/download the repository
 git clone https://github.com/your-repo/genea-video-streamer.git
 cd genea-video-streamer
 
-# Edit config/rtsp-multi-stream.yaml with your RTSP camera URLs
-# And config/inference.yaml to enable/disable AI detection per stream
+2.
+Edit config/rtsp-multi-stream.yaml with your RTSP camera URLs
 
-# Start the full stack (streaming + optional AI inference)
+3.
+And config/inference.yaml to enable/disable AI detection per stream
+
+4.
+Start the full stack (streaming + optional AI inference)
 docker-compose up -d
 
-# View streaming: http://localhost:8080
-# View detection stats: http://localhost:8080/api/detections/stats (if inference enabled)
-# View stream health: http://localhost:8080/api/health
+5.
+View streaming at http://localhost:8080
 
-# Monitor logs
+6.
+View detection stats at http://localhost:8080/api/detections/stats (if inference enabled)
+
+7.
+View stream health at http://localhost:8080/api/health
+
+8.
+Monitor logs
 docker-compose logs -f streamer
 docker-compose logs -f inference  # if enabled
 
-# Stop services
+9.
+Stop services
 docker-compose down
 ```
 
